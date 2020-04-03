@@ -1,0 +1,18 @@
+#define IO_GPIO_INIT 0x00
+#define IO_GPIO_WRITE 0x01
+#define IO_GPIO_READ 0x02
+#define IO_GPIO_PWM_OUT 0x03
+
+#define IO_GPIO_INPUT 0x00
+#define IO_GPIO_OUTPUT 0x01
+#define IO_GPIO_NONE 0x00
+#define IO_GPIO_PULLDOWN 0x01
+#define IO_GPIO_PULLUP 0x02
+
+#define IO_UART_OPEN 0x00
+#define IO_UART_WRITE 0x01
+#define IO_UART_READ 0x02
+#define IO_UART_READ_BYTES 0x03
+#define IO_UART_READ_BYTE 0x04
+#define IO_UART_AVAILABLE 0x05
+#define IO_UART_CLOSE 0x06

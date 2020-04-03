@@ -1,6 +1,12 @@
 #pragma once
+#define FEATURE_SERIAL
+#define FEATURE_GPIO
+#ifdef FEATURE_GPIO
 #include <wiringPi.h>
+#endif
+#ifdef FEATURE_SERIAL
 #include <wiringSerial.h>
+#endif
 #include <string>
 #include <vector>
 #include <map>
@@ -11,8 +17,6 @@ using namespace std;
 #define PULL_NONE 0
 #define PULL_DOWN 1
 #define PULL_UP 2
-#define FEATURE_SERIAL
-#define FEATURE_GPIO
 class IOManager
 {
 public:

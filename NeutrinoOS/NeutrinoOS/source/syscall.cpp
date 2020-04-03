@@ -364,17 +364,20 @@ vector<byte> syscall::systemCall(vector<byte> indata, nvm* v)
 			id = bitconverter::toint32(data, 1);
 			txt = bitconverter::tostring(data, 5);
 			ViewManager::views[id].elements.push_back(UISerialization::DeserializeElement(txt));
+			ViewManager::RenderView(ViewManager::views[ViewManager::activeView]);
 			break;
 		case uicmd::ModifyElement:
 			id = bitconverter::toint32(data, 1);
 			id2 = bitconverter::toint32(data, 5);
 			txt = bitconverter::tostring(data, 9);
 			*ViewManager::views[id].GetElementByID(id2) = UISerialization::DeserializeElement(txt);
+			ViewManager::RenderView(ViewManager::views[ViewManager::activeView]);
 			break;
 		case uicmd::DeleteElement:
 			id = bitconverter::toint32(data, 1);
 			id2 = bitconverter::toint32(data, 5);
 			ViewManager::views[id].elements.erase(ViewManager::views[id].elements.begin() + ViewManager::views[id].GetElementIndexByID(id2));
+			ViewManager::RenderView(ViewManager::views[ViewManager::activeView]);
 			break;
 		case uicmd::GetPropertyValue:
 			id = bitconverter::toint32(data, 1);
@@ -389,7 +392,7 @@ vector<byte> syscall::systemCall(vector<byte> indata, nvm* v)
 			bl = false;
 			txt1 = "";
 			txt2 = "";
-			for (int i = 1; i < txt.size(); i++)
+			for (int i = 0; i < txt.size(); i++)
 			{
 				if (txt[i] == ':' && txt[i - 1] != '\\')
 				{
@@ -399,6 +402,7 @@ vector<byte> syscall::systemCall(vector<byte> indata, nvm* v)
 				else if (bl) txt2 += txt[i];
 			}
 			ViewManager::views[id].elements[ViewManager::views[id].GetElementIndexByID(id2)].properties[txt1] = txt2;
+			ViewManager::RenderView(ViewManager::views[ViewManager::activeView]);
 			break;
 		case uicmd::SwitchView:
 			id = bitconverter::toint32(data, 1);

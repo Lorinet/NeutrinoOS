@@ -1,0 +1,13 @@
+NgeInitVideoDisplay:0
+NgeClearScreen:1
+NgeSetColor:2
+NgeDrawPoint:3
+NgeDrawRectangle:4
+NgeFillRectangle:5
+NgeDrawLine:6
+NgeSetFont:7
+NgeDrawString:8
+NgeSetPosition:9
+NgeSetBitmapDimensions:10
+NgeDrawXBMBitmap:11
+NgeGraphicsInterruptEx:12

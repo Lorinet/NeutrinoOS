@@ -13,7 +13,7 @@ int main(int argc, char* argv[])
 	{
 		//cout << "Neutrino OS Loader v1.0" << endl << "Usage: neutrino <program.lex>" << endl;
 		lvmgr::initialize("/neutrino");
-		vmmgr::createProcess("/neutrino/Neutrino/bin/clock.lex", true);
+		vmmgr::createProcess("/neutrino/Neutrino/bin/pins.lex", true);
 		vmmgr::start();
 	}
 }

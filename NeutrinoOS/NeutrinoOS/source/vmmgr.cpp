@@ -144,4 +144,5 @@ bool vmmgr::inputRequested(int pid)
 	{
 		return processes[pid].awaitin;
 	}
+	return false;
 }

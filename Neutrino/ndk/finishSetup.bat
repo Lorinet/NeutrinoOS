@@ -1,0 +1,3 @@
+@echo off
+echo Configuring Neutrino SDK...
+timeout 5
