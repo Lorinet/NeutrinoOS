@@ -1,0 +1,11 @@
+WMCreateWindow:0
+WMDestroyWindow:1
+WMAddUserElement:2
+WMSetUserElement:3
+WMRemoveUserElement:4
+WMReadElementProperty:5
+WMSetUserElementProperty:6
+WMSetActiveWindow:7
+WMUpdateView:8
+WMAttachEventHandler:9
+WMDetachEventHandler:10

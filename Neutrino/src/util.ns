@@ -1,0 +1,26 @@
+#exlink ReplaceChars
+
+:main
+ret
+
+:ReplaceChars
+pop _charb
+pop _chara
+pop _str
+size _str _length
+mov _length _sl
+dec _sl 1
+goto __repch1
+push _str
+ret
+:__repch1
+index _str _sl _charc
+cmp _charc _chara
+jeq __repch2
+dec _sl 1
+cmp _sl -1
+jne __repch1
+ret
+:__repch2
+inst _str _sl _charb
+ret
