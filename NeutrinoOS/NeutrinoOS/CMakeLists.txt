@@ -1,0 +1,6 @@
+﻿cmake_minimum_required (VERSION 3.8)
+add_executable (NeutrinoOS "components/TiwazUI/elements.cpp" "components/TiwazUI/gpio.cpp" "components/TiwazUI/graphics.cpp" "components/TiwazUI/inputmgr.cpp" "components/TiwazUI/uiserialization.cpp" "components/TiwazUI/view.cpp" "components/TiwazUI/viewmgr.cpp" "source/arrayobj.cpp" "source/bitconverter.cpp" "source/coreos.cpp" "source/disassembler.cpp" "source/dynamiclinker.cpp" "source/event.cpp" "source/filesystem.cpp" "source/input.cpp" "source/instruction.cpp" "source/iomgr.cpp" "source/lvmgr.cpp" "source/main.cpp" "source/networking.cpp" "source/nfsdimp.cpp" "source/ntime.cpp" "source/nvm.cpp" "source/syscall.cpp" "source/textscreen.cpp" "source/timer.cpp" "source/util.cpp" "source/vmmgr.cpp" "source/vt.cpp")
+target_include_directories(NeutrinoOS PRIVATE "include")
+target_include_directories(NeutrinoOS PRIVATE "components")
+target_link_libraries(NeutrinoOS PRIVATE "u8g2")
+target_link_libraries(NeutrinoOS PRIVATE "wiringPi")
