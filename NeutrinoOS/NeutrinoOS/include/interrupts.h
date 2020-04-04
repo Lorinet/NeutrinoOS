@@ -50,7 +50,22 @@ enum interrupts
 	TIMERINT = 0x3F,
 	PIN_INTERRUPT = 0x40,
 	SERIAL_INTERRUPT = 0x41,
+	NFS_INTERRUPT = 0x42,
 	UI_INTERRUPT = 0x47
+};
+enum nfscmd
+{
+	OPEN = 0x00,
+	CLOSE = 0x01,
+	CREATE = 0x02,
+	ERASE = 0x03,
+	ADDFILE = 0x04,
+	REMOVEFILE = 0x05,
+	WRITEFILE = 0x06,
+	READFILE = 0x07,
+	EXTRACTIMAGE = 0x08,
+	COPYFILE = 0x09,
+	MOVEFILE = 0x0A
 };
 enum procexih
 {

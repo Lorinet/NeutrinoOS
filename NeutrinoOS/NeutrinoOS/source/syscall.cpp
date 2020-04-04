@@ -426,6 +426,50 @@ vector<byte> syscall::systemCall(vector<byte> indata, nvm* v)
 #endif
 		}
 		break;
+	case NFS_INTERRUPT:
+		switch (data[0])
+		{
+		case nfscmd::OPEN:
+			return bitconverter::toarray(nfsmgr::OpenImage(bitconverter::tostring(data, 1), v->processid));
+		case nfscmd::CLOSE:
+			nfsmgr::CloseImage(bitconverter::toint32(data, 1), v->processid);
+			break;
+		case nfscmd::CREATE:
+			return bitconverter::toarray(nfsmgr::OpenImage(nfs(bitconverter::tostring(data, 1)), v->processid));
+		case nfscmd::ERASE:
+			nfsmgr::GetNFS(bitconverter::toint32(data, 1), v->processid)->Erase();
+			break;
+		case nfscmd::ADDFILE:
+			nfsmgr::GetNFS(bitconverter::toint32(data, 1), v->processid)->AddFile(bitconverter::tostring(data, 5));
+			break;
+		case nfscmd::REMOVEFILE:
+			nfsmgr::GetNFS(bitconverter::toint32(data, 1), v->processid)->RemoveFile(bitconverter::tostring(data, 5));
+			break;
+		case nfscmd::WRITEFILE:
+			id = bitconverter::toint32(data, 1);
+			txt = bitconverter::readto0(data, 5);
+			txt1 = bitconverter::tostring(data, 5 + txt.size());
+			nfsmgr::GetNFS(id, v->processid)->WriteFile(txt, bitconverter::toarray(txt1));
+			break;
+		case nfscmd::READFILE:
+			return nfsmgr::GetNFS(bitconverter::toint32(data, 1), v->processid)->ReadFile(bitconverter::tostring(data, 5));
+		case nfscmd::COPYFILE:
+			id = bitconverter::toint32(data, 1);
+			txt = bitconverter::readto0(data, 5);
+			txt1 = bitconverter::tostring(data, 5 + txt.size());
+			nfsmgr::GetNFS(id, v->processid)->CopyFile(txt, txt1);
+			break;
+		case nfscmd::MOVEFILE:
+			id = bitconverter::toint32(data, 1);
+			txt = bitconverter::readto0(data, 5);
+			txt1 = bitconverter::tostring(data, 5 + txt.size());
+			nfsmgr::GetNFS(id, v->processid)->MoveFile(txt, txt1);
+			break;
+		case nfscmd::EXTRACTIMAGE:
+			nfsmgr::GetNFS(bitconverter::toint32(data, 1), v->processid)->ExtractAllFiles(bitconverter::tostring(data, 5));
+			break;
+		}
+		break;
 	default:
 		break;
 	}

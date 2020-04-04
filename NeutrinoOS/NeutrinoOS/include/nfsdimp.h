@@ -22,6 +22,8 @@ private:
 	fstream fileio;
 public:
 	nfs(string file);
+	int ownerProcess;
+	string fileName;
 	static nfs CreateFSImage(string file);
 	static nfs CreateFSImage(string file, vector<string> files);
 	void AddFile(string file);
@@ -43,4 +45,13 @@ public:
 	void Commit();
 	void Erase();
 	void Release();
+};
+class nfsmgr
+{
+public:
+	static map<int, nfs> handles;
+	static int OpenImage(string filename, int process);
+	static void CloseImage(int hndl, int process);
+	static nfs* GetNFS(int hndl, int process);
+	static int OpenImage(nfs n, int process);
 };

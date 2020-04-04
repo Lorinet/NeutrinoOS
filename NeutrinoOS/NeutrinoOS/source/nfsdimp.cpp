@@ -1,6 +1,53 @@
 #include "nfsdimp.h"
+map<int, nfs> nfsmgr::handles;
+int nfsmgr::OpenImage(string filename, int process)
+{
+	for (pair<const int, nfs> const &p : handles)
+	{
+		if (p.second.fileName == filename) return -1;
+	}
+	int index = 0;
+	while (handles.find(index) != handles.end()) index++;
+	handles.insert({ index, nfs(filename) });
+	handles[index].ownerProcess = process;
+	return index;
+}
+int nfsmgr::OpenImage(nfs n, int process)
+{
+	for (pair<const int, nfs> const& p : handles)
+	{
+		if (p.second.fileName == n.fileName) return -1;
+	}
+	int index = 0;
+	while (handles.find(index) != handles.end()) index++;
+	handles.insert({ index, n });
+	handles[index].ownerProcess = process;
+	return index;
+}
+void nfsmgr::CloseImage(int hndl, int process)
+{
+	if (handles.find(hndl) != handles.end())
+	{
+		if (handles[hndl].ownerProcess == process)
+		{
+			handles.erase(hndl);
+		}
+	}
+}
+nfs* nfsmgr::GetNFS(int hndl, int process)
+{
+	if (handles.find(hndl) != handles.end())
+	{
+		if (handles[hndl].ownerProcess == process)
+		{
+			return &handles[hndl];
+		}
+	}
+	return NULL;
+}
 nfs::nfs(string file)
 {
+	fileName = file;
 	string filename = lvmgr::formatPath(file);
 	fileio = fstream(filename, ios::binary | ios::ate | ios::in | ios::out);
 	fileio.seekg(0, ios::end);

@@ -2,10 +2,9 @@
   "ExpandedNodes": [
     "",
     "\\NeutrinoOS",
-    "\\NeutrinoOS\\components",
-    "\\NeutrinoOS\\components\\TiwazUI",
+    "\\NeutrinoOS\\include",
     "\\NeutrinoOS\\source"
   ],
-  "SelectedNode": "\\NeutrinoOS\\components\\TiwazUI\\viewmgr.cpp",
+  "SelectedNode": "\\NeutrinoOS\\include\\interrupts.h",
   "PreviewInSolutionExplorer": false
 }

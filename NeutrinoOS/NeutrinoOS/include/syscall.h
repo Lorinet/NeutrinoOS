@@ -12,6 +12,7 @@
 #include "timer.h"
 #include "components.h"
 #include "iomgr.h"
+#include "nfsdimp.h"
 using namespace std;
 class nvm;
 class syscall
