@@ -54,10 +54,11 @@
   
 */
 
-
+#pragma once
 #ifndef _U8G2_H
 #define _U8G2_H
-
+#include "util.h"
+#ifdef __UNIX
 #include "u8x8.h"
 
 
@@ -2652,4 +2653,4 @@ extern const uint8_t u8g2_font_px437wyse700b_mn[] U8G2_FONT_SECTION("u8g2_font_p
 
 
 #endif
-
+#endif

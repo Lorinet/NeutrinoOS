@@ -18,6 +18,7 @@ string IOManager::GetPortNativeName(string dev)
 	string port = "COM" + dev[dev.size() - 1];
 	return port;
 #endif
+return "";
 }
 void IOManager::Initialize()
 {
@@ -36,6 +37,7 @@ int IOManager::UARTGetAvailableBytes(string dev)
 #if defined(__UNIX) && defined(FEATURE_SERIAL)
 	return serialDataAvail(SerialIndex[dev]);
 #endif
+return 0;
 }
 void IOManager::UARTFlush(string dev)
 {
@@ -48,6 +50,7 @@ byte IOManager::UARTReadByte(string dev)
 #if defined(__UNIX) && defined(FEATURE_SERIAL)
 	return serialGetchar(SerialIndex[dev]);
 #endif
+return 0;
 }
 vector<byte> IOManager::UARTRead(string dev)
 {
@@ -60,6 +63,7 @@ vector<byte> IOManager::UARTRead(string dev)
 	}
 	return v;
 #endif
+return vector<byte>();
 }
 vector<byte> IOManager::UARTReadBytes(string dev, int bytes)
 {
@@ -73,6 +77,7 @@ vector<byte> IOManager::UARTReadBytes(string dev, int bytes)
 	}
 	return v;
 #endif
+return vector<byte>();
 }
 void IOManager::UARTWrite(string dev, vector<byte> data)
 {
@@ -110,4 +115,5 @@ bool IOManager::PinRead(int pin)
 #if defined(__UNIX) && defined(FEATURE_GPIO)
 	return digitalRead(pin);
 #endif
+return false;
 }

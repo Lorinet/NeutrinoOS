@@ -1,18 +1,22 @@
 #include "syscall.h"
 #include "nvm.h"
-vector<byte> syscall::systemCall(vector<byte> indata, nvm* v)
+#include "vt.h"
+#include "event.h"
+string syscall::filename, syscall::files, syscall::folders, syscall::txt, syscall::txt1, syscall::txt2;
+Array<byte> syscall::contents, syscall::msg;
+unsigned int syscall::n;
+int syscall::proc, syscall::id, syscall::id2;
+byte syscall::c;
+bool syscall::bl;
+vt syscall::vi, syscall::vo;
+interrupts syscall::syscll;
+Array<byte> syscall::data;
+Array<byte> syscall::systemCall(byte* indata, int datasize, nvm* v)
 {
-	interrupts syscll = (interrupts)indata[0];
-	vector<byte> data;
-	for (unsigned int i = 1; i < indata.size(); i++) data.push_back(indata[i]);
-	string filename, files, folders, txt, txt1, txt2;
-	vector<byte> contents, msg;
-	unsigned int n;
-	int proc, id, id2;
-	byte c;
-	bool bl;
-	vt vi, vo;
+	syscll = (interrupts)indata[0];
+	data.clear();
 	eventid eid;
+	for (unsigned int i = 1; i < datasize; i++) data.push(indata[i]);
 #if defined(__SDL)
 	SDL_Color sc;
 #endif
@@ -36,8 +40,8 @@ vector<byte> syscall::systemCall(vector<byte> indata, nvm* v)
 			n += 1;
 		}
 		n += 4;
-		contents = vector<byte>(data.size() - filename.size() - 4);
-		while (n < data.size())
+		contents = Array<byte>(data.size - filename.size() - 4);
+		while (n < data.size)
 		{
 			contents[n - filename.size() - 4] = data[n];
 			n += 1;
@@ -63,7 +67,7 @@ vector<byte> syscall::systemCall(vector<byte> indata, nvm* v)
 	case interrupts::CGETK:
 		break;
 	case interrupts::START_PROCESS:
-		vmmgr::processes[bitconverter::toint32(data, 0)].suspended = false;
+		vmmgr::processes[bitconverter::toint32(data, 0)]->suspended = false;
 		break;
 	case interrupts::GETFILES:
 		id = 0;
@@ -73,8 +77,8 @@ vector<byte> syscall::systemCall(vector<byte> indata, nvm* v)
 		}
 		v->arrays.insert({ id, arrayobj() });
 		for (string s : file::getFiles(lvmgr::formatPath(bitconverter::tostring(data))))
-			v->arrays[id].data.push_back(bitconverter::toarray(s));
-		return bitconverter::toarray(id);
+			v->arrays[id].data.push(bitconverter::toArray(s));
+		return bitconverter::toArray(id);
 	case interrupts::GETDIRECTORIES:
 		id = 0;
 		while (v->arrays.find(id) != v->arrays.end())
@@ -83,12 +87,12 @@ vector<byte> syscall::systemCall(vector<byte> indata, nvm* v)
 		}
 		v->arrays.insert({ id, arrayobj() });
 		for (string s : file::getDirectories(lvmgr::formatPath(bitconverter::tostring(data))))
-			v->arrays[id].data.push_back(bitconverter::toarray(s));
-		return bitconverter::toarray(id);
+			v->arrays[id].data.push(bitconverter::toArray(s));
+		return bitconverter::toArray(id);
 	case interrupts::FILE_EXISTS:
-		return bitconverter::toarray(file::fileExists(lvmgr::formatPath(bitconverter::tostring(data))));
+		return bitconverter::toArray(file::fileExists(lvmgr::formatPath(bitconverter::tostring(data))));
 	case interrupts::FOLDER_EXISTS:
-		return bitconverter::toarray(file::directoryExists(lvmgr::formatPath(bitconverter::tostring(data))));
+		return bitconverter::toArray(file::directoryExists(lvmgr::formatPath(bitconverter::tostring(data))));
 	case interrupts::POWER:
 		if (vmmgr::activeProcess == v->processid)
 		{
@@ -109,12 +113,17 @@ vector<byte> syscall::systemCall(vector<byte> indata, nvm* v)
 			}
 		}
 		break;
-	case interrupts::SETTITLE:
-
+	case interrupts::GETFIRSTMSG:
+		if (v->messages.size > 0)
+		{
+			msg = v->messages[0];
+			v->messages.removeAt(0);
+			return msg;
+		}
 		break;
 	case interrupts::CREATE_PROCESS:
 		filename = lvmgr::formatPath(bitconverter::tostring(data));
-		return bitconverter::toarray(vmmgr::createProcess(filename, true));
+		return bitconverter::toArray(vmmgr::createProcess(filename, true));
 		break;
 	case interrupts::CREATE_BACKGROUND_PROCESS:
 		filename = bitconverter::tostring(data);
@@ -124,9 +133,8 @@ vector<byte> syscall::systemCall(vector<byte> indata, nvm* v)
 		vmmgr::terminateProcess(bitconverter::toint32(data, 0));
 		break;
 	case interrupts::GET_PROCESSID:
-		return bitconverter::toarray(v->processid);
+		return bitconverter::toArray(v->processid);
 	case interrupts::CLEAR_SCREEN:
-		v->outterm->buffer.clear();
 		break;
 	case interrupts::BUFFER_SCREEN:
 
@@ -139,7 +147,7 @@ vector<byte> syscall::systemCall(vector<byte> indata, nvm* v)
 		break;
 	case interrupts::CREATE_PROCESS_EX:
 		c = data[0];
-		data.erase(data.begin());
+		data.removeAt(0);
 		switch (c)
 		{
 		case procexih::STDIN_MSGOUT:
@@ -159,28 +167,28 @@ vector<byte> syscall::systemCall(vector<byte> indata, nvm* v)
 			vo = vt(0, v->processid, vtype::StandardOutput);
 			break;
 		}
-		filename = bitconverter::tostring(data);
-		return bitconverter::toarray(vmmgr::createProcessEx(filename, vi, vo));
+		filename = lvmgr::formatPath(bitconverter::tostring(data));
+		return bitconverter::toArray(vmmgr::createProcessEx(filename, vi, vo));
 		break;
 	case interrupts::SEND_PROC_INPUT:
 		proc = bitconverter::toint32(data, 0);
-		msg = vector<byte>();
-		for (n = 4; n < data.size(); n++) msg.push_back(data[n]);
-		msg.push_back('\n');
+		msg = Array<byte>();
+		for (n = 4; n < data.size; n++) msg.push(data[n]);
+		msg.push('\n');
 		vmmgr::sendInput(proc, msg);
 		break;
 	case interrupts::GETMSG:
-		if (v->messages.size() > 0)
+		if (v->messages.size > 0)
 		{
-			msg = v->messages.top();
+			msg = v->messages.getTop();
 			v->messages.pop();
 			return msg;
 		}
 		break;
 	case interrupts::SENDMSG:
 		proc = bitconverter::toint32(data, 0);
-		msg = vector<byte>();
-		for (n = 4; n < data.size(); n++) msg.push_back(data[n]);
+		msg = Array<byte>();
+		for (n = 4; n < data.size; n++) msg.push(data[n]);
 		vmmgr::sendMessage(proc, msg);
 		break;
 	case interrupts::AWAITMSG:
@@ -193,23 +201,23 @@ vector<byte> syscall::systemCall(vector<byte> indata, nvm* v)
 		v->waitForProcInput = bitconverter::toint32(data, 0);
 		break;
 	case interrupts::SUSPEND_PROCESS_EX:
-		vmmgr::processes[bitconverter::toint32(data, 0)].suspended = true;
+		vmmgr::processes[bitconverter::toint32(data, 0)]->suspended = true;
 		break;
 	case interrupts::GETINFOSTRING:
 		switch (data[0])
 		{
 		case 0x00:
-			return bitconverter::toarray(neutrinoOSVersion);
+			return bitconverter::toArray(neutrinoOSVersion);
 		case 0x01:
-			return bitconverter::toarray(aboutNeutrino);
+			return bitconverter::toArray(aboutNeutrino);
 		case 0x02:
-			return bitconverter::toarray(neutrinoDeviceType);
+			return bitconverter::toArray(neutrinoDeviceType);
 		case 0x03:
-			return bitconverter::toarray(neutrinoRuntimeVersion);
+			return bitconverter::toArray(neutrinoRuntimeVersion);
 		case 0x04:
-			return bitconverter::toarray(neutrinoBuildDate);
+			return bitconverter::toArray(neutrinoBuildDate);
 		case 0x05:
-			return bitconverter::toarray(neutrinoBuildNumber);
+			return bitconverter::toArray(neutrinoBuildNumber);
 		}
 		break;
 	case interrupts::ATTACH_EVENT_HANDLER:
@@ -237,31 +245,31 @@ vector<byte> syscall::systemCall(vector<byte> indata, nvm* v)
 		switch (data[0])
 		{
 		case timesel::TIME_HM:
-			return bitconverter::toarray(ntime::getTimeS());
+			return bitconverter::toArray(ntime::getTimeS());
 			break;
 		case timesel::TIME_HMS:
-			return bitconverter::toarray(ntime::getTimeWithSeconds());
+			return bitconverter::toArray(ntime::getTimeWithSeconds());
 			break;
 		case timesel::DATETIME:
-			return bitconverter::toarray(ntime::getDateTime());
+			return bitconverter::toArray(ntime::getDateTime());
 			break;
 		case timesel::HOUR:
-			return bitconverter::toarray(ntime::getHour());
+			return bitconverter::toArray(ntime::getHour());
 			break;
 		case timesel::MINUTE:
-			return bitconverter::toarray(ntime::getMinute());
+			return bitconverter::toArray(ntime::getMinute());
 			break;
 		case timesel::SECOND:
-			return bitconverter::toarray(ntime::getSecond());
+			return bitconverter::toArray(ntime::getSecond());
 			break;
 		case timesel::YEAR:
-			return bitconverter::toarray(ntime::getYear());
+			return bitconverter::toArray(ntime::getYear());
 			break;
 		case timesel::MONTH:
-			return bitconverter::toarray(ntime::getMonth());
+			return bitconverter::toArray(ntime::getMonth());
 			break;
 		case timesel::DAY:
-			return bitconverter::toarray(ntime::getDay());
+			return bitconverter::toArray(ntime::getDay());
 			break;
 		}
 		break;
@@ -272,13 +280,13 @@ vector<byte> syscall::systemCall(vector<byte> indata, nvm* v)
 	case interrupts::TIMERINT:
 		switch (data[0])
 		{
-		case timercmd::CREATE:
+		case timercmd::CREATE_TIMER:
 			id = 0;
 			while (v->timers.find(id) != v->timers.end()) id += 1;
 			v->timers.insert({ id, timerevt(bitconverter::toint32(data, 1), bitconverter::toint32(data, 5)) });
-			return bitconverter::toarray(id);
+			return bitconverter::toArray(id);
 			break;
-		case timercmd::DESTROY:
+		case timercmd::DESTROY_TIMER:
 			id = bitconverter::toint32(data, 1);
 			if (v->timers.find(id) != v->timers.end()) v->timers.erase(v->timers.find(id));
 			break;
@@ -290,7 +298,7 @@ vector<byte> syscall::systemCall(vector<byte> indata, nvm* v)
 			id = bitconverter::toint32(data, 1);
 			if (v->timers.find(id) != v->timers.end()) v->timers[id].loop = false;
 			break;
-		case timercmd::START:
+		case timercmd::START_TIMER:
 			id = bitconverter::toint32(data, 1);
 			if (v->timers.find(id) != v->timers.end())
 			{
@@ -298,7 +306,7 @@ vector<byte> syscall::systemCall(vector<byte> indata, nvm* v)
 				v->timers[id].running = true;
 			}
 			break;
-		case timercmd::STOP:
+		case timercmd::STOP_TIMER:
 			id = bitconverter::toint32(data, 1);
 			if (v->timers.find(id) != v->timers.end()) v->timers[id].running = false;
 			break;
@@ -312,7 +320,7 @@ vector<byte> syscall::systemCall(vector<byte> indata, nvm* v)
 			IOManager::PinMode(bitconverter::toint32(data, 1), bitconverter::toint32(data, 5), bitconverter::toint32(data, 9));
 			break;
 		case pinint::DIGITALREAD:
-			return vector<byte>({ (byte)IOManager::PinRead(bitconverter::toint32(data, 1)) });
+			return bitconverter::toArray((byte)IOManager::PinRead(bitconverter::toint32(data, 1)));
 		case pinint::DIGITALWRITE:
 			IOManager::PinWrite(bitconverter::toint32(data, 1), bitconverter::toint32(data, 5));
 			break;
@@ -353,9 +361,9 @@ vector<byte> syscall::systemCall(vector<byte> indata, nvm* v)
 		{
 #if defined(COMPONENT_TIWAZ)
 		case uicmd::CreateView:
-			id = ViewManager::CreateView(View(UISerialization::DeserializeView(bitconverter::tostring(data, 1))));
-			ViewManager::views[id].parentProcess = v->processid;
-			return bitconverter::toarray(id);
+			id = ViewManager::CreateView(UISerialization::DeserializeView(bitconverter::tostring(data, 1)));
+			ViewManager::views[id]->parentProcess = v->processid;
+			return bitconverter::toArray(id);
 			break;
 		case uicmd::DestroyView:
 			ViewManager::CloseView(bitconverter::toint32(data, 1));
@@ -363,27 +371,27 @@ vector<byte> syscall::systemCall(vector<byte> indata, nvm* v)
 		case uicmd::AddElement:
 			id = bitconverter::toint32(data, 1);
 			txt = bitconverter::tostring(data, 5);
-			ViewManager::views[id].elements.push_back(UISerialization::DeserializeElement(txt));
+			ViewManager::views[id]->elements.push(UISerialization::DeserializeElement(txt));
 			ViewManager::RenderView(ViewManager::views[ViewManager::activeView]);
 			break;
 		case uicmd::ModifyElement:
 			id = bitconverter::toint32(data, 1);
 			id2 = bitconverter::toint32(data, 5);
 			txt = bitconverter::tostring(data, 9);
-			*ViewManager::views[id].GetElementByID(id2) = UISerialization::DeserializeElement(txt);
+			*ViewManager::views[id]->GetElementByID(id2) = UISerialization::DeserializeElement(txt);
 			ViewManager::RenderView(ViewManager::views[ViewManager::activeView]);
 			break;
 		case uicmd::DeleteElement:
 			id = bitconverter::toint32(data, 1);
 			id2 = bitconverter::toint32(data, 5);
-			ViewManager::views[id].elements.erase(ViewManager::views[id].elements.begin() + ViewManager::views[id].GetElementIndexByID(id2));
+			ViewManager::views[id]->elements.removeAt(ViewManager::views[id]->GetElementIndexByID(id2));
 			ViewManager::RenderView(ViewManager::views[ViewManager::activeView]);
 			break;
 		case uicmd::GetPropertyValue:
 			id = bitconverter::toint32(data, 1);
 			id2 = bitconverter::toint32(data, 5);
 			txt = bitconverter::tostring(data, 9);
-			return bitconverter::toarray(ViewManager::views[id].elements[ViewManager::views[id].GetElementIndexByID(id2)].GetProperty(txt));
+			return bitconverter::toArray(ViewManager::views[id]->elements[ViewManager::views[id]->GetElementIndexByID(id2)].GetProperty(txt));
 			break;
 		case uicmd::SetPropertyValue:
 			id = bitconverter::toint32(data, 1);
@@ -401,7 +409,8 @@ vector<byte> syscall::systemCall(vector<byte> indata, nvm* v)
 				else if (!bl) txt1 += txt[i];
 				else if (bl) txt2 += txt[i];
 			}
-			ViewManager::views[id].elements[ViewManager::views[id].GetElementIndexByID(id2)].properties[txt1] = txt2;
+			cout << txt1 << " " << txt2 << endl;
+			ViewManager::views[id]->elements[ViewManager::views[id]->GetElementIndexByID(id2)].properties[txt1] = txt2;
 			ViewManager::RenderView(ViewManager::views[ViewManager::activeView]);
 			break;
 		case uicmd::SwitchView:
@@ -416,12 +425,12 @@ vector<byte> syscall::systemCall(vector<byte> indata, nvm* v)
 			id = bitconverter::toint32(data, 1);
 			id2 = bitconverter::toint32(data, 5);
 			proc = bitconverter::toint32(data, 9);
-			ViewManager::views[id].elements[ViewManager::views[id].GetElementIndexByID(id2)].eventHandler = proc;
+			ViewManager::views[id]->elements[ViewManager::views[id]->GetElementIndexByID(id2)].eventHandler = proc;
 			break;
 		case uicmd::DetachEventHandler:
 			id = bitconverter::toint32(data, 1);
 			id2 = bitconverter::toint32(data, 5);
-			ViewManager::views[id].elements[ViewManager::views[id].GetElementIndexByID(id2)].eventHandler = -1;
+			ViewManager::views[id]->elements[ViewManager::views[id]->GetElementIndexByID(id2)].eventHandler = -1;
 			break;
 #endif
 		}
@@ -430,12 +439,12 @@ vector<byte> syscall::systemCall(vector<byte> indata, nvm* v)
 		switch (data[0])
 		{
 		case nfscmd::OPEN:
-			return bitconverter::toarray(nfsmgr::OpenImage(bitconverter::tostring(data, 1), v->processid));
+			return bitconverter::toArray(nfsmgr::OpenImage(bitconverter::tostring(data, 1), v->processid));
 		case nfscmd::CLOSE:
 			nfsmgr::CloseImage(bitconverter::toint32(data, 1), v->processid);
 			break;
-		case nfscmd::CREATE:
-			return bitconverter::toarray(nfsmgr::OpenImage(nfs(bitconverter::tostring(data, 1)), v->processid));
+		case nfscmd::CREATE_NFS:
+			return bitconverter::toArray(nfsmgr::OpenImage(nfs(bitconverter::tostring(data, 1)), v->processid));
 		case nfscmd::ERASE:
 			nfsmgr::GetNFS(bitconverter::toint32(data, 1), v->processid)->Erase();
 			break;
@@ -473,5 +482,5 @@ vector<byte> syscall::systemCall(vector<byte> indata, nvm* v)
 	default:
 		break;
 	}
-	return vector<byte>();
+	return Array<byte>();
 }

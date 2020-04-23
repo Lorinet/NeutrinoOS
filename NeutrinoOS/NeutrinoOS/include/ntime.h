@@ -10,9 +10,7 @@ using namespace std;
 class ntime
 {
 public:
-#ifndef __ESP32
 	static chrono::time_point<chrono::steady_clock> starttmr;
-#endif
 	static int timeZone;
 	static void loadNetworkTime();
 	static time_t getTime();

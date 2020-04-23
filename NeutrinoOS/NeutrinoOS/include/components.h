@@ -1,5 +1,7 @@
 #pragma once
+#if defined(__HOLO)
 #define COMPONENT_TIWAZ
+#endif
 #ifdef COMPONENT_TIWAZ
 #include "TiwazUI/viewmgr.h"
 #include "TiwazUI/bitmaps.h"

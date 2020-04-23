@@ -1,8 +1,13 @@
 #pragma once
+#include "util.h"
+#if defined(__UNIX)
 extern "C" 
 { 
 #include <wiringPi.h> 
 }
+#elif defined(__ESP32)
+
+#endif
 #include "viewmgr.h"
 #define PIN_BACK 27
 #define PIN_ENTER 28

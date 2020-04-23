@@ -1,5 +1,5 @@
 #pragma once
-#include <vector>
+#include "containers.h"
 #include <map>
 #include <string>
 #include "util.h"
@@ -12,7 +12,7 @@ public:
 	static string formatPath(string path);
 	static void mount(string letter, string folder);
 	static void unmount(string letter);
-	static vector<string> getDrives();
+	static Array<string> getDrives();
 	static bool driveExists(string letter);
 };
 

@@ -20,7 +20,7 @@ enum interrupts
 	FILE_EXISTS = 0x21,
 	FOLDER_EXISTS = 0x22,
 	POWER = 0x23,
-	SETTITLE = 0x24,
+	GETFIRSTMSG = 0x24,
 	CREATE_PROCESS = 0x25,
 	KILL_PROCESS = 0x26,
 	GET_PROCESSID = 0x27,
@@ -57,7 +57,7 @@ enum nfscmd
 {
 	OPEN = 0x00,
 	CLOSE = 0x01,
-	CREATE = 0x02,
+	CREATE_NFS = 0x02,
 	ERASE = 0x03,
 	ADDFILE = 0x04,
 	REMOVEFILE = 0x05,
@@ -103,12 +103,12 @@ enum timesel
 };
 enum timercmd
 {
-	CREATE = 0x00,
-	DESTROY = 0x01,
+	CREATE_TIMER = 0x00,
+	DESTROY_TIMER = 0x01,
 	LOOP = 0x02,
 	ONCE = 0x03,
-	START = 0x04,
-	STOP = 0x05
+	START_TIMER = 0x04,
+	STOP_TIMER = 0x05
 };
 enum pinint
 {

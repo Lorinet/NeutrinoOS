@@ -81,7 +81,9 @@
     U8X8_MSG_DELAY_100NANO
     U8X8_MSG_DELAY_NANO
 */
-
+#pragma once
+#include "util.h"
+#ifdef __UNIX
 #ifndef _U8X8_H
 #define _U8X8_H
 
@@ -1049,3 +1051,4 @@ extern const uint8_t u8x8_font_pxplustandynewtv_u[] U8X8_FONT_SECTION("u8x8_font
 
 #endif  /* _U8X8_H */
 
+#endif /* __UNIX */

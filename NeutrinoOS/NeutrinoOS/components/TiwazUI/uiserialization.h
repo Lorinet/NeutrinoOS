@@ -3,11 +3,11 @@
 #include "elements.h"
 #include "util.h"
 #include <string>
-#include <vector>
+#include "containers.h"
 using namespace std;
 class UISerialization
 {
 public:
-	static View DeserializeView(string s);
+	static View* DeserializeView(string s);
 	static Element DeserializeElement(string s);
 };

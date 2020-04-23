@@ -1,30 +1,30 @@
 #include "uiserialization.h"
-View UISerialization::DeserializeView(string s)
+View* UISerialization::DeserializeView(string s)
 {
 	// Type:Button......|Type:Label.....
-	vector<string> elementser;
+	Array<string> elementser;
 	string cur = "";
 	cur += s[0];
 	for (int i = 1; i < s.size(); i++)
 	{
 		if (s[i] == '|' && s[i - 1] != '\\')
 		{
-			elementser.push_back(cur);
+			elementser.push(cur);
 			cur = "";
 		}
 		else cur += s[i];
 	}
-	vector<Element> elements;
-	for (int i = 0; i < elementser.size(); i++)
+	Array<Element> elements;
+	for (int i = 0; i < elementser.size; i++)
 	{
-		elements.push_back(DeserializeElement(elementser[i]));
+		elements.push(DeserializeElement(elementser[i]));
 	}
-	return View(elements);
+	return new View(elements);
 }
 Element UISerialization::DeserializeElement(string s)
 {
 	// Type:Button;Text:Buy: eggs\; milk;Width:45;...
-	vector<pair<string, string>> tokens;
+	Array<pair<string, string>> tokens;
 	string pname, pvalue = "";
 	pname += s[0];
 	bool cv = false;
@@ -35,7 +35,7 @@ Element UISerialization::DeserializeElement(string s)
 		{
 			cv = false;
 			pvalue = util::replaceAll(pvalue, "\\:", ":");
-			tokens.push_back({ pname, pvalue });
+			tokens.push({ pname, pvalue });
 			pname = "";
 			pvalue = "";
 		}
@@ -49,9 +49,9 @@ Element UISerialization::DeserializeElement(string s)
 		}
 	}
 	Element e;
-	for (pair<string, string> p : tokens)
+	for (int i = 0; i < tokens.size; i++)
 	{
-		e.properties.insert(p);
+		e.properties.emplace(tokens[i].first, tokens[i].second);
 	}
 	return e;
 }

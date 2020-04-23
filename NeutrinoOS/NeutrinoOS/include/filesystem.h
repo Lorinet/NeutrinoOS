@@ -12,16 +12,16 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #elif defined(__WIN32)
-#include "wdirent.h"
+//#include "wdirent.h"
 #endif
 using namespace std;
 class file
 {
 public:
-	static vector<byte> readAllBytes(string path);
-	static void readAllBytes(string path, vector<byte>* v);
+	static Array<byte> readAllBytes(string file);
+	static byte* readAllBytes(string path, int* size);
 	static string readAllText(string path);
-	static void writeAllBytes(string path, vector<byte> data);
+	static void writeAllBytes(string path, Array<byte> data);
 	static void writeAllText(string path, string text);
 	static void deleteFile(string path);
 	static void createFile(string path);

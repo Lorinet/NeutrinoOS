@@ -1,12 +1,12 @@
 #include "disassembler.h"
-vector<instruction> disassembler::disassembleExecutable(vector<byte> program)
+Array<instruction>* disassembler::disassembleExecutable(byte* program, int size)
 {
-	if (program.size() < 4) throw "Corrupted executable!";
+	//if (program.size() < 4) throw "Corrupted executable!";
 	string magic = "";
 	magic += program[0];
 	magic += program[1];
 	magic += program[2];
-	if (magic != "NEX") throw "Corrupted executable!";
+	//if (magic != "NEX") throw "Corrupted executable!";
 	byte rti = program[3];
 	int codeindex = 4;
 	if (rti == 'L')
@@ -20,18 +20,18 @@ vector<instruction> disassembler::disassembleExecutable(vector<byte> program)
 			secIterator += 1;
 		}
 	}
-	vector<byte> bc;
-	for (unsigned int i = codeindex; i < program.size(); i++)
+	byte* bc = new byte[size - codeindex];
+	for (unsigned int i = codeindex; i < size; i++)
 	{
-		bc.push_back(program[i]);
+		bc[i - codeindex] = program[i];
 	}
-	return disassembleCode(bc);
+	return disassembleCode(bc, size - codeindex);
 }
-vector<instruction> disassembler::disassembleCode(vector<byte> bc)
+Array<instruction>* disassembler::disassembleCode(byte* bc, int size)
 {
-	vector<instruction> instr;
+	Array<instruction>* instr = new Array<instruction>();
 	unsigned int cntr = 0;
-	while (cntr < bc.size())
+	while (cntr < size)
 	{
 		byte op = bc[cntr];
 		cntr += 1;
@@ -74,26 +74,24 @@ vector<instruction> disassembler::disassembleCode(vector<byte> bc)
 			length = bc[cntr];
 			cntr += 1;
 		}
-		vector<byte> parameters;
-		int paramindex = 0;
-		while (paramindex < length)
+		byte* parameters = new byte[length];
+		for(int i = 0; i < length; i++)
 		{
-			parameters.push_back(bc[cntr]);
-			cntr += 1;
-			paramindex += 1;
+			parameters[i] = bc[cntr];
+			cntr++;
 		}
-		instr.push_back(instruction((opcode)op, parameters));
+		instr->push(instruction((opcode)op, parameters, length));
 	}
 	return instr;
 }
-map<int, int> disassembler::extractExternalMethods(vector<byte> program)
+map<int, int> disassembler::extractExternalMethods(byte* program, int size)
 {
-	if (program.size() < 4) throw "Corrupted library!";
+	//if (program.size() < 4) throw "Corrupted library!";
 	string magic = "";
 	magic += program[0];
 	magic += program[1];
 	magic += program[2];
-	if (magic != "NEX") throw "Corrupted library!";
+	//if (magic != "NEX") throw "Corrupted library!";
 	byte rti = program[3];
 	int codeindex = 4;
 	if (rti == 'L')
@@ -104,7 +102,6 @@ map<int, int> disassembler::extractExternalMethods(vector<byte> program)
 		map<int, int> secs;
 		while (secIterator < numOfSec)
 		{
-			char c = ' ';
 			int sec = bitconverter::toint32(program, codeindex);
 			codeindex += 4;
 			int sa = bitconverter::toint32(program, codeindex);
@@ -114,5 +111,6 @@ map<int, int> disassembler::extractExternalMethods(vector<byte> program)
 		}
 		return secs;
 	}
-	else throw "Invalid library!";
+	//else throw "Invalid library!";
+	return map<int, int>();
 }

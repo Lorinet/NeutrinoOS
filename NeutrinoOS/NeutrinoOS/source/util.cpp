@@ -1,17 +1,5 @@
 #include "util.h"
-void util::remove(vector<byte> vc, int index)
-{
-	vc.erase(vc.begin() + index);
-}
-vector<byte> util::initvect(int capacity)
-{
-	vector<byte> v;
-	for (int i = 0; i < capacity; i++)
-	{
-		v.push_back(0);
-	}
-	return v;
-}
+#ifdef __cplusplus
 string util::replaceAll(string& source, const string& from, const string& to)
 {
 	string newString;
@@ -28,15 +16,8 @@ string util::replaceAll(string& source, const string& from, const string& to)
 	//source.swap(newString);
 	return newString;
 }
-bool util::contains(deque<int> d, int i)
-{
-	for (int j = 0; j < d.size(); j++)
-	{
-		if (d[j] == i) return true;
-	}
-	return false;
-}
 bool util::startsWith(string s, string sta)
 {
 	return s.rfind(sta, 0) == 0;
 }
+#endif

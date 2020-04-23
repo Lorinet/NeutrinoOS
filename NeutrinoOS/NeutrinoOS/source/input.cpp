@@ -17,11 +17,11 @@ void input::inputLoop(nvm* v)
 		if (v->interm->type == vtype::StandardInput)
 		{
 			v->interm->registerInputString(readLine());
-			v->interm->input.push_back('\n');
+			v->interm->input.push('\n');
 		}
 		else if (v->interm->type == vtype::Trash)
 		{
-			v->interm->input.push_back('\n');
+			v->interm->input.push('\n');
 		}
 	}
 }

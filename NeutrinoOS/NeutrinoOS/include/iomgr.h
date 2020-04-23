@@ -1,16 +1,16 @@
 #pragma once
-#define FEATURE_SERIAL
-#define FEATURE_GPIO
-#ifdef FEATURE_GPIO
+#include "util.h"
+//#define FEATURE_SERIAL
+//#define FEATURE_GPIO
+#if defined(FEATURE_GPIO) && defined(__UNIX)
 #include <wiringPi.h>
 #endif
-#ifdef FEATURE_SERIAL
+#if defined(FEATURE_SERIAL) && defined(__UNIX)
 #include <wiringSerial.h>
 #endif
 #include <string>
 #include <vector>
 #include <map>
-#include "util.h"
 #include "bitconverter.h"
 #include "filesystem.h"
 using namespace std;

@@ -1,0 +1,5 @@
+C:/Users/Andrei/Documents/GitHub/NeutrinoOS/NeutrinoOS/out/build/x86-Debug/CMakeFiles/edit_cache.dir
+C:/Users/Andrei/Documents/GitHub/NeutrinoOS/NeutrinoOS/out/build/x86-Debug/CMakeFiles/rebuild_cache.dir
+C:/Users/Andrei/Documents/GitHub/NeutrinoOS/NeutrinoOS/out/build/x86-Debug/NeutrinoOS/CMakeFiles/rebuild_cache.dir
+C:/Users/Andrei/Documents/GitHub/NeutrinoOS/NeutrinoOS/out/build/x86-Debug/NeutrinoOS/CMakeFiles/NeutrinoOS.dir
+C:/Users/Andrei/Documents/GitHub/NeutrinoOS/NeutrinoOS/out/build/x86-Debug/NeutrinoOS/CMakeFiles/edit_cache.dir

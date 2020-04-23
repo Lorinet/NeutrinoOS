@@ -21,6 +21,7 @@ private:
 	map<string, nfs_file> files;
 	fstream fileio;
 public:
+	nfs();
 	nfs(string file);
 	int ownerProcess;
 	string fileName;
@@ -38,7 +39,7 @@ public:
 	int ImageSize();
 	void ExtractFile(string filename, string destination);
 	void ExtractAllFiles(string destination);
-	vector<byte> ReadFile(string filename);
+	Array<byte> ReadFile(string filename);
 	void WriteFile(string filename, vector<byte> data);
 	void LoadFile(string name);
 	void LoadAllFiles();

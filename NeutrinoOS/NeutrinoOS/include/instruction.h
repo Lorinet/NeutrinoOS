@@ -7,6 +7,8 @@ class instruction
 {
 public:
 	opcode opCode;
-	vector<byte> parameters;
-	instruction(opcode op, vector<byte> params);
+	byte* parameters;
+	int psize;
+	instruction();
+	instruction(opcode op, byte* params, int size);
 };

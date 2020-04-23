@@ -1,5 +1,5 @@
 #pragma once
-#include <vector>
+#include "containers.h"
 #include <string>
 #include "util.h"
 #include "vmmgr.h"
@@ -10,8 +10,9 @@ class ntrevent
 {
 public:
 	byte id;
-	vector<vector<byte>> parameters;
-	ntrevent(byte i, vector<vector<byte>> p);
+	Array<Array<byte>> parameters;
+	ntrevent();
+	ntrevent(byte i, Array<Array<byte>> p);
 };
 
 enum eventid
@@ -64,7 +65,7 @@ enum eventid
 class events
 {
 public:
-	static vector<ntrevent> pending;
+	static Array<ntrevent> pending;
 	static int seconds;
 	static int minutes;
 	static int hours;

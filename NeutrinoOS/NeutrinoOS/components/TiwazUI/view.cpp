@@ -3,11 +3,50 @@ View::View()
 {
 	focusedElement = -1;
 }
-View::View(vector<Element> e)
+View::View(Array<Element> e)
 {
 	focusedElement = -1;
 	elements = e;
-	for (int i = 0; i < elements.size(); i++)
+	for (int i = 0; i < elements.size; i++)
+	{
+		if (elements[i].GetProperty("Selectable") == "1")
+		{
+			focusedElement = elements[i].GetPropertyInt("ID");
+			break;
+		}
+	}
+}
+View::View(View& other)
+{
+	focusedElement = -1;
+	elements = Array<Element>();
+	for(int i = 0; i < other.elements.size; i++)
+	{
+		elements.add(other.elements[i]);
+	}
+	for (int i = 0; i < elements.size; i++)
+	{
+		if (elements[i].GetProperty("Selectable") == "1")
+		{
+			focusedElement = elements[i].GetPropertyInt("ID");
+			break;
+		}
+	}
+}
+View::~View()
+{
+	elements.~Array();
+	focusedElement = -1;
+}
+void View::operator=(View& other)
+{
+	focusedElement = -1;
+	elements = Array<Element>();
+	for(int i = 0; i < other.elements.size; i++)
+	{
+		elements.add(other.elements[i]);
+	}
+	for (int i = 0; i < elements.size; i++)
 	{
 		if (elements[i].GetProperty("Selectable") == "1")
 		{
@@ -18,7 +57,7 @@ View::View(vector<Element> e)
 }
 Element* View::GetElementByID(int id)
 {
-	for (int i = 0; i < elements.size(); i++)
+	for (int i = 0; i < elements.size; i++)
 	{
 		if (elements[i].GetPropertyInt("ID") == id) return &elements[i];
 	}
@@ -26,7 +65,7 @@ Element* View::GetElementByID(int id)
 }
 int View::GetElementIndexByID(int id)
 {
-	for (int i = 0; i < elements.size(); i++)
+	for (int i = 0; i < elements.size; i++)
 	{
 		if (elements[i].GetPropertyInt("ID") == id) return i;
 	}
@@ -35,7 +74,7 @@ int View::GetElementIndexByID(int id)
 int View::GetLastIndex()
 {
 	int max = 0;
-	for (int i = 0; i < elements.size(); i++)
+	for (int i = 0; i < elements.size; i++)
 	{
 		if (max < elements[i].GetPropertyInt("ID")) max = elements[i].GetPropertyInt("ID");
 	}
@@ -43,7 +82,7 @@ int View::GetLastIndex()
 }
 bool View::ContainsSelectables()
 {
-	for (int i = 0; i < elements.size(); i++)
+	for (int i = 0; i < elements.size; i++)
 	{
 		if (elements[i].GetProperty("Selectable") == "1") 
 			return true;

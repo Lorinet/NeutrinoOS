@@ -1,12 +1,11 @@
 #pragma once
-#include <vector>
-#include <deque>
+#include "containers.h"
 #include "util.h"
 using namespace std;
 class arrayobj
 {
 public:
-	deque<vector<byte>> data;
+	Array<Array<byte>> data;
 	arrayobj();
 };
 

@@ -2,27 +2,29 @@
 map<int, nfs> nfsmgr::handles;
 int nfsmgr::OpenImage(string filename, int process)
 {
-	for (pair<const int, nfs> const &p : handles)
+	/*for (pair<const int, nfs> const &p : handles)
 	{
 		if (p.second.fileName == filename) return -1;
 	}
 	int index = 0;
 	while (handles.find(index) != handles.end()) index++;
-	handles.insert({ index, nfs(filename) });
+	handles.emplace(index, nfs(filename));
 	handles[index].ownerProcess = process;
-	return index;
+	return index;*/
+	return 0;
 }
 int nfsmgr::OpenImage(nfs n, int process)
 {
-	for (pair<const int, nfs> const& p : handles)
+	/*for (pair<const int, nfs> const& p : handles)
 	{
 		if (p.second.fileName == n.fileName) return -1;
 	}
 	int index = 0;
 	while (handles.find(index) != handles.end()) index++;
-	handles.insert({ index, n });
+	handles.emplace(index, n);
 	handles[index].ownerProcess = process;
-	return index;
+	return index;*/
+	return 0;
 }
 void nfsmgr::CloseImage(int hndl, int process)
 {
@@ -44,6 +46,10 @@ nfs* nfsmgr::GetNFS(int hndl, int process)
 		}
 	}
 	return NULL;
+}
+nfs::nfs()
+{
+
 }
 nfs::nfs(string file)
 {
@@ -86,13 +92,15 @@ nfs::nfs(string file)
 }
 nfs nfs::CreateFSImage(string file)
 {
-	vector<byte> b = vector<byte>({ 'N', 'F', 'S', 0, 0, 0, 0 });
+	Array<byte> b = Array<byte>();
+	b.add('N'); b.add('F'); b.add('S'); b.add(0); b.add(0); b.add(0); b.add(0);
 	file::writeAllBytes(lvmgr::formatPath(file), b);
 	return nfs(file);
 }
 nfs nfs::CreateFSImage(string file, vector<string> files)
 {
-	vector<byte> b = vector<byte>({ 'N', 'F', 'S', 0, 0, 0, 0 });
+	Array<byte> b = Array<byte>();
+	b.add('N'); b.add('F'); b.add('S'); b.add(0); b.add(0); b.add(0); b.add(0);
 	file::writeAllBytes(lvmgr::formatPath(file), b);
 	nfs n = nfs(file);
 	for (string s : files) n.AddFile(s);
@@ -100,18 +108,18 @@ nfs nfs::CreateFSImage(string file, vector<string> files)
 }
 void nfs::AddFile(string file)
 {
-	vector<byte> v = file::readAllBytes(file);
-	files.insert({ file, nfs_file(file, v.size(), 0) });
-	files[file].contents = reinterpret_cast<byte*>(v.data());
+	Array<byte> v = file::readAllBytes(file);
+	files.insert({ file, nfs_file(file, v.size, 0) });
+	files[file].contents = bitconverter::copy(v.holder, v.size);
 	Commit();
 }
 void nfs::AddFiles(vector<string> filelist)
 {
 	for (string s : filelist)
 	{
-		vector<byte> v = file::readAllBytes(s);
-		files.insert({ s, nfs_file(s, v.size(), 0) });
-		files[s].contents = reinterpret_cast<byte*>(v.data());
+		Array<byte> v = file::readAllBytes(s);
+		files.insert({ s, nfs_file(s, v.size, 0) });
+		files[s].contents = bitconverter::copy(v.holder, v.size);
 	}
 	Commit();
 }
@@ -168,16 +176,16 @@ void nfs::ExtractFile(string filename, string destination)
 	LoadFile(filename);
 	string dest = destination;
 	if (dest[dest.size() - 1] != '\\') dest += '\\';
-	file::writeAllBytes(lvmgr::formatPath(dest + filename), vector<byte>(files[filename].contents, files[filename].contents + files[filename].size));
+	file::writeAllBytes(lvmgr::formatPath(dest + filename), Array<byte>(files[filename].contents, files[filename].size));
 }
 void nfs::ExtractAllFiles(string destination)
 {
 	for (pair<string, nfs_file> p : files) ExtractFile(p.first, destination);
 }
-vector<byte> nfs::ReadFile(string filename)
+Array<byte> nfs::ReadFile(string filename)
 {
 	LoadFile(filename);
-	return vector<byte>(files[filename].contents, files[filename].contents + files[filename].size);
+	return Array<byte>(files[filename].contents, files[filename].size);
 }
 void nfs::WriteFile(string filename, vector<byte> data)
 {

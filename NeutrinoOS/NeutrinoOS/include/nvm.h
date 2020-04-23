@@ -1,8 +1,6 @@
 #pragma once
-#include <vector>
 #include <map>
 #include <stack>
-#include <deque>
 #include "opcode.h"
 #include "util.h"
 #include "syscall.h"
@@ -14,6 +12,8 @@
 #include "timer.h"
 #include "vt.h"
 #include "arrayobj.h"
+#include "containers.h"
+#include "memorystats.h"
 using namespace std;
 class vt;
 class timerevt;
@@ -23,16 +23,16 @@ public:
 	int lnkndx;
 	map<string, pair<int, int>> modules;
 	map<int, int> extcalls;
-	vector<instruction> bytecode;
-	map<int, map<int, vector<byte>>> memory;
+	Array<instruction>* bytecode;
+	map<int, map<int, Array<byte>>> memory;
 	map<int, arrayobj> arrays;
 	int curPage;
 	map<int, pair<int, int>> pages;
 	map<byte, int> eventHandlers;
 	map<int, timerevt> timers;
-	stack<vector<byte>> astack;
-	deque<int> callstack;
-	stack<vector<byte>> messages;
+	BufferedStack astack;
+	Array<int> callstack;
+	Array<Array<byte>> messages;
 	vt* interm;
 	vt* outterm;
 	bool awaitmsg;
@@ -48,8 +48,21 @@ public:
 	bool awaitin;
 	byte bits;
 	int waitForProcInput;
+
+	int k, k1, k2, cv1, cv2, addr, cmpi, cmpid, ii, sn;
+	unsigned int n;
+	Array<byte> v, v1, bl, t, pu, po, arr1, arr2;
+	map<int, int> sectionMap;
+	string rep, lnkf;
+	Array<instruction> emc;
+	byte inter;
+	map<string, int> adlinks;
+	char c;
+	instruction i;
+	byte* bp;
+
 	nvm();
-	nvm(vector<instruction> code);
+	nvm(Array<instruction>* code);
 	void start();
 	void start(int procid);
 	void cycle();

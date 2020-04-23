@@ -1,17 +1,17 @@
 #include "filesystem.h"
-#if defined(__UNIX)
+#if defined(__UNIX) || defined(__ESP32)
 #include <dirent.h>
 #elif defined(__WIN32)
-#include "wdirent.h"
+//#include "wdirent.h"
 #endif
-vector<byte> file::readAllBytes(string path)
+Array<byte> file::readAllBytes(string path)
 {
 	unsigned char* fcontent = NULL;
 	size_t fsize = 0;
 	FILE* f = fopen(path.c_str(), "rb");
 	if (f == NULL)
 	{
-		return vector<byte>();
+		return Array<byte>();
 	}
 	fseek(f, 0, SEEK_END);
 	fsize = ftell(f);
@@ -19,16 +19,17 @@ vector<byte> file::readAllBytes(string path)
 	fcontent = (unsigned char*)malloc(fsize);
 	fread(fcontent, 1, fsize, f);
 	fclose(f);
-	return vector<byte>(fcontent, fcontent + fsize);
+	return Array<byte>(fcontent, fsize);
 }
-void file::readAllBytes(string path, vector<byte>* v)
+byte* file::readAllBytes(string path, int* size)
 {
+	//cout << path << endl;
 	unsigned char* fcontent = NULL;
 	size_t fsize = 0;
 	FILE* f = fopen(path.c_str(), "rb");
 	if (f == NULL)
 	{
-		return;
+		return NULL;
 	}
 	fseek(f, 0, SEEK_END);
 	fsize = ftell(f);
@@ -36,17 +37,18 @@ void file::readAllBytes(string path, vector<byte>* v)
 	fcontent = (unsigned char*)malloc(fsize);
 	fread(fcontent, 1, fsize, f);
 	fclose(f);
-	v->assign(fcontent, fcontent + fsize);
+	*size = fsize;
+	return fcontent;
 }
 string file::readAllText(string path)
 {
 	return bitconverter::tostring(file::readAllBytes(path));
 }
-void file::writeAllBytes(string path, vector<byte> data)
+void file::writeAllBytes(string path, Array<byte> data)
 {
 	ofstream ofile(path);
 	ofile.seekp(0, ofile.beg);
-	for (int i = 0; i < data.size(); i++)
+	for (int i = 0; i < data.size; i++)
 	{
 		ofile.write((char*)&data[i], 1);
 	}
@@ -90,15 +92,16 @@ bool file::fileExists(string path)
 }
 bool file::directoryExists(string path)
 {
-	struct stat sb;
+	/*struct stat sb;
 	if (stat(path.c_str(), &sb) == 0 && S_ISDIR(sb.st_mode))
 		return true;
-	else return false;
+	else return false;*/
+	return false;
 }
 vector<string> file::getFiles(string path)
 {
 	vector<string> fls;
-	DIR* dir;
+	/*DIR* dir;
 	struct dirent* ent;
 	if ((dir = opendir(path.c_str())) != NULL)
 	{
@@ -112,13 +115,13 @@ vector<string> file::getFiles(string path)
 			}
 		}
 		closedir(dir);
-	}
+	}*/
 	return fls;
 }
 vector<string> file::getDirectories(string path)
 {
 	vector<string> fls;
-	DIR* dir;
+	/*DIR* dir;
 	struct dirent* ent;
 	if ((dir = opendir(path.c_str())) != NULL)
 	{
@@ -132,7 +135,7 @@ vector<string> file::getDirectories(string path)
 			}
 		}
 		closedir(dir);
-	}
+	}*/
 	if (find(fls.begin(), fls.end(), ".") != fls.end()) fls.erase(find(fls.begin(), fls.end(), "."));
 	if (find(fls.begin(), fls.end(), "..") != fls.end()) fls.erase(find(fls.begin(), fls.end(), ".."));
 	return fls;

@@ -1,16 +1,19 @@
 #pragma once
 #include <string>
-#include <vector>
+#include "containers.h"
 #include "elements.h"
 using namespace std;
 class View
 {
 public:
 	View();
-	View(vector<Element> e);
+	View(Array<Element> e);
+	View(View& other);
+	~View();
+	void operator=(View& other);
 	int focusedElement;
 	int parentProcess;
-	vector<Element> elements;
+	Array<Element> elements;
 	Element* GetElementByID(int id);
 	int GetElementIndexByID(int id);
 	int GetLastIndex();
