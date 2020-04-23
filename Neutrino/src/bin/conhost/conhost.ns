@@ -1,0 +1,40 @@
+; -----------------------------------------
+;  Neutrino Operating System Project
+;  Console host application
+; -----------------------------------------
+
+#include ConhostView.ns
+#include neutrino.ns
+
+:main
+link neutrino.lnx
+link userlib.lnx
+extcall NtrReceiveMessage
+spush EX_PROC_MSGIN_MSGOUT
+extcall NtrCreateProcessEx
+extcall NtrStartProcess
+call ConhostView_CreateView
+goto messageLoop
+ret
+
+:messageLoop
+extcall NtrAwaitMessage
+extcall NtrGetFirstMessage
+pop __ProcMesg
+push __ConhostView_hwnd
+spush 0
+spush "Text"
+extcall WMReadElementProperty
+pop __ConsoleText
+concat __ProcMesg __ConsoleText
+clr __ProcMesg
+str __ConsoleField "Text:"
+concat __ConsoleText __ConsoleField
+clr __ConsoleText
+push __ConhostView_hwnd
+spush 0
+push __ConsoleField
+extcall WMSetUserElementProperty
+clr __ConsoleField
+lj messageLoop
+ret

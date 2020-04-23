@@ -1,0 +1,18 @@
+; ConhostView View Layout
+
+:ConhostView_CreateView
+spush "ID:0;Type:TextField;Position X:0;Position Y:0;Width:0;Height:0;Font:Console 7;Border:0;|"
+extcall WMCreateWindow
+pop __ConhostView_hwnd ; Do not modify the handle variable!
+push __ConhostView_hwnd
+extcall WMSetActiveWindow
+extcall WMUpdateView
+ret
+
+:ConhostView_DestroyView
+push __ConhostView_hwnd
+extcall WMDestroyWindow
+ret
+
+; Auto-generated with Neutrino UI Design Tool
+; #include ConhostView.ns
