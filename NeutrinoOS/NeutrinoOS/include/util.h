@@ -8,7 +8,7 @@
 //#define __ESP32
 #define __WIN32
 //#define __UNIX
-#define __COREOS
+//#define __HOLO
 typedef unsigned char byte;
 #ifdef __cplusplus
 using namespace std;

@@ -1,12 +1,20 @@
 #pragma once
 #include "util.h"
 //#define FEATURE_SERIAL
-//#define FEATURE_GPIO
-#if defined(FEATURE_GPIO) && defined(__UNIX)
+#define FEATURE_GPIO
+#if defined(FEATURE_GPIO)
+#if defined(__UNIX)
 #include <wiringPi.h>
+#elif defined(__ESP32)
+#include "driver/gpio.h"
 #endif
-#if defined(FEATURE_SERIAL) && defined(__UNIX)
+#endif
+#if defined(FEATURE_SERIAL)
+#if defined(__UNIX)
 #include <wiringSerial.h>
+#elif defined(__ESP32)
+
+#endif
 #endif
 #include <string>
 #include <vector>

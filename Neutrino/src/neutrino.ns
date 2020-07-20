@@ -1,7 +1,7 @@
 ; -----------------------------------------------
-;  The Neutrino Operating System Project
+;  Neutrino Operating System Project
 ;  Neutrino OS System Library
-;  by Kovacs Lorand -- 2020.03.30.
+;  by Kovacs Lorand -- 2020.06.13.
 ; -----------------------------------------------
 
 #define COLOR_BLACK 0
@@ -27,6 +27,7 @@
 #define STRING_OS_NTR_RUNTIME_VERSION 0x03
 #define STRING_OS_BUILD_DATE 0x04
 #define STRING_OS_BUILD_NUMBER 0x05
+#define STRING_PLATFORM_ARCHITECTURE 0x06
 
 #define POWER_REBOOT 0x00
 #define POWER_SHUTDOWN 0x01
@@ -96,7 +97,7 @@
 
 #define SYSTEM_PRINT 0x10
 #define SYSTEM_NEWLINE 0x12
-#define SYSTEM_BCOLOR 0x13
+#define SYSTEM_GET_MESSAGE_COUNT 0x13
 #define SYSTEM_FCOLOR 0x14
 #define SYSTEM_FGETS 0x15
 #define SYSTEM_FPUTS 0x16
@@ -113,13 +114,13 @@
 #define SYSTEM_FILE_EXISTS 0x21
 #define SYSTEM_FOLDER_EXISTS 0x22
 #define SYSTEM_POWER 0x23
-#define SYSTEM_SET_WINDOW_TITLE 0x24
+#define SYSTEM_GET_FIRST_MESSAGE 0x24
 #define SYSTEM_CREATE_PROCESS 0x25
 #define SYSTEM_KILL_PROCESS 0x26
 #define SYSTEM_GET_PROCESSID 0x27
 #define SYSTEM_CREATE_BACKGROUND_PROCESS 0x28
-#define SYSTEM_CONSOLE_CLEAR_SCREEN 0x29
-#define SYSTEM_BUFFER_SCREEN 0x2A
+#define SYSTEM_SHUTDOWN_PROCESS 0x29
+#define SYSTEM_FORK_PROCESS 0x2A
 #define SYSTEM_RESTORE_SCREEN 0x2B
 #define SYSTEM_CONSOLE_PRINT_EDITABLE 0x2C
 #define SYSTEM_CREATE_PROCESS_EX 0x2D
@@ -148,9 +149,9 @@
 #exlink NtrConsolePrint
 #exlink NtrConsolePrintLine
 #exlink NtrConsoleNewLine
-#exlink NtrConsoleBackColor
+#exlink NtrGetMessageCount
 #exlink NtrConsoleForeColor
-#exlink NtrConsoleClearScreen
+#exlink NtrShutdownProcess
 #exlink NtrReadFile
 #exlink NtrWriteFile
 #exlink NtrDeleteFile
@@ -175,17 +176,16 @@
 #exlink NtrTerminateProcess
 #exlink NtrGetProcessId
 #exlink NtrCreateBackgroundProcess
-#exlink NtrBufferScreen
-#exlink NtrScreenRestore
+#exlink NtrForkProcess
+#exlink NtrRestoreScreen
 #exlink NtrConsolePrintEditable
 #exlink NtrProcWaitForInputRequest
 #exlink NtrCreateProcessEx
 #exlink NtrSendMessage
 #exlink NtrReceiveMessage
 #exlink NtrAwaitMessage
-#exlink NtrConsoleSetColor
 #exlink NtrGetInformationString
-#exlink NtrSetWindowTitle
+#exlink NtrGetFirstMessage
 #exlink NtrGraphicsInterrupt
 #exlink NtrAttachEventHandler
 #exlink NtrDetachEventHandler
@@ -219,9 +219,9 @@ ret
 int SYSTEM_NEWLINE
 ret
 
-:NtrConsoleBackColor
+:NtrGetMessageCount
 pop ___1
-int SYSTEM_BCOLOR ___1
+int SYSTEM_GET_MESSAGE_COUNT ___1
 ret
 
 :NtrConsoleForeColor
@@ -229,8 +229,8 @@ pop ___1
 int SYSTEM_FCOLOR ___1
 ret
 
-:NtrConsoleClearScreen
-int SYSTEM_CONSOLE_CLEAR_SCREEN
+:NtrShutdownProcess
+int SYSTEM_SHUTDOWN_PROCESS
 ret
 
 :NtrReadFile
@@ -337,7 +337,7 @@ ret
 :NtrCreateProcessEx
 pop ___1
 pop ___2
-str ___3 ""
+clr ___3
 append ___1 ___3
 concat ___2 ___3
 int SYSTEM_CREATE_PROCESS_EX ___3
@@ -354,7 +354,7 @@ ret
 
 :NtrTerminateProcess
 pop ___1
-int SYSTEM_KILL_PROCESS
+int SYSTEM_KILL_PROCESS ___1
 ret
 
 :NtrGetProcessId
@@ -366,11 +366,11 @@ pop ___1
 int SYSTEM_CREATE_BACKGROUND_PROCESS ___1
 ret
 
-:NtrBufferScreen
-int SYSTEM_BUFFER_SCREEN
+:NtrForkProcess
+int SYSTEM_FORK_PROCESS
 ret
 
-:NtrScreenRestore
+:NtrRestoreScreen
 int SYSTEM_RESTORE_SCREEN
 ret
 
@@ -397,19 +397,14 @@ ret
 int SYSTEM_PROC_AWAIT_MESSAGE
 ret
 
-:NtrConsoleSetColor
-call NtrConsoleForeColor
-call NtrConsoleBackColor
-ret
-
 :NtrGetInformationString
 pop ___1
 int SYSTEM_GET_INFO_STRING ___1
 ret
 
-:NtrSetWindowTitle
+:NtrGetFirstMessage
 pop ___1
-int SYSTEM_SET_WINDOW_TITLE ___1
+int SYSTEM_GET_FIRST_MESSAGE ___1
 ret
 
 :NtrGraphicsInterrupt
@@ -420,10 +415,10 @@ ret
 :NtrAttachEventHandler
 pop ___1
 pop ___2
+clr ___3
 append ___2 ___3
 concat ___1 ___3
 int SYSTEM_ATTACH_EVENT_HANDLER ___3
-clr ___3
 ret
 
 :NtrDetachEventHandler

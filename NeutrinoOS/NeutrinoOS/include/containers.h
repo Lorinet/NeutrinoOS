@@ -247,11 +247,27 @@ public:
 			behold[i] = other.holder[i];
 		}
 	}
+	void addRange(Array<T>* other)
+	{
+		T* behold = new T[size + other->size];
+		for (int i = 0; i < size; i++)
+		{
+			behold[i] = holder[i];
+		}
+		size = size + other->size;
+		for (int i = size - other->size; i < size; i++)
+		{
+			behold[i] = other->holder[i];
+		}
+	}
 	void clear()
 	{
-		delete[] holder;
-		holder = new T[0];
-		size = 0;
+		if(alive)
+		{
+			delete[] holder;
+			holder = new T[0];
+			size = 0;
+		}
 	}
 };
 template<class K, class V>

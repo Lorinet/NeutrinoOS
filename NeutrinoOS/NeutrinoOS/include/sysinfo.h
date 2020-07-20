@@ -1,6 +1,5 @@
 #pragma once
 #include "util.h"
-//#define __HOLO
 using namespace std;
 const string neutrinoOSVersion = "1.0f";
 const string neutrinoBuildNumber = "110";

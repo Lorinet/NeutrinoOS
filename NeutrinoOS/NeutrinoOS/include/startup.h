@@ -2,6 +2,7 @@
 #include <iostream>
 #include "vmmgr.h"
 #include "lvmgr.h"
+#include "iomgr.h"
 
 static void NeutrinoStartup()
 {
@@ -10,7 +11,9 @@ static void NeutrinoStartup()
 #elif defined(__UNIX) || defined(__ESP32)
 	lvmgr::initialize("/neutrino");
 #endif
-	int pid = vmmgr::createProcess(lvmgr::formatPath("0:\\Neutrino\\bin\\conhost.lex"), true);
-	vmmgr::sendMessage(pid, bitconverter::toArray("0:\\Neutrino\\bin\\hello.lex"));
+	IOManager::Initialize();
+	//int pid = vmmgr::createProcess(lvmgr::formatPath("0:\\Neutrino\\bin\\conhost.lex"), true);
+	//vmmgr::sendMessage(pid, bitconverter::toArray("0:\\Neutrino\\bin\\hello.lex"));
+	vmmgr::createProcess(lvmgr::formatPath("0:\\Neutrino\\bin\\pwrmenu.lex"), true);
 	vmmgr::start();
 }

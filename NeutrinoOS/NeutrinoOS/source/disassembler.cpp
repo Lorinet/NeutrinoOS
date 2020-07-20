@@ -53,7 +53,7 @@ Array<instruction>* disassembler::disassembleCode(byte* bc, int size)
 		{
 			length = 4;
 		}
-		else if (op == opcode::SPLIT || op == opcode::INDEX || op == opcode::INSERT || op == opcode::PUSHBLK || op == opcode::VAI)
+		else if (op == opcode::SPLIT || op == opcode::INDEX || op == opcode::INSERT || op == opcode::PUSHBLK || op == opcode::VAI || op == opcode::EXTMOVL)
 		{
 			length = 12;
 		}

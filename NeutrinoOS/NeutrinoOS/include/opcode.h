@@ -71,8 +71,9 @@ enum opcode
 	SJG = 0x73,
 	SJZ = 0x74,
 	SJNZ = 0x75,
-	VAL = 0x76,
-	VAS = 0x77,
+	VAL = 0x76, // array length
+	VAS = 0x77, // array set index
+    EXTMOVL = 0x78,
 	INTS = 0x80,
 	INTR = 0x81,
 	BREAK = 0x82,

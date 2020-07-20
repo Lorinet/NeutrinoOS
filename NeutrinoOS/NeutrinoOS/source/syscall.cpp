@@ -28,6 +28,9 @@ Array<byte> syscall::systemCall(byte* indata, int datasize, nvm* v)
 	case interrupts::NEWLN:
 		v->outterm->write("\n");
 		break;
+	case interrupts::GETNOMSG:
+		return bitconverter::toArray(v->messages.size);
+		break;
 	case interrupts::FGETS:
 		return file::readAllBytes(lvmgr::formatPath(bitconverter::tostring(data)));
 		break;
@@ -409,7 +412,6 @@ Array<byte> syscall::systemCall(byte* indata, int datasize, nvm* v)
 				else if (!bl) txt1 += txt[i];
 				else if (bl) txt2 += txt[i];
 			}
-			cout << txt1 << " " << txt2 << endl;
 			ViewManager::views[id]->elements[ViewManager::views[id]->GetElementIndexByID(id2)].properties[txt1] = txt2;
 			ViewManager::RenderView(ViewManager::views[ViewManager::activeView]);
 			break;
@@ -431,6 +433,10 @@ Array<byte> syscall::systemCall(byte* indata, int datasize, nvm* v)
 			id = bitconverter::toint32(data, 1);
 			id2 = bitconverter::toint32(data, 5);
 			ViewManager::views[id]->elements[ViewManager::views[id]->GetElementIndexByID(id2)].eventHandler = -1;
+			break;
+#else
+		case uicmd::GetPropertyValue:
+			return bitconverter::toArray("0");
 			break;
 #endif
 		}

@@ -127,15 +127,21 @@ void nvm::cycle()
 			break;
 		case opcode::CLR:
 			k = bitconverter::toint32(i.parameters, 0);
-			v = Array<byte>();
-			if (memory[curPage].find(k) != memory[curPage].end()) memory[curPage][k] = v;
-			else memory[curPage].emplace(k, v);
+			if (memory[curPage].find(k) != memory[curPage].end()) memory[curPage][k].clear();
+			else
+			{
+				v = Array<byte>();
+				memory[curPage].emplace(k, v);
+			}
 			break;
 		case opcode::CONCAT:
 			k1 = bitconverter::toint32(i.parameters, 0);
 			k2 = bitconverter::toint32(i.parameters, 4);
 			bl = memory[curPage][k2];
-			bl.insert(memory[curPage][k1], bl.size, 0, memory[curPage][k1].size);
+			for (n = 0; n < memory[curPage][k1].size; n++)
+			{
+				bl.push(memory[curPage][k1][n]);
+			}
 			memory[curPage][k2] = bl;
 			break;
 		case opcode::MOV:
@@ -214,11 +220,8 @@ void nvm::cycle()
 		case opcode::CONCATB:
 			k1 = i.parameters[0];
 			k2 = i.parameters[1];
-			bl = Array<byte>();
-			for (n = 0; n < memory[curPage][k2].size; n++)
-			{
-				bl.push(memory[curPage][k2][n]);
-			}
+			bl = memory[curPage][k2];
+			//bl.insert(&memory[curPage][k1], 0, 0, memory[curPage][k1].size);
 			for (n = 0; n < memory[curPage][k1].size; n++)
 			{
 				bl.push(memory[curPage][k1][n]);
@@ -235,9 +238,12 @@ void nvm::cycle()
 			break;
 		case opcode::CLRB:
 			k = i.parameters[0];
-			v = Array<byte>();
-			if (memory[curPage].find(k) != memory[curPage].end()) memory[curPage][k] = v;
-			else memory[curPage].emplace(k, v);
+			if (memory[curPage].find(k) != memory[curPage].end()) memory[curPage][k].clear();
+			else
+			{
+				v = Array<byte>();
+				memory[curPage].emplace(k, v);
+			}
 			break;
 		case opcode::VAC:
 			k1 = bitconverter::toint32(i.parameters, 0);

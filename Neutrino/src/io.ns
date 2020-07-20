@@ -23,21 +23,8 @@
 #define IO_UART_AVAILABLE 0x05
 #define IO_UART_CLOSE 0x06
 
-#exlink GPIOInitPin
-#exlink GPIOWritePin
-#exlink GPIOReadPin
-#exlink GPIOWritePWM
-#exlink UARTOpen
-#exlink UARTWrite
-#exlink UARTRead
-#exlink UARTReadByte
-#exlink UARTReadBytes
-#exlink UARTGetAvailableBytes
-#exlink UARTClose
-
-
 :main
-link neutrino.lnx
+link neutrino.ns
 ret
 
 :GPIOInitPin

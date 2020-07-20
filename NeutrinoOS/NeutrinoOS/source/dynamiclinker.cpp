@@ -17,6 +17,8 @@ void dynamiclinker::dynamicLink(nvm* v)
 	}
 	int sec;
 	string key;
+	int var;
+	byte* ab;
 	for (int i = 0; i < v->bytecode->size; i++)
 	{
 		if ((*v->bytecode)[i].opCode == opcode::EXTCALL)
@@ -25,6 +27,27 @@ void dynamiclinker::dynamicLink(nvm* v)
 			key = bitconverter::tostring((*v->bytecode)[i].parameters, 4, (*v->bytecode)[i].psize);
 			(*v->bytecode)[i].opCode = opcode::JMP;
 			(*v->bytecode)[i].parameters = bitconverter::toarray_p(offsets[key] + sections[key][sec]);
+		}
+		else if ((*v->bytecode)[i].opCode == opcode::EXTMOVL)
+		{
+			sec = bitconverter::toint32((*v->bytecode)[i].parameters, 0);
+			var = bitconverter::toint32((*v->bytecode)[i].parameters, 4);
+			key = bitconverter::tostring((*v->bytecode)[i].parameters, 8, (*v->bytecode)[i].psize);
+			(*v->bytecode)[i].opCode = opcode::ST;
+			(*v->bytecode)[i].psize = 8;
+			(*v->bytecode)[i].parameters = new byte[8];
+			ab = bitconverter::toarray_p(var);
+			for(int j = 0; j < 4; j++)
+			{
+				(*v->bytecode)[i].parameters[j] = ab[j];
+			}
+			delete[] ab;
+			ab = bitconverter::toarray_p(offsets[key] + sections[key][sec]);
+			for(int j = 0; j < 4; j++)
+			{
+				(*v->bytecode)[i].parameters[j + 4] = ab[j];
+			}
+			delete[] ab;
 		}
 	}
 	return;
@@ -133,14 +156,27 @@ void dynamiclinker::replaceModulesByName(Array<instruction>* dasm)
 	}
 	byte* modnm = NULL;
 	byte* sec = NULL;
+	byte* var = NULL;
+	int modind = 0;
 	for (int j = 0; j < dasm->size; j++)
 	{
 		if ((*dasm)[j].opCode == opcode::EXTCALL)
 		{
-			modnm = bitconverter::toarray_p(imods[bitconverter::toint32((*dasm)[j].parameters, 0)]);
+			modnm = bitconverter::toarray_p(imods[bitconverter::toint32((*dasm)[j].parameters, 0)] + '\0');
 			sec = bitconverter::toarray_p(bitconverter::toint32((*dasm)[j].parameters, 4));
 			(*dasm)[j].psize = imods[bitconverter::toint32((*dasm)[j].parameters, 0)].size() + 4;
 			(*dasm)[j].parameters = bitconverter::append(sec, 4, modnm, imods[bitconverter::toint32((*dasm)[j].parameters, 0)].size());
+		}
+		else if ((*dasm)[j].opCode == opcode::EXTMOVL)
+		{
+			modind = bitconverter::toint32((*dasm)[j].parameters, 0);
+			modnm = bitconverter::toarray_p(imods[modind] + '\0');
+			sec = bitconverter::toarray_p(bitconverter::toint32((*dasm)[j].parameters, 4));
+			var = bitconverter::toarray_p(bitconverter::toint32((*dasm)[j].parameters, 8));
+			(*dasm)[j].psize = imods[bitconverter::toint32((*dasm)[j].parameters, 0)].size() + 8;
+			(*dasm)[j].parameters = bitconverter::append(sec, 4, var, 4);
+			(*dasm)[j].parameters = bitconverter::append((*dasm)[j].parameters, 8, modnm, imods[modind].size());
+			cout << "";
 		}
 	}
 	if(modnm != NULL) delete modnm;

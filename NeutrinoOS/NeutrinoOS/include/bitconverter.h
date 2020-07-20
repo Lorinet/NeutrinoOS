@@ -21,6 +21,7 @@ public:
 	static string tostring(byte* vc, int size);
 	static string tostring(byte* vc, int off, int size);
 	static string readto0(Array<byte> vc, int off);
+	static string readto0(byte* vc, int size, int off);
 	static Array<byte> subvector(Array<byte> vc, int off);
 	static byte* copy(byte* b, int size);
 };

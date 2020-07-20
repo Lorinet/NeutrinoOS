@@ -3,7 +3,7 @@ enum interrupts
 {
 	PRINT = 0x10,
 	NEWLN = 0x12,
-	BCOLOR = 0x13,
+	GETNOMSG = 0x13,
 	FCOLOR = 0x14,
 	FGETS = 0x15,
 	FPUTS = 0x16,
@@ -126,4 +126,18 @@ enum serint
 	SERREADBYTE = 0x04,
 	SERAVAILABLE = 0x05,
 	SERCLOSE = 0x06
+};
+enum uicmd
+{
+	CreateView = 0,
+	DestroyView = 1,
+	AddElement = 2,
+	ModifyElement = 3,
+	DeleteElement = 4,
+	GetPropertyValue = 5,
+	SetPropertyValue = 6,
+	SwitchView = 7,
+	UpdateScreen = 8,
+	AttachEventHandler = 9,
+	DetachEventHandler = 10
 };

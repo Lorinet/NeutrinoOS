@@ -125,3 +125,13 @@ string bitconverter::readto0(Array<byte> vc, int off)
 	}
 	return s;
 }
+string bitconverter::readto0(byte* vc, int size, int off)
+{
+	string s = "";
+	for (int i = off; i < size; i++)
+	{
+		if (vc[i] == 0) break;
+		s += vc[i];
+	}
+	return s;
+}
