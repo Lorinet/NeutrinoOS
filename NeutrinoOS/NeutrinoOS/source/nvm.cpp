@@ -3,6 +3,7 @@
 #include "timer.h"
 nvm::nvm()
 {
+	fileName = "??";
 	bytecode = new Array<instruction>();
 	astack = BufferedStack(10);
 	eventHandlers = map<byte, int>();
@@ -28,6 +29,7 @@ nvm::nvm()
 }
 nvm::nvm(Array<instruction>* code)
 {
+	fileName = "??";
 	bytecode = code;
 	eventHandlers = map<byte, int>();
 	astack.top = -1;
@@ -59,8 +61,9 @@ void nvm::start()
 	eventsenabled = true;
 	bits = 32;
 }
-void nvm::start(int procid)
+void nvm::start(int procid, string file)
 {
+	fileName = file;
 	processid = procid;
 	start();
 }
@@ -147,7 +150,6 @@ void nvm::cycle()
 		case opcode::MOV:
 			k1 = bitconverter::toint32(i.parameters, 0);
 			k2 = bitconverter::toint32(i.parameters, 4);
-			memory[curPage][k2] = memory[curPage][k1];
 			if (memory[curPage].count(k2)) memory[curPage][k2] = memory[curPage][k1];
 			else memory[curPage].emplace(k2, memory[curPage][k1]);
 			break;
@@ -167,13 +169,19 @@ void nvm::cycle()
 			memory[curPage][k2] = pu;
 			break;
 		case opcode::INDEX:
-			v = memory[curPage][bitconverter::toint32(i.parameters, 0)];
 			k1 = bitconverter::toint32(memory[curPage][bitconverter::toint32(i.parameters, 4)], 0);
 			k2 = bitconverter::toint32(i.parameters, 8);
-			memory[curPage][k2] = bitconverter::toArray((int)v[k1]);
+			if (bits == 32)
+				memory[curPage][k2] = bitconverter::toArray((int)memory[curPage][bitconverter::toint32(i.parameters, 0)][k1]);
+			else if (bits == 8)
+			{
+				po = Array<byte>();
+				po.add(memory[curPage][bitconverter::toint32(i.parameters, 0)][k1]);
+				memory[curPage][k2] = Array<byte>(po);
+				po.clear();
+			}
 			break;
 		case opcode::INSERT:
-			v = memory[curPage][bitconverter::toint32(i.parameters, 0)];
 			k1 = bitconverter::toint32(memory[curPage][bitconverter::toint32(i.parameters, 4)], 0);
 			k2 = bitconverter::toint32(i.parameters, 8);
 			memory[curPage][bitconverter::toint32(i.parameters, 0)][k1] = memory[curPage][k2][0];
@@ -293,8 +301,8 @@ void nvm::cycle()
 			break;
 		case opcode::VAL:
 			k1 = bitconverter::toint32(memory[curPage][bitconverter::toint32(i.parameters, 0)], 0);
-			k2 = bitconverter::toint32(memory[curPage][bitconverter::toint32(i.parameters, 4)], 0);
-			memory[curPage][k2] = bitconverter::toArray(arrays[bitconverter::toint32(memory[curPage][k1], 0)].data.size);
+			k2 = bitconverter::toint32(i.parameters, 4);
+			memory[curPage][k2] = bitconverter::toArray(arrays[k1].data.size);
 			break;
 		case opcode::VAS:
 			k = bitconverter::toint32(memory[curPage][bitconverter::toint32(i.parameters, 0)], 0); // indexand
@@ -423,10 +431,6 @@ void nvm::cycle()
 		case opcode::JMP:
 			addr = bitconverter::toint32(i.parameters, 0);
 			branch(addr);
-			for (pair<int, pair<int, int>> p : pages)
-			{
-				if (p.second.first <= pc && p.second.second >= pc) curPage = p.first;
-			}
 			break;
 		case opcode::JEQ:
 			addr = bitconverter::toint32(i.parameters, 0);
@@ -572,6 +576,24 @@ void nvm::cycle()
 		case opcode::LJ:
 			pc = bitconverter::toint32(i.parameters, 0);
 			break;
+		case opcode::LJE:
+			if (equal) pc = bitconverter::toint32(i.parameters, 0);
+			break;
+		case opcode::LJNE:
+			if (!equal) pc = bitconverter::toint32(i.parameters, 0);
+			break;
+		case opcode::LJG:
+			if (greater) pc = bitconverter::toint32(i.parameters, 0);
+			break;
+		case opcode::LJL:
+			if (less) pc = bitconverter::toint32(i.parameters, 0);
+			break;
+		case opcode::LJGE:
+			if (equal || greater) pc = bitconverter::toint32(i.parameters, 0);
+			break;
+		case opcode::LJLE:
+			if (equal || less) pc = bitconverter::toint32(i.parameters, 0);
+			break;
 		case opcode::SJ:
 			branch((int)i.parameters[0]);
 			break;
@@ -716,6 +738,10 @@ void nvm::branch(int addr)
 {
 	callstack.push(pc);
 	pc = addr;
+	for (pair<int, pair<int, int>> p : pages)
+	{
+		if (p.second.first <= pc && p.second.second >= pc) curPage = p.first;
+	}
 }
 void nvm::halt()
 {

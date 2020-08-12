@@ -1,0 +1,31 @@
+:main
+link neutrino.lnx
+link util.lnx
+ldstr "0:\Neutrino\hello.lex"
+ldstr "\"
+extcall SplitString
+pop _spl
+val _spl _l
+tostr _l _ls
+push _ls
+extcall NtrConsolePrintLine
+str _i 0
+goto :loop
+push _spl
+ldstr "\"
+extcall RebuildString
+extcall NtrConsolePrintLine
+ret
+
+:loop
+cmp _i _l
+lje :done
+vai _spl _i _val
+push _val
+extcall NtrConsolePrintLine
+inc _i 1
+lj :loop
+ret
+
+:done
+ret

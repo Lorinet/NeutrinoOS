@@ -104,7 +104,7 @@ public:
 	}
 	void erase(int start, int length)
 	{
-		if (start >= 0 && start < size && start + length < size && start + length > 0)
+		if (start >= 0 && start < size && start + length <= size && start + length > 0)
 		{
 			int os = size;
 			size -= length;

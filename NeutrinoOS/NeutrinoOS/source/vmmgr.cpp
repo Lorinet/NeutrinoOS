@@ -3,8 +3,6 @@
 #include "vt.h"
 bool vmmgr::running = false;
 map<int, nvm*> vmmgr::processes;
-int vmmgr::activeProcess;
-int vmmgr::prevActiveProcess;
 vector<int> vmmgr::procidx;
 void vmmgr::start()
 {
@@ -18,14 +16,19 @@ void vmmgr::start()
 	running = true;
 	#ifdef __ESP32
 	int dog = 0;
+	esp_task_wdt_init(3, false);
 	#endif
 	while (running)
 	{
 		#ifdef __ESP32
-		if(dog == 10)
+		if(dog >= 100) 
 		{
-			vTaskDelay(1);
+			esp_task_wdt_reset();
 			dog = 0;
+		}
+		else
+		{
+			dog++;
 		}
 		#endif
 		stepAll();
@@ -38,9 +41,6 @@ void vmmgr::stepAll()
 		if (!processes[procidx[i]]->suspended)
 		{
 			input::inputLoop(processes[procidx[i]]);
-#if defined(COMPONENT_TIWAZ)
-			inputmgr::poll();
-#endif
 			if (processes[procidx[i]]->messages.size > 0) processes[procidx[i]]->awaitmsg = false;
 			processes[procidx[i]]->cycle();
 		}
@@ -51,12 +51,11 @@ void vmmgr::stepAll()
 		}
 	}
 	events::eventLoop();
+#if defined(COMPONENT_TIWAZ)
+	inputmgr::poll();
+#endif
 }
-int vmmgr::startProgram(string path, bool active)
-{
-	return createProcess(path, active);
-}
-int vmmgr::createProcess(string file, bool active)
+int vmmgr::createProcess(string file)
 {
 	int procid = 0;
 	//try
@@ -68,12 +67,7 @@ int vmmgr::createProcess(string file, bool active)
 		int progsize;
 		byte* pcode = file::readAllBytes(file, &progsize);
 		processes.insert({ procid, new nvm(disassembler::disassembleExecutable(pcode, progsize)) });
-		if (active)
-		{
-			prevActiveProcess = activeProcess;
-			activeProcess = procid;
-		}
-		processes[procid]->start(procid);
+		processes[procid]->start(procid, file);
 		procidx.push_back(procid);
 		return procid;
 	//}
@@ -97,7 +91,7 @@ int vmmgr::createProcessEx(string file, vt in, vt out)
 		processes.insert({ procid, new nvm(disassembler::disassembleExecutable(pcode, progsize)) });
 		*processes[procid]->interm = in;
 		*processes[procid]->outterm = out;
-		processes[procid]->start(procid);
+		processes[procid]->start(procid, file);
 		processes[procid]->suspended = true;
 		procidx.push_back(procid);
 		return procid;
@@ -113,11 +107,21 @@ void vmmgr::terminateProcess(int pid)
 	if (processes.count(pid))
 	{
 		processes.erase(pid);
-		if (pid == activeProcess)
+		procidx.erase(find(procidx.begin(), procidx.end(), pid));
+		#if defined(COMPONENT_TIWAZ)
+		Array<int> deathRow = Array<int>();
+		for(map<int, View *>::iterator it = ViewManager::views.begin(); it != ViewManager::views.end(); it++)
 		{
-			activeProcess = prevActiveProcess;
+			if(ViewManager::views[it->first]->parentProcess == pid)
+			{
+				deathRow.add(it->first);
+			}
 		}
-		procidx.erase(remove(procidx.begin(), procidx.end(), pid));
+		for(int i = 0; i < deathRow.size; i++)
+		{
+			ViewManager::CloseView(deathRow[i]);
+		}
+		#endif
 	}
 }
 void vmmgr::sendMessage(int pid, Array<byte> msg)
@@ -140,7 +144,7 @@ void vmmgr::sendInput(int pid, Array<byte> msg)
 void vmmgr::reload()
 {
 	suspend();
-	//processes = map<int, nvm>();
+	processes.clear();
 	start();
 }
 void vmmgr::suspend()
@@ -153,7 +157,25 @@ void vmmgr::vmmerror(string error)
 }
 void vmmgr::vmmerror(string error, int procid)
 {
-	cout << error << procid << endl;
+	if(processes.find(procid) != processes.end())
+	{
+		processes[procid]->running = false;
+		#ifdef __WIN32
+		string appname = util::getLast(processes[procid]->fileName, '\\');
+		#else
+		string appname = util::getLast(processes[procid]->fileName, '/');
+		#endif
+		if(file::fileExists(lvmgr::formatPath("0:\\Neutrino\\bin\\error.lex")))
+		{
+			int pid = createProcess(lvmgr::formatPath("0:\\Neutrino\\bin\\error.lex"));
+			sendMessage(pid, bitconverter::toArray("Application " + appname + " stopped working\\: " + util::replaceAll(error, ":", "\\:")));
+		}
+		cout << "ERROR: Application " << appname << " (" << procid << ") stopped working: " << error << endl;
+	}
+	else
+	{
+		cout << "ERROR: " << error << endl;
+	}
 }
 bool vmmgr::inputRequested(int pid)
 {

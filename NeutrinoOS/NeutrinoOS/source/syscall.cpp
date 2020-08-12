@@ -32,7 +32,15 @@ Array<byte> syscall::systemCall(byte* indata, int datasize, nvm* v)
 		return bitconverter::toArray(v->messages.size);
 		break;
 	case interrupts::FGETS:
-		return file::readAllBytes(lvmgr::formatPath(bitconverter::tostring(data)));
+		filename = lvmgr::formatPath(bitconverter::tostring(data));
+		if(file::fileExists(filename))
+		{
+			return file::readAllBytes(filename);
+		}
+		else
+		{
+			vmmgr::vmmerror("File not found: " + bitconverter::tostring(data), v->processid);
+		}
 		break;
 	case interrupts::FPUTS:
 		filename = "";
@@ -49,19 +57,51 @@ Array<byte> syscall::systemCall(byte* indata, int datasize, nvm* v)
 			contents[n - filename.size() - 4] = data[n];
 			n += 1;
 		}
-		file::writeAllBytes(lvmgr::formatPath(filename), contents);
+		filename = lvmgr::formatPath(filename);
+		if(file::fileExists(filename))
+		{
+			file::writeAllBytes(filename, contents);
+		}
+		else
+		{
+			vmmgr::vmmerror("File not found: " + bitconverter::tostring(data), v->processid);
+		}
 		break;
 	case interrupts::FDELETE:
-		file::deleteFile(lvmgr::formatPath(bitconverter::tostring(data)));
+		filename = lvmgr::formatPath(bitconverter::tostring(data));
+		if(file::fileExists(filename))
+		{
+			file::deleteFile(filename);
+		}
+		else
+		{
+			vmmgr::vmmerror("File not found: " + bitconverter::tostring(data), v->processid);
+		}
 		break;
 	case interrupts::FCREATE:
-		file::createFile(lvmgr::formatPath(bitconverter::tostring(data)));
+		filename = lvmgr::formatPath(bitconverter::tostring(data));
+		if(!file::fileExists(filename))
+		{
+			file::createFile(filename);
+		}
 		break;
 	case interrupts::DDELETE:
-		file::deleteDirectory(lvmgr::formatPath(bitconverter::tostring(data)));
+		filename = lvmgr::formatPath(bitconverter::tostring(data));
+		if(file::directoryExists(filename))
+		{
+			file::deleteDirectory(filename);
+		}
+		else
+		{
+			vmmgr::vmmerror("Folder not found: " + bitconverter::tostring(data), v->processid);
+		}
 		break;
 	case interrupts::DCREATE:
-		file::createDirectory(lvmgr::formatPath(bitconverter::tostring(data)));
+		filename = lvmgr::formatPath(bitconverter::tostring(data));
+		if(!file::directoryExists(filename))
+		{
+			file::createDirectory(filename);
+		}
 		break;
 	case interrupts::CGETS:
 		v->awaitin = true;
@@ -70,7 +110,15 @@ Array<byte> syscall::systemCall(byte* indata, int datasize, nvm* v)
 	case interrupts::CGETK:
 		break;
 	case interrupts::START_PROCESS:
-		vmmgr::processes[bitconverter::toint32(data, 0)]->suspended = false;
+		proc = bitconverter::toint32(data, 0);
+		if(vmmgr::processes.find(proc) == vmmgr::processes.end())
+		{
+			vmmgr::vmmerror("Can't find PID " + proc, v->processid);
+		}
+		else
+		{
+			vmmgr::processes[proc]->suspended = false;
+		}
 		break;
 	case interrupts::GETFILES:
 		id = 0;
@@ -79,9 +127,18 @@ Array<byte> syscall::systemCall(byte* indata, int datasize, nvm* v)
 			id++;
 		}
 		v->arrays.insert({ id, arrayobj() });
-		for (string s : file::getFiles(lvmgr::formatPath(bitconverter::tostring(data))))
-			v->arrays[id].data.push(bitconverter::toArray(s));
-		return bitconverter::toArray(id);
+		filename = lvmgr::formatPath(bitconverter::tostring(data));
+		if(file::directoryExists(filename))
+		{
+			for (string s : file::getFiles(filename))
+				v->arrays[id].data.push(bitconverter::toArray(s));
+			return bitconverter::toArray(id);
+		}
+		else
+		{
+			vmmgr::vmmerror("Folder not found: " + bitconverter::tostring(data), v->processid);
+		}
+		break;
 	case interrupts::GETDIRECTORIES:
 		id = 0;
 		while (v->arrays.find(id) != v->arrays.end())
@@ -89,20 +146,29 @@ Array<byte> syscall::systemCall(byte* indata, int datasize, nvm* v)
 			id++;
 		}
 		v->arrays.insert({ id, arrayobj() });
-		for (string s : file::getDirectories(lvmgr::formatPath(bitconverter::tostring(data))))
-			v->arrays[id].data.push(bitconverter::toArray(s));
-		return bitconverter::toArray(id);
+		filename = lvmgr::formatPath(bitconverter::tostring(data));
+		if(file::directoryExists(filename))
+		{
+			for (string s : file::getDirectories(filename))
+				v->arrays[id].data.push(bitconverter::toArray(s));
+			return bitconverter::toArray(id);
+		}
+		else
+		{
+			vmmgr::vmmerror("Folder not found: " + bitconverter::tostring(data), v->processid);
+		}
+		break;
 	case interrupts::FILE_EXISTS:
 		return bitconverter::toArray(file::fileExists(lvmgr::formatPath(bitconverter::tostring(data))));
 	case interrupts::FOLDER_EXISTS:
 		return bitconverter::toArray(file::directoryExists(lvmgr::formatPath(bitconverter::tostring(data))));
 	case interrupts::POWER:
-		if (vmmgr::activeProcess == v->processid)
+		switch (data[0])
 		{
-			switch (data[0])
-			{
 			case 0x00:
-				vmmgr::reload();
+				#ifdef __ESP32
+				esp_restart();
+				#endif
 				break;
 			case 0x01:
 				exit(0);
@@ -111,9 +177,7 @@ Array<byte> syscall::systemCall(byte* indata, int datasize, nvm* v)
 				vmmgr::reload();
 				break;
 			case 0x03:
-
-				break;
-			}
+			break;
 		}
 		break;
 	case interrupts::GETFIRSTMSG:
@@ -126,21 +190,35 @@ Array<byte> syscall::systemCall(byte* indata, int datasize, nvm* v)
 		break;
 	case interrupts::CREATE_PROCESS:
 		filename = lvmgr::formatPath(bitconverter::tostring(data));
-		return bitconverter::toArray(vmmgr::createProcess(filename, true));
+		if(file::fileExists(filename))
+		{
+        	return bitconverter::toArray(vmmgr::createProcess(filename));
+		}
+		else
+		{
+			vmmgr::vmmerror("Can't find file " + bitconverter::tostring(data), v->processid);
+		}
 		break;
 	case interrupts::CREATE_BACKGROUND_PROCESS:
-		filename = bitconverter::tostring(data);
-		vmmgr::startProgram(lvmgr::formatPath(filename), false);
 		break;
 	case interrupts::KILL_PROCESS:
-		vmmgr::terminateProcess(bitconverter::toint32(data, 0));
+		proc = bitconverter::toint32(data, 0);
+		if(vmmgr::processes.find(proc) == vmmgr::processes.end())
+		{
+			vmmgr::vmmerror("Can't find PID " + proc, v->processid);
+		}
+		else
+		{
+			vmmgr::terminateProcess(proc);
+		}
 		break;
 	case interrupts::GET_PROCESSID:
 		return bitconverter::toArray(v->processid);
-	case interrupts::CLEAR_SCREEN:
+	case interrupts::SHUTDOWN_PROCESS:
+		v->running = false;
 		break;
-	case interrupts::BUFFER_SCREEN:
-
+	case interrupts::FORK_PROCESS:
+		vmmgr::createProcess(v->fileName);
 		break;
 	case interrupts::RESTORE_SCREEN:
 
@@ -171,14 +249,28 @@ Array<byte> syscall::systemCall(byte* indata, int datasize, nvm* v)
 			break;
 		}
 		filename = lvmgr::formatPath(bitconverter::tostring(data));
-		return bitconverter::toArray(vmmgr::createProcessEx(filename, vi, vo));
+		if(file::fileExists(filename))
+		{
+			return bitconverter::toArray(vmmgr::createProcessEx(filename, vi, vo));
+		}
+		else
+		{
+			vmmgr::vmmerror("Can't find file " + bitconverter::tostring(data), v->processid);
+		}
 		break;
 	case interrupts::SEND_PROC_INPUT:
 		proc = bitconverter::toint32(data, 0);
 		msg = Array<byte>();
 		for (n = 4; n < data.size; n++) msg.push(data[n]);
 		msg.push('\n');
-		vmmgr::sendInput(proc, msg);
+		if(vmmgr::processes.find(proc) == vmmgr::processes.end())
+		{
+			vmmgr::vmmerror("Can't find PID " + proc, v->processid);
+		}
+		else
+		{
+			vmmgr::sendInput(proc, msg);
+		}
 		break;
 	case interrupts::GETMSG:
 		if (v->messages.size > 0)
@@ -192,19 +284,42 @@ Array<byte> syscall::systemCall(byte* indata, int datasize, nvm* v)
 		proc = bitconverter::toint32(data, 0);
 		msg = Array<byte>();
 		for (n = 4; n < data.size; n++) msg.push(data[n]);
-		vmmgr::sendMessage(proc, msg);
+		if(vmmgr::processes.find(proc) == vmmgr::processes.end())
+		{
+			vmmgr::vmmerror("Can't find PID " + proc, v->processid);
+		}
+		else
+		{
+			vmmgr::sendMessage(proc, msg);
+		}
 		break;
 	case interrupts::AWAITMSG:
 		v->awaitmsg = true;
 		break;
 	case interrupts::THROWERR:
-		vmmgr::vmmerror(bitconverter::tostring(data));
+		vmmgr::vmmerror(bitconverter::tostring(data), v->processid);
 		break;
 	case interrupts::WAIT_FOR_PROC_REQUEST_INPUT:
-		v->waitForProcInput = bitconverter::toint32(data, 0);
+		proc = bitconverter::toint32(data, 0);
+		if(vmmgr::processes.find(proc) == vmmgr::processes.end())
+		{
+			vmmgr::vmmerror("Can't find PID " + proc, v->processid);
+		}
+		else
+		{
+			v->waitForProcInput = proc;
+		}
 		break;
 	case interrupts::SUSPEND_PROCESS_EX:
-		vmmgr::processes[bitconverter::toint32(data, 0)]->suspended = true;
+		proc = bitconverter::toint32(data, 0);
+		if(vmmgr::processes.find(proc) == vmmgr::processes.end())
+		{
+			vmmgr::vmmerror("Can't find PID " + proc, v->processid);
+		}
+		else
+		{
+			vmmgr::processes[proc]->suspended = true;
+		}
 		break;
 	case interrupts::GETINFOSTRING:
 		switch (data[0])
@@ -221,6 +336,8 @@ Array<byte> syscall::systemCall(byte* indata, int datasize, nvm* v)
 			return bitconverter::toArray(neutrinoBuildDate);
 		case 0x05:
 			return bitconverter::toArray(neutrinoBuildNumber);
+		case 0x06:
+			return bitconverter::toArray(platformArch);
 		}
 		break;
 	case interrupts::ATTACH_EVENT_HANDLER:
@@ -412,7 +529,7 @@ Array<byte> syscall::systemCall(byte* indata, int datasize, nvm* v)
 				else if (!bl) txt1 += txt[i];
 				else if (bl) txt2 += txt[i];
 			}
-			ViewManager::views[id]->elements[ViewManager::views[id]->GetElementIndexByID(id2)].properties[txt1] = txt2;
+			ViewManager::views[id]->elements[ViewManager::views[id]->GetElementIndexByID(id2)].properties[txt1] = util::replaceAll(txt2, "\\:", ":");
 			ViewManager::RenderView(ViewManager::views[ViewManager::activeView]);
 			break;
 		case uicmd::SwitchView:

@@ -14,6 +14,6 @@ static void NeutrinoStartup()
 	IOManager::Initialize();
 	//int pid = vmmgr::createProcess(lvmgr::formatPath("0:\\Neutrino\\bin\\conhost.lex"), true);
 	//vmmgr::sendMessage(pid, bitconverter::toArray("0:\\Neutrino\\bin\\hello.lex"));
-	vmmgr::createProcess(lvmgr::formatPath("0:\\Neutrino\\bin\\pwrmenu.lex"), true);
+	vmmgr::createProcess(lvmgr::formatPath("0:\\Neutrino\\bin\\test.lex"));
 	vmmgr::start();
 }

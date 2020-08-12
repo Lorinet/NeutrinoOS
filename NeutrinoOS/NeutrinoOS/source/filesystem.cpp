@@ -92,31 +92,41 @@ bool file::fileExists(string path)
 }
 bool file::directoryExists(string path)
 {
-	/*struct stat sb;
+	/*#ifndef __ESP32
+	struct stat sb;
 	if (stat(path.c_str(), &sb) == 0 && S_ISDIR(sb.st_mode))
 		return true;
-	else return false;*/
+	else return false;
 	return false;
+	#else
+	return true;
+	#endif*/
+	return true;
 }
 vector<string> file::getFiles(string path)
 {
-	vector<string> fls;
-	/*DIR* dir;
+	/*vector<string> fls;
+	DIR* dir;
 	struct dirent* ent;
 	if ((dir = opendir(path.c_str())) != NULL)
 	{
 		while ((ent = readdir(dir)) != NULL)
 		{
+			#ifndef __ESP32
 			struct stat path_stat;
 			stat(ent->d_name, &path_stat);
 			if (S_ISREG(path_stat.st_mode))
 			{
 				fls.push_back(ent->d_name);
 			}
+			#else
+			fls.push_back(ent->d_name);
+			#endif
 		}
 		closedir(dir);
-	}*/
-	return fls;
+	}
+	return fls;*/
+	return vector<string>();
 }
 vector<string> file::getDirectories(string path)
 {

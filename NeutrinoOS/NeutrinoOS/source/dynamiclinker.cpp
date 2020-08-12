@@ -27,6 +27,7 @@ void dynamiclinker::dynamicLink(nvm* v)
 			key = bitconverter::tostring((*v->bytecode)[i].parameters, 4, (*v->bytecode)[i].psize);
 			(*v->bytecode)[i].opCode = opcode::JMP;
 			(*v->bytecode)[i].parameters = bitconverter::toarray_p(offsets[key] + sections[key][sec]);
+			(*v->bytecode)[i].psize = 4;
 		}
 		else if ((*v->bytecode)[i].opCode == opcode::EXTMOVL)
 		{
@@ -77,46 +78,55 @@ void dynamiclinker::link(Array<instruction>* v, map<string, int>* off, map<int, 
 					{
 						(*dasm)[j].opCode = opcode::JMP;
 						(*dasm)[j].parameters = bitconverter::toarray_p(((int)(*dasm)[j].parameters[0]) + v->size);
+						(*dasm)[j].psize = 4;
 					}
 					else if ((*dasm)[j].opCode == opcode::SJE)
 					{
 						(*dasm)[j].opCode = opcode::JEQ;
 						(*dasm)[j].parameters = bitconverter::toarray_p(((int)(*dasm)[j].parameters[0]) + v->size);
+						(*dasm)[j].psize = 4;
 					}
 					else if ((*dasm)[j].opCode == opcode::SJNE)
 					{
 						(*dasm)[j].opCode = opcode::JNE;
 						(*dasm)[j].parameters = bitconverter::toarray_p(((int)(*dasm)[j].parameters[0]) + v->size);
+						(*dasm)[j].psize = 4;
 					}
 					else if ((*dasm)[j].opCode == opcode::SJL)
 					{
 						(*dasm)[j].opCode = opcode::JLT;
 						(*dasm)[j].parameters = bitconverter::toarray_p(((int)(*dasm)[j].parameters[0]) + v->size);
+						(*dasm)[j].psize = 4;
 					}
 					else if ((*dasm)[j].opCode == opcode::SJG)
 					{
 						(*dasm)[j].opCode = opcode::JGT;
 						(*dasm)[j].parameters = bitconverter::toarray_p(((int)(*dasm)[j].parameters[0]) + v->size);
+						(*dasm)[j].psize = 4;
 					}
 					else if ((*dasm)[j].opCode == opcode::SJLE)
 					{
 						(*dasm)[j].opCode = opcode::JLE;
 						(*dasm)[j].parameters = bitconverter::toarray_p(((int)(*dasm)[j].parameters[0]) + v->size);
+						(*dasm)[j].psize = 4;
 					}
 					else if ((*dasm)[j].opCode == opcode::SJGE)
 					{
 						(*dasm)[j].opCode = opcode::JGE;
 						(*dasm)[j].parameters = bitconverter::toarray_p(((int)(*dasm)[j].parameters[0]) + v->size);
+						(*dasm)[j].psize = 4;
 					}
 					else if ((*dasm)[j].opCode == opcode::SJZ)
 					{
 						(*dasm)[j].opCode = opcode::JZ;
 						(*dasm)[j].parameters = bitconverter::toarray_p(((int)(*dasm)[j].parameters[0]) + v->size);
+						(*dasm)[j].psize = 4;
 					}
 					else if ((*dasm)[j].opCode == opcode::SJNZ)
 					{
 						(*dasm)[j].opCode = opcode::JNZ;
 						(*dasm)[j].parameters = bitconverter::toarray_p(((int)(*dasm)[j].parameters[0]) + v->size);
+						(*dasm)[j].psize = 4;
 					}
 					else if ((*dasm)[j].opCode == opcode::MOVL)
 					{
@@ -128,6 +138,70 @@ void dynamiclinker::link(Array<instruction>* v, map<string, int>* off, map<int, 
 						(*dasm)[j].parameters[6] = vv[2];
 						(*dasm)[j].parameters[7] = vv[3];
 						delete vv;
+					}
+					else if((*dasm)[j].opCode == opcode::JMP)
+					{
+						(*dasm)[j].parameters = bitconverter::toarray_p(bitconverter::toint32((*dasm)[j].parameters, 0) + v->size);
+					}
+					else if ((*dasm)[j].opCode == opcode::JEQ)
+					{
+						(*dasm)[j].parameters = bitconverter::toarray_p(bitconverter::toint32((*dasm)[j].parameters, 0) + v->size);
+					}
+					else if ((*dasm)[j].opCode == opcode::JNE)
+					{
+						(*dasm)[j].parameters = bitconverter::toarray_p(bitconverter::toint32((*dasm)[j].parameters, 0) + v->size);
+					}
+					else if ((*dasm)[j].opCode == opcode::JLT)
+					{
+						(*dasm)[j].parameters = bitconverter::toarray_p(bitconverter::toint32((*dasm)[j].parameters, 0) + v->size);
+					}
+					else if ((*dasm)[j].opCode == opcode::JGT)
+					{
+						(*dasm)[j].parameters = bitconverter::toarray_p(bitconverter::toint32((*dasm)[j].parameters, 0) + v->size);
+					}
+					else if ((*dasm)[j].opCode == opcode::JGE)
+					{
+						(*dasm)[j].parameters = bitconverter::toarray_p(bitconverter::toint32((*dasm)[j].parameters, 0) + v->size);
+					}
+					else if ((*dasm)[j].opCode == opcode::JLE)
+					{
+						(*dasm)[j].parameters = bitconverter::toarray_p(bitconverter::toint32((*dasm)[j].parameters, 0) + v->size);
+					}
+					else if ((*dasm)[j].opCode == opcode::JZ)
+					{
+						(*dasm)[j].parameters = bitconverter::toarray_p(bitconverter::toint32((*dasm)[j].parameters, 0) + v->size);
+					}
+					else if ((*dasm)[j].opCode == opcode::JNZ)
+					{
+						(*dasm)[j].parameters = bitconverter::toarray_p(bitconverter::toint32((*dasm)[j].parameters, 0) + v->size);
+					}
+					else if ((*dasm)[j].opCode == opcode::LJ)
+					{
+						(*dasm)[j].parameters = bitconverter::toarray_p(bitconverter::toint32((*dasm)[j].parameters, 0) + v->size);
+					}
+					else if ((*dasm)[j].opCode == opcode::LJE)
+					{
+						(*dasm)[j].parameters = bitconverter::toarray_p(bitconverter::toint32((*dasm)[j].parameters, 0) + v->size);
+					}
+					else if ((*dasm)[j].opCode == opcode::LJNE)
+					{
+						(*dasm)[j].parameters = bitconverter::toarray_p(bitconverter::toint32((*dasm)[j].parameters, 0) + v->size);
+					}
+					else if ((*dasm)[j].opCode == opcode::LJL)
+					{
+						(*dasm)[j].parameters = bitconverter::toarray_p(bitconverter::toint32((*dasm)[j].parameters, 0) + v->size);
+					}
+					else if ((*dasm)[j].opCode == opcode::LJG)
+					{
+						(*dasm)[j].parameters = bitconverter::toarray_p(bitconverter::toint32((*dasm)[j].parameters, 0) + v->size);
+					}
+					else if ((*dasm)[j].opCode == opcode::LJLE)
+					{
+						(*dasm)[j].parameters = bitconverter::toarray_p(bitconverter::toint32((*dasm)[j].parameters, 0) + v->size);
+					}
+					else if ((*dasm)[j].opCode == opcode::LJGE)
+					{
+						(*dasm)[j].parameters = bitconverter::toarray_p(bitconverter::toint32((*dasm)[j].parameters, 0) + v->size);
 					}
 				}
 				pages->insert({ *ndx, pair<int, int>(v->size, v->size + dasm->size - 1) });
@@ -176,7 +250,6 @@ void dynamiclinker::replaceModulesByName(Array<instruction>* dasm)
 			(*dasm)[j].psize = imods[bitconverter::toint32((*dasm)[j].parameters, 0)].size() + 8;
 			(*dasm)[j].parameters = bitconverter::append(sec, 4, var, 4);
 			(*dasm)[j].parameters = bitconverter::append((*dasm)[j].parameters, 8, modnm, imods[modind].size());
-			cout << "";
 		}
 	}
 	if(modnm != NULL) delete modnm;

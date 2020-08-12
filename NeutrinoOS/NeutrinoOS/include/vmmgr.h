@@ -9,6 +9,7 @@
 #ifdef __ESP32
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "esp_task_wdt.h"
 #endif
 using namespace std;
 class nvm;
@@ -19,12 +20,9 @@ public:
 	static bool running;
 	static map<int, nvm*> processes;
 	static vector<int> procidx;
-	static int activeProcess;
-	static int prevActiveProcess;
 	static void start();
 	static void stepAll();
-	static int startProgram(string path, bool active);
-	static int createProcess(string file, bool active);
+	static int createProcess(string file);
 	static int createProcessEx(string file, vt in, vt out);
 	static void terminateProcess(int pid);
 	static void sendMessage(int pid, Array<byte> msg);

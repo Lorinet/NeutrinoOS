@@ -16,6 +16,13 @@ string util::replaceAll(string& source, const string& from, const string& to)
 	//source.swap(newString);
 	return newString;
 }
+string util::getLast(string str, char del)
+{
+	stringstream ss = stringstream(str);
+	string sec = "";
+	while(getline(ss, sec, del));
+	return sec;
+}
 bool util::startsWith(string s, string sta)
 {
 	return s.rfind(sta, 0) == 0;

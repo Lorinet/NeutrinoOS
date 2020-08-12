@@ -74,6 +74,12 @@ enum opcode
 	VAL = 0x76, // array length
 	VAS = 0x77, // array set index
     EXTMOVL = 0x78,
+	LJL = 0x79,
+	LJG = 0x7A,
+	LJE = 0x7B,
+	LJNE = 0x7C,
+	LJGE = 0x7D,
+	LJLE = 0x7E,
 	INTS = 0x80,
 	INTR = 0x81,
 	BREAK = 0x82,

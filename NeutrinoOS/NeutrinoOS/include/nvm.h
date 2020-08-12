@@ -33,6 +33,7 @@ public:
 	BufferedStack astack;
 	Array<int> callstack;
 	Array<Array<byte>> messages;
+	string fileName;
 	vt* interm;
 	vt* outterm;
 	bool awaitmsg;
@@ -64,7 +65,7 @@ public:
 	nvm();
 	nvm(Array<instruction>* code);
 	void start();
-	void start(int procid);
+	void start(int procid, string file);
 	void cycle();
 	void branch(int addr);
 	void halt();
