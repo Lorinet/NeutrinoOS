@@ -1,9 +1,6 @@
 {
   "ExpandedNodes": [
-    "",
-    "\\NeutrinoOS",
-    "\\NeutrinoOS\\include",
-    "\\NeutrinoOS\\source"
+    ""
   ],
   "SelectedNode": "\\CMakeLists.txt",
   "PreviewInSolutionExplorer": false

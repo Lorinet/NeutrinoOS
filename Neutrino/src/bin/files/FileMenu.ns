@@ -1,8 +1,7 @@
 ; FileMenu View Layout
 
 :FileMenu_CreateView
-spush "ID:0;Type:ListView;Font:Helvetica 8;Items:Open,Open with
-+,Copy,Move,New,Cancel,Exit Files,;|ID:1;Type:WakeOnInteraction;|"
+spush "ID:0;Type:ListView;Font:Helvetica 8;Items:Open,Open with,Copy,Move,New,Cancel,Exit Files,;|ID:1;Type:WakeOnInteraction;|"
 extcall WMCreateWindow
 pop __FileMenu_hwnd ; Do not modify the handle variable!
 push __FileMenu_hwnd
