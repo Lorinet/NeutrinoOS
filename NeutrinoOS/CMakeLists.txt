@@ -7,6 +7,5 @@ target_link_libraries(NeutrinoOS PRIVATE "u8g2")
 target_link_libraries(NeutrinoOS PRIVATE "wiringPi")
 ]]
 add_executable (NeutrinoOS "main.cpp" "source/arrayobj.cpp" "source/bitconverter.cpp" "source/disassembler.cpp" "source/dynamiclinker.cpp" "source/event.cpp" "source/filesystem.cpp" "source/input.cpp" "source/instruction.cpp" "source/iomgr.cpp" "source/lvmgr.cpp" "source/nfsdimp.cpp" "source/ntime.cpp" "source/nvm.cpp" "source/syscall.cpp" "source/timer.cpp" "source/util.cpp" "source/vmmgr.cpp" "source/vt.cpp")
-
 target_include_directories(NeutrinoOS PRIVATE "include")
 target_include_directories(NeutrinoOS PRIVATE "components")

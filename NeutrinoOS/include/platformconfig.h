@@ -1,4 +1,4 @@
-
+#pragma once
 ///                                                  /// 
 /// Neutrino OS Portable Platform Buid Configuration ///
 ///                                                  ///
@@ -8,7 +8,7 @@
 /// Base Platform
 //#define __ESP32
 #define __WIN32
-//#define __LINUX
+//#define __UNIX
 
 /// Device Class
 //#define __HOLO

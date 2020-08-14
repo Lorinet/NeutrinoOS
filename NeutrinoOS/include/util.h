@@ -5,7 +5,6 @@
 #include <sstream>
 #endif
 #include "platformconfig.h"
-#include "sysinfo.h"
 typedef unsigned char byte;
 #ifdef __cplusplus
 using namespace std;

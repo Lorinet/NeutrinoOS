@@ -1,6 +1,5 @@
 #pragma once
-#include <string>
-#include "platformconfig.h"
+#include "util.h"
 using namespace std;
 const string neutrinoOSVersion = "1.0f";
 const string neutrinoBuildNumber = "111";
@@ -21,7 +20,7 @@ const string platformArch = "x86";
 #elif defined(__XTENSA)
 const string platformArch = "xtensa";
 #elif defined(__ARM)
-const string platformArch = "arm"
+const string platformArch = "arm";
 #else
 const string platformArch = "unknown";
 #endif

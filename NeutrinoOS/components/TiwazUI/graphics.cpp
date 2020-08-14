@@ -23,8 +23,8 @@ void Graphics::InitGraphicSystem()
 		u8g2_esp32_hal.sda = GPIO_NUM_21;
 		u8g2_esp32_hal.scl = GPIO_NUM_22;
 		u8g2_esp32_hal_init(u8g2_esp32_hal);
-#endif
 		u8g2_Setup_ssd1306_i2c_128x64_noname_f(&u8g2, U8G2_R0, u8g2_esp32_i2c_byte_cb, u8g2_esp32_gpio_and_delay_cb);
+#endif
 		u8x8_SetI2CAddress(&u8g2.u8x8, 0x78);
 		u8g2_InitDisplay(&u8g2);
 		u8g2_SetPowerSave(&u8g2, 0);

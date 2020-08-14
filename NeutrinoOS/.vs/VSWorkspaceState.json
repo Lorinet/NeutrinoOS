@@ -1,7 +1,9 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\components",
+    "\\components\\TiwazUI",
+    "\\include"
   ],
-  "SelectedNode": "\\CMakeLists.txt",
   "PreviewInSolutionExplorer": false
 }
