@@ -162,7 +162,17 @@ void WindowManager::RenderWindow(Window& w, int wid, bool active)
 				}
 				else if (type == "CheckBox")
 				{
-
+					if (Graphics::fonts.find(e.GetProperty("Font")) == Graphics::fonts.end()) continue;
+					int wi, he;
+					TTF_SizeText(Graphics::fonts[e.GetProperty("Font")].font, e.GetProperty("Text").c_str(), &wi, &he);
+					Element* ew = &(windows[wid].elements[windows[wid].GetElementIndexByID(e.IGetProperty("ID"))]);
+					ew->properties["Width"] = to_string(wi + 10);
+					ew->properties["Height"] = to_string(he + 10);
+					if (e.GetProperty("Hovering") == "1")
+						Graphics::DrawFilledRectangle(e.IGetProperty("Position X") + w.posX, e.IGetProperty("Position Y") + w.posY + w.drawableBase, 12, 12, Theming::TransparenceColor);
+					if(e.IGetProperty("Checked") == 1) Graphics::DrawFilledRectangle(e.IGetProperty("Position X") + w.posX + 3, e.IGetProperty("Position Y") + w.posY + w.drawableBase + 3, 6, 6, Theming::TextColorLight);
+					Graphics::DrawRectangle(e.IGetProperty("Position X") + w.posX, e.IGetProperty("Position Y") + w.posY + w.drawableBase, 12, 12);
+					Graphics::DrawString(e.IGetProperty("Position X") + w.posX + 18, e.IGetProperty("Position Y") + w.posY + w.drawableBase, e.GetProperty("Text"), e.GetProperty("Font"));
 				}
 			}
 		}
@@ -467,7 +477,7 @@ void WindowManager::Initialize()
 	Graphics::LoadFont("graphics\\fonts\\logisoso.ttf", "Logisoso 28", 37);
 	Graphics::LoadFont("graphics\\fonts\\logisoso.ttf", "Logisoso 32", 43);
 	Graphics::LoadFont("graphics\\fonts\\logisoso.ttf", "Logisoso 38", 22);
-	Theming::ApplyTheme("themes\\Honey.lnth");
+	Theming::ApplyTheme("themes\\Glare.lnth");
 	#elif defined(__UNIX)
 	Graphics::LoadImageE("graphics/close.png", "close");
 	Graphics::LoadImageE("graphics/closelight.png", "closelight");
@@ -548,7 +558,28 @@ void WindowManager::FireEvent(EffigyEvent evt, int x, int y)
 						{
 							vmmgr::processes[w.second.parentProcess]->suspended = false;
 						}
-						vmmgr::processes[w.second.parentProcess]->branch(ew->eventHandler);
+						if (ew->eventHandler != -1)
+						{
+							vmmgr::processes[w.second.parentProcess]->branch(ew->eventHandler);
+						}
+					}
+				}
+				else if (e.GetProperty("Hoverable") == "1" || e.GetProperty("Type") == "CheckBox")
+				{
+					Element* ew = &(windows[w.first].elements[windows[w.first].GetElementIndexByID(e.IGetProperty("ID"))]);
+					if (e.Hover(x - w.second.posX, y - w.second.posY - w.second.drawableBase))
+					{
+						if (ew->IGetProperty("Checked") == 0) ew->properties["Checked"] = "1";
+						else ew->properties["Checked"] = "0";
+						if (find(w.second.properties.begin(), w.second.properties.end(), "WakeOnInteraction") != w.second.properties.end())
+						{
+							vmmgr::processes[w.second.parentProcess]->suspended = false;
+						}
+						if (ew->eventHandler != -1)
+						{
+							vmmgr::processes[w.second.parentProcess]->branch(ew->eventHandler);
+						}
+						RenderWindows();
 					}
 				}
 			}
@@ -658,7 +689,7 @@ void WindowManager::FireEvent(EffigyEvent evt, int x, int y)
 				{
 					for (Element& e : w.second.elements)
 					{
-						if (e.GetProperty("Hoverable") == "1" || e.GetProperty("Type") == "Button")
+						if (e.GetProperty("Hoverable") == "1" || e.GetProperty("Type") == "Button" || e.GetProperty("Type") == "CheckBox")
 						{
 							Element* ew = &(windows[w.first].elements[windows[w.first].GetElementIndexByID(e.IGetProperty("ID"))]);
 							if (e.Hover(x - w.second.posX, y - w.second.posY - w.second.drawableBase))

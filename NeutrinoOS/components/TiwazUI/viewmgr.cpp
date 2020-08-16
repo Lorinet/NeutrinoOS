@@ -316,6 +316,13 @@ void ViewManager::FireEvent(TiwazEvent e)
 					vmmgr::processes[views[activeView]->parentProcess]->branch(elm->eventHandler);
 				}
 			}
+			else if (elm->GetProperty("Type") == "CheckBox")
+			{
+				if (elm->eventHandler != -1)
+				{
+					vmmgr::processes[views[activeView]->parentProcess]->branch(elm->eventHandler);
+				}
+			}
 		}
 		else if(v->properties.contains("ListView"))
 		{
