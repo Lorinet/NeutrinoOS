@@ -6,8 +6,8 @@ set (TiwazSources "components/TiwazUI/elements.cpp" "components/TiwazUI/gpio.cpp
 set (EffigySources "components/EffigyWM/element.cpp" "components/EffigyWM/graphics.cpp" "components/EffigyWM/serialization.cpp" "components/EffigyWM/window.cpp" "components/EffigyWM/winmgr.cpp" "components/EffigyWM/sdl/draw/SDL_gfxPrimitives.c" "components/EffigyWM/sdl/draw/SDL_framerate.c" "components/EffigyWM/sdl/draw/SDL_gfxBlitFunc.c" "components/EffigyWM/sdl/draw/SDL_imageFilter.c" "components/EffigyWM/sdl/draw/SDL_rotozoom.c")
 
 set(BuildTiwaz FALSE)
-set(BuildEffigyWin FALSE)
-set(BuildEffigyLin TRUE)
+set(BuildEffigyWin TRUE)
+set(BuildEffigyLin FALSE)
 
 if(BuildTiwaz)
 	list(APPEND CoreSources ${TiwazSources})

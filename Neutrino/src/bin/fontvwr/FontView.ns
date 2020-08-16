@@ -1,0 +1,18 @@
+; FontView View Layout
+
+:FontView_CreateView
+spush "ID:0;Type:WindowInfo;Position X:0;Position Y:0;Width:500;Height:450;Text:Font Viewer;|ID:1;Type:Label;Position X:5;Position Y:5;Width:0;Height:0;Text:The quick brown fox;Font:Micro 4;Border:0;|ID:2;Type:Label;Position X:5;Position Y:15;Width:0;Height:0;Text:The quick brown fox;Font:Console 10;Border:0;|ID:3;Type:Label;Position X:5;Position Y:40;Width:0;Height:0;Text:The quick brown fox;Font:Times New Roman 13 Bold;Border:0;|ID:4;Type:Label;Position X:5;Position Y:70;Width:0;Height:0;Text:The quick brown fox;Font:Helvetica 11 Bold;Border:0;|ID:5;Type:Label;Position X:5;Position Y:100;Width:0;Height:0;Text:The quick brown fox;Font:Courier New 19;Border:0;|ID:6;Type:Label;Position X:5;Position Y:150;Width:0;Height:0;Text:The quick brown fox;Font:Logisoso 20;Border:0;|ID:7;Type:Label;Position X:5;Position Y:200;Width:0;Height:0;Text:The quick brown fox;Font:Open Iconic 8;Border:0;|ID:8;Type:Label;Position X:5;Position Y:250;Width:0;Height:0;Text:The quick brown fox;Font:Battery 19;Border:0;|ID:9;Type:Label;Position X:5;Position Y:300;Width:0;Height:0;Text:The quick brown fox;Font:Segments 42 Numbers;Border:0;|"
+extcall WMCreateWindow
+pop __FontView_hwnd ; Do not modify the handle variable!
+push __FontView_hwnd
+extcall WMSetActiveWindow
+extcall WMUpdateView
+ret
+
+:FontView_DestroyView
+push __FontView_hwnd
+extcall WMDestroyWindow
+ret
+
+; Auto-generated with Neutrino UI Design Tool
+; #include FontView.ns
