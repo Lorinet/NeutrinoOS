@@ -1,7 +1,7 @@
 #pragma once
 #include "util.h"
 //#define FEATURE_SERIAL
-#define FEATURE_GPIO
+//#define FEATURE_GPIO
 #if defined(FEATURE_GPIO)
 #if defined(__UNIX)
 #include <wiringPi.h>

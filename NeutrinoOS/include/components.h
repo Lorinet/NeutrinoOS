@@ -1,7 +1,7 @@
 #pragma once
 #if defined(__HOLO)
 #define COMPONENT_TIWAZ
-#elif defined(__DESKTOP)
+#elif defined(__DESKTOP) || defined(__SANDBOX)
 #define COMPONENT_EFFIGY
 #endif
 #ifdef COMPONENT_TIWAZ

@@ -2,7 +2,7 @@
 #include "util.h"
 using namespace std;
 const string neutrinoOSVersion = "1.0f";
-const string neutrinoBuildNumber = "111";
+const string neutrinoBuildNumber = "115";
 const string neutrinoBuildDate = "Jun 2020";
 const string neutrinoRuntimeVersion = "1.0";
 const string aboutNeutrino = "Thurs Core OS [Version " + neutrinoOSVersion + " build " + neutrinoBuildNumber + "] - " + neutrinoBuildDate;

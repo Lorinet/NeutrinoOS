@@ -49,7 +49,12 @@ him for his work.
 #    include <mmintrin.h>
 #  endif
 #endif
+#include "platformconfig.h"
+#if defined(__WIN32)
 #include <SDL_cpuinfo.h>
+#elif defined(__UNIX)
+#include <SDL/SDL_cpuinfo.h>
+#endif
 #include "SDL_imageFilter.h"
 
 /*!

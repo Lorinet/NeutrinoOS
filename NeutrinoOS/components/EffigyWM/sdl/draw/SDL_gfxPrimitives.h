@@ -35,7 +35,13 @@ Andreas Schiffler -- aschiffler at ferzkopp dot net
 #define M_PI	3.1415926535897932384626433832795
 #endif
 
+#include "platformconfig.h"
+
+#if defined(__WIN32)
 #include "SDL.h"
+#elif defined(__UNIX)
+#include <SDL/SDL.h>
+#endif
 
 /* Set up for C function definitions, even when using C++ */
 #ifdef __cplusplus

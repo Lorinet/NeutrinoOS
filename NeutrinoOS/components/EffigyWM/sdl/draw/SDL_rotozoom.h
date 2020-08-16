@@ -41,7 +41,14 @@ extern "C" {
 #define M_PI	3.141592654
 #endif
 
+
+#include "platformconfig.h"
+
+#if defined(__WIN32)
 #include "SDL.h"
+#elif defined(__UNIX)
+#include <SDL/SDL.h>
+#endif
 
 	/* ---- Defines */
 

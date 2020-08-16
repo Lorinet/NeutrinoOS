@@ -2,9 +2,16 @@
 #include <cstdint>
 #include <map>
 #include <string>
+#include "platformconfig.h"
+#if defined(__WIN32)
 #include "SDL.h"
 #include "SDL_ttf.h"
 #include "SDL_image.h"
+#elif defined(__UNIX)
+#include <SDL/SDL.h>
+#include <SDL/SDL_ttf.h>
+#include <SDL/SDL_image.h>
+#endif
 #include "SDL_gfxPrimitives.h"
 using namespace std;
 struct Color

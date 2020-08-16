@@ -10,9 +10,13 @@ map<string, FontType> Graphics::fonts;
 map<string, Texture> Graphics::textures;
 void Graphics::InitGraphicSystem()
 {
-	SDL_Init(SDL_INIT_EVERYTHING);
+	//SDL_Init(SDL_INIT_EVERYTHING);
+	if( SDL_Init( SDL_INIT_VIDEO ) < 0 )
+    {
+		printf( "SDL could not initialize! SDL_Error: %s\n", SDL_GetError() );
+	}
 	SDL_WM_SetCaption("Neutrino", "Neutrino");
-	window = SDL_SetVideoMode(resX, resY, 24, 0);
+	window = SDL_SetVideoMode(resX, resY, 0, 0);
 	TTF_Init();
 	IMG_Init(IMG_INIT_PNG);
 	ClearScreen();

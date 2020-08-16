@@ -1,6 +1,9 @@
 #include "winmgr.h"
 #include <iostream>
 #include <fstream>
+#ifdef __UNIX
+#include <stdlib.h>
+#endif
 #include "vmmgr.h"
 Color Theming::AccentColor(0, 200, 255, 230);
 Color Theming::InactiveColor(255, 255, 255, 230);
@@ -414,7 +417,12 @@ void WindowManager::Update()
 }
 void WindowManager::Initialize()
 {
+	#if defined(__DESKTOP) && defined(__UNIX)
+	setenv("SDL_VIDEODRIVER", "fbcon", 1);
+	setenv("SDL_FBDEV", "/dev/fb0", 1);
+	#endif
 	Graphics::InitGraphicSystem();
+	#if defined(__WIN32)
 	Graphics::LoadImageE("graphics\\close.png", "close");
 	Graphics::LoadImageE("graphics\\closelight.png", "closelight");
 	Graphics::LoadImageE("graphics\\maximize.png", "maximize");
@@ -428,6 +436,21 @@ void WindowManager::Initialize()
 	Graphics::LoadFont("graphics\\arial.ttf", "Helvetica 12", 16);
 	Graphics::LoadFont("graphics\\logisoso.ttf", "Logisoso 16", 22);
 	Theming::ApplyTheme("themes\\Honey.lnth");
+	#elif defined(__UNIX)
+	Graphics::LoadImageE("graphics/close.png", "close");
+	Graphics::LoadImageE("graphics/closelight.png", "closelight");
+	Graphics::LoadImageE("graphics/maximize.png", "maximize");
+	Graphics::LoadImageE("graphics/restore.png", "restore");
+	Graphics::LoadImageE("graphics/minimize.png", "minimize");
+	Graphics::LoadImageE("graphics/NeutrinoIconLight.png", "icon_light");
+	Graphics::LoadImageE("graphics/NeutrinoIconDark.png", "icon_dark");
+	Graphics::LoadFont("graphics/micro.ttf", "Micro 4", 8);
+	Graphics::LoadFont("graphics/micro.ttf", "Micro 5", 8);
+	Graphics::LoadFont("graphics/arial.ttf", "Helvetica 8", 11);
+	Graphics::LoadFont("graphics/arial.ttf", "Helvetica 12", 16);
+	Graphics::LoadFont("graphics/logisoso20.bdf", "Logisoso 16", 20);
+	Theming::ApplyTheme("themes/Honey.lnth");
+	#endif
 }
 void WindowManager::FireEvent(EffigyEvent evt, int p)
 {

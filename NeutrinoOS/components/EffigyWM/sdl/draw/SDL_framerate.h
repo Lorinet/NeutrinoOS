@@ -37,7 +37,14 @@ extern "C" {
 
 	/* --- */
 
+
+#include "platformconfig.h"
+
+#if defined(__WIN32)
 #include "SDL.h"
+#elif defined(__UNIX)
+#include <SDL/SDL.h>
+#endif
 
 	/* --------- Definitions */
 

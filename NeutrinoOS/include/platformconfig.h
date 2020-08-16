@@ -7,13 +7,14 @@
 
 /// Base Platform
 //#define __ESP32
-#define __WIN32
-//#define __UNIX
+//#define __WIN32
+#define __UNIX
 
 /// Device Class
 //#define __HOLO
-//#define __WATCH
-#define __DESKTOP
+#define __SANDBOX
+//#define __DESKTOP
+//#define __THIN
 
 /// CPU Architecture
 //#define __XTENSA

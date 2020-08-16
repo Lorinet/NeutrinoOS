@@ -38,8 +38,16 @@ extern    "C" {
 #include <stdio.h>
 #include <stdlib.h>
 
+
+#include "platformconfig.h"
+
+#if defined(__WIN32)
 #include "SDL.h"
 #include "SDL_video.h"
+#elif defined(__UNIX)
+#include <SDL/SDL.h>
+#include <SDL/SDL_video.h>
+#endif
 
 
 	extern const unsigned int GFX_ALPHA_ADJUST_ARRAY[256];
