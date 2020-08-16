@@ -14,7 +14,7 @@ static void NeutrinoStartup()
 	IOManager::Initialize();
 	//int pid = vmmgr::createProcess(lvmgr::formatPath("0:\\Neutrino\\bin\\conhost.lex"));
 	//vmmgr::sendMessage(pid, bitconverter::toArray("0:\\Neutrino\\bin\\test.lex"));
-	vmmgr::createProcess(lvmgr::formatPath("0:\\Neutrino\\bin\\inpanel.lex"));
+	vmmgr::createProcess(lvmgr::formatPath("0:\\Neutrino\\bin\\testeffigy.lex"));
 	//int pid = vmmgr::createProcess(lvmgr::formatPath("0:\\Neutrino\\bin\\error.lex"));
 	//vmmgr::sendMessage(pid, bitconverter::toArray("The application Test has stopped working."));
 	vmmgr::start();

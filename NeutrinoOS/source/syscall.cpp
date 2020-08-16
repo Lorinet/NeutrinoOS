@@ -551,6 +551,80 @@ Array<byte> syscall::systemCall(byte* indata, int datasize, nvm* v)
 			id2 = bitconverter::toint32(data, 5);
 			ViewManager::views[id]->elements[ViewManager::views[id]->GetElementIndexByID(id2)].eventHandler = -1;
 			break;
+#elif defined(COMPONENT_EFFIGY)
+		case uicmd::CreateView:
+			id = WindowManager::CreateWindowE(Serialization::DeserializeView(bitconverter::tostring(data, 1)));
+			WindowManager::windows[id].parentProcess = v->processid;
+			WindowManager::RenderWindows();
+			return bitconverter::toArray(id);
+			break;
+		case uicmd::DestroyView:
+			WindowManager::CloseWindow(bitconverter::toint32(data, 1));
+			WindowManager::RenderWindows();
+			break;
+		case uicmd::AddElement:
+			id = bitconverter::toint32(data, 1);
+			txt = bitconverter::tostring(data, 5);
+			WindowManager::windows[id].elements.push_back(Serialization::DeserializeElement(txt));
+			WindowManager::RenderWindows();
+			break;
+		case uicmd::ModifyElement:
+			id = bitconverter::toint32(data, 1);
+			id2 = bitconverter::toint32(data, 5);
+			txt = bitconverter::tostring(data, 9);
+			*WindowManager::windows[id].GetElementByID(id2) = Serialization::DeserializeElement(txt);
+			WindowManager::RenderWindows();
+			break;
+		case uicmd::DeleteElement:
+			id = bitconverter::toint32(data, 1);
+			id2 = bitconverter::toint32(data, 5);
+			WindowManager::windows[id].elements.erase(WindowManager::windows[id].elements.begin() + WindowManager::windows[id].GetElementIndexByID(id2));
+			WindowManager::RenderWindows();
+			break;
+		case uicmd::GetPropertyValue:
+			id = bitconverter::toint32(data, 1);
+			id2 = bitconverter::toint32(data, 5);
+			txt = bitconverter::tostring(data, 9);
+			return bitconverter::toArray(WindowManager::windows[id].elements[WindowManager::windows[id].GetElementIndexByID(id2)].GetProperty(txt));
+			break;
+		case uicmd::SetPropertyValue:
+			id = bitconverter::toint32(data, 1);
+			id2 = bitconverter::toint32(data, 5);
+			txt = bitconverter::tostring(data, 9);
+			bl = false;
+			txt1 = "";
+			txt2 = "";
+			for (int i = 0; i < txt.size(); i++)
+			{
+				if (txt[i] == ':' && txt[i - 1] != '\\')
+				{
+					bl = true;
+				}
+				else if (!bl) txt1 += txt[i];
+				else if (bl) txt2 += txt[i];
+			}
+			WindowManager::windows[id].elements[WindowManager::windows[id].GetElementIndexByID(id2)].properties[txt1] = util::replaceAll(txt2, "\\:", ":");
+			WindowManager::RenderWindows();
+			break;
+		case uicmd::SwitchView:
+			id = bitconverter::toint32(data, 1);
+			WindowManager::activeWindow = id;
+			WindowManager::RenderWindows();
+			break;
+		case uicmd::UpdateScreen:
+			WindowManager::RenderWindows();
+			break;
+		case uicmd::AttachEventHandler:
+			id = bitconverter::toint32(data, 1);
+			id2 = bitconverter::toint32(data, 5);
+			proc = bitconverter::toint32(data, 9);
+			WindowManager::windows[id].elements[WindowManager::windows[id].GetElementIndexByID(id2)].eventHandler = proc;
+			break;
+		case uicmd::DetachEventHandler:
+			id = bitconverter::toint32(data, 1);
+			id2 = bitconverter::toint32(data, 5);
+			WindowManager::windows[id].elements[WindowManager::windows[id].GetElementIndexByID(id2)].eventHandler = -1;
+			break;
 #else
 		case uicmd::GetPropertyValue:
 			return bitconverter::toArray("0");

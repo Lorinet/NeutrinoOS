@@ -2,8 +2,11 @@
   "ExpandedNodes": [
     "",
     "\\components",
+    "\\components\\EffigyWM",
     "\\components\\TiwazUI",
-    "\\include"
+    "\\include",
+    "\\source"
   ],
+  "SelectedNode": "\\components\\TiwazUI\\viewmgr.cpp",
   "PreviewInSolutionExplorer": false
 }

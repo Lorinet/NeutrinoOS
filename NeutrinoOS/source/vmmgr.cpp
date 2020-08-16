@@ -9,6 +9,8 @@ void vmmgr::start()
 #if defined(COMPONENT_TIWAZ)
 	ViewManager::Initialize();
 	inputmgr::initialize();
+#elif defined(COMPONENT_EFFIGY)
+	WindowManager::Initialize();
 #endif
 #if defined(FEATURE_SERIAL) || defined(FEATURE_GPIO)
 	IOManager::Initialize();
@@ -53,6 +55,8 @@ void vmmgr::stepAll()
 	events::eventLoop();
 #if defined(COMPONENT_TIWAZ)
 	inputmgr::poll();
+#elif defined(COMPONENT_EFFIGY)
+	WindowManager::Update();
 #endif
 }
 int vmmgr::createProcess(string file)
