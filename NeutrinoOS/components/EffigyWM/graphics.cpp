@@ -1,4 +1,5 @@
 #include "graphics.h"
+#include <iostream>
 extern "C" 
 {
 	FILE __iob_func[3] = { *stdin,*stdout,*stderr };
@@ -8,17 +9,30 @@ SDL_Surface* Graphics::window;
 Color Graphics::color = Color(0, 0, 0, 0);
 map<string, FontType> Graphics::fonts;
 map<string, Texture> Graphics::textures;
+int Graphics::resX;
+int Graphics::resY;
 void Graphics::InitGraphicSystem()
 {
-	//SDL_Init(SDL_INIT_EVERYTHING);
-	if( SDL_Init( SDL_INIT_VIDEO ) < 0 )
+	if (file::fileExists(lvmgr::formatPath("0:\\Neutrino\\cfg\\effigy\\ScreenWidth")) && file::fileExists(lvmgr::formatPath("0:\\Neutrino\\cfg\\effigy\\ScreenHeight")))
+	{
+		resX = atoi(file::readAllText(lvmgr::formatPath("0:\\Neutrino\\cfg\\effigy\\ScreenWidth")).c_str());
+		resY = atoi(file::readAllText(lvmgr::formatPath("0:\\Neutrino\\cfg\\effigy\\ScreenHeight")).c_str());
+	}
+	else
+	{
+		resX = 640;
+		resY = 480;
+	}
+	setenv("SDL_VIDEODRIVER", "fbcon", 1);
+	setenv("SDL_FBDEV", "/dev/fb0", 1);
+	if(SDL_Init(SDL_INIT_EVERYTHING) < 0)
     {
-		printf( "SDL could not initialize! SDL_Error: %s\n", SDL_GetError() );
+		printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
 	}
 	SDL_WM_SetCaption("Neutrino", "Neutrino");
-	window = SDL_SetVideoMode(resX, resY, 0, 0);
-	TTF_Init();
+	window = SDL_SetVideoMode(resX, resY, 0, SDL_FULLSCREEN);
 	IMG_Init(IMG_INIT_PNG);
+	TTF_Init();
 	ClearScreen();
 	UpdateScreen();
 }
@@ -70,7 +84,7 @@ void Graphics::DrawString(int x, int y, string text, string font)
 	sc.r = color.R;
 	sc.g = color.G;
 	sc.b = color.B;
-	SDL_Surface* ts = TTF_RenderText_Solid(fonts[font].font, text.c_str(), sc);
+	SDL_Surface* ts = TTF_RenderText_Blended(fonts[font].font, text.c_str(), sc);
 	int w, h;
 	TTF_SizeText(fonts[font].font, text.c_str(), &w, &h);
 	SDL_Rect sr;

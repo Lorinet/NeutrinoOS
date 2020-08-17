@@ -51,7 +51,8 @@ enum interrupts
 	PIN_INTERRUPT = 0x40,
 	SERIAL_INTERRUPT = 0x41,
 	NFS_INTERRUPT = 0x42,
-	UI_INTERRUPT = 0x47
+	UI_INTERRUPT = 0x47,
+	APP_DATA_INTERRUPT = 0x48
 };
 enum nfscmd
 {
@@ -66,6 +67,12 @@ enum nfscmd
 	EXTRACTIMAGE = 0x08,
 	COPYFILE = 0x09,
 	MOVEFILE = 0x0A
+};
+enum appdatacmd
+{
+	GETVALUE = 0x00,
+	SETVALUE = 0x01,
+	CLEARVALUE = 0x02
 };
 enum procexih
 {

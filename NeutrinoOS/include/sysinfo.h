@@ -1,11 +1,11 @@
 #pragma once
 #include "util.h"
 using namespace std;
-const string neutrinoOSVersion = "1.0f";
+const string neutrinoOSVersion = "1.00";
 const string neutrinoBuildNumber = "115";
-const string neutrinoBuildDate = "Jun 2020";
+const string neutrinoBuildDate = "Aug 2020";
 const string neutrinoRuntimeVersion = "1.0";
-const string aboutNeutrino = "Thurs Core OS [Version " + neutrinoOSVersion + " build " + neutrinoBuildNumber + "] - " + neutrinoBuildDate;
+const string aboutNeutrino = "Neutrino Core OS " + neutrinoOSVersion + " [build " + neutrinoBuildNumber + "] - " + neutrinoBuildDate;
 #if defined(__DESKTOP)
 const string neutrinoDeviceType = "PC";
 #elif defined(__HOLO)

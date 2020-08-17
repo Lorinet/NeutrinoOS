@@ -13,6 +13,8 @@
 #include <SDL/SDL_image.h>
 #endif
 #include "SDL_gfxPrimitives.h"
+#include "filesystem.h"
+#include "lvmgr.h"
 using namespace std;
 struct Color
 {
@@ -39,8 +41,8 @@ public:
 class Graphics
 {
 public:
-	static const int resX = 1280;
-	static const int resY = 720;
+	static int resX;
+	static int resY;
 	static Color color;
 	static bool glareEnabled;
 	static void InitGraphicSystem();

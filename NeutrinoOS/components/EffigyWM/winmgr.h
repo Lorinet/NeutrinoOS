@@ -3,6 +3,9 @@
 #include <vector>
 #include "graphics.h"
 #include "window.h"
+#include "sysinfo.h"
+#include "filesystem.h"
+#include "lvmgr.h"
 
 class vmmgr;
 

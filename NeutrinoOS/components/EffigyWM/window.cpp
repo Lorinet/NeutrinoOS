@@ -2,8 +2,8 @@
 Window::Window()
 {
 	properties = vector<string>();
-	posX = 300;
-	posY = 300;
+	posX = Graphics::resX / 3;
+	posY = Graphics::resY / 3;
 	width = 150;
 	height = 120;
 	hidden = false;
@@ -18,8 +18,8 @@ Window::Window()
 Window::Window(vector<Element> el)
 {
 	properties = vector<string>();
-	posX = 300;
-	posY = 300;
+	posX = Graphics::resX / 3;
+	posY = Graphics::resY / 3;
 	width = 150;
 	height = 120;
 	hidden = false;

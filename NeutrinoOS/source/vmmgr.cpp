@@ -2,6 +2,7 @@
 #include "nvm.h"
 #include "vt.h"
 bool vmmgr::running = false;
+bool vmmgr::dozing = false;
 map<int, nvm*> vmmgr::processes;
 vector<int> vmmgr::procidx;
 void vmmgr::start()
@@ -16,23 +17,43 @@ void vmmgr::start()
 	IOManager::Initialize();
 #endif
 	running = true;
-	#ifdef __ESP32
+	dozing = false;
 	int dog = 0;
+	#ifdef __ESP32
 	esp_task_wdt_init(3, false);
 	#endif
 	while (running)
 	{
-		#ifdef __ESP32
 		if(dog >= 100) 
 		{
+			#ifdef __ESP32
 			esp_task_wdt_reset();
+			#endif
+			#if defined(COMPONENT_EFFIGY)
+			bool dozeNow = true;
+			for (int i = 0; i < procidx.size(); i++)
+			{
+				if (!processes[procidx[i]]->suspended && !processes[procidx[i]]->awaitmsg && !processes[procidx[i]]->awaitin && processes[procidx[i]]->waitForProcInput == -1)
+				{
+					dozeNow = false;
+					break;
+				}
+			}
+			if (dozeNow && !dozing)
+			{
+				doze(true);
+			}
+			else if (!dozeNow && dozing)
+			{
+				doze(false);
+			}
+			#endif
 			dog = 0;
 		}
 		else
 		{
 			dog++;
 		}
-		#endif
 		stepAll();
 	}
 }
@@ -154,6 +175,16 @@ void vmmgr::reload()
 void vmmgr::suspend()
 {
 	running = false;
+}
+void vmmgr::doze(bool d)
+{
+	dozing = d;
+#ifdef __UNIX
+	//if(d) system("cgset -r cpu.cfs_quota_us=100000 cpulimit");
+	//else system("cgset -r cpu.cfs_quota_us=1000000 cpulimit");
+	if (d) system("cpufreq-set --cpu 0 --max 800MHz");
+	else system("cpufreq-set --cpu 0 --max 1.60GHz");
+#endif
 }
 void vmmgr::vmmerror(string error)
 {

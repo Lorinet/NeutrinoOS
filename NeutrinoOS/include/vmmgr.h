@@ -18,6 +18,7 @@ class vmmgr
 {
 public:
 	static bool running;
+	static bool dozing;
 	static map<int, nvm*> processes;
 	static vector<int> procidx;
 	static void start();
@@ -29,6 +30,7 @@ public:
 	static void sendInput(int pid, Array<byte> input);
 	static void reload();
 	static void suspend();
+	static void doze(bool d);
 	static void vmmerror(string error);
 	static void vmmerror(string error, int procid);
 	static bool inputRequested(int pid);

@@ -1,9 +1,4 @@
 #include "winmgr.h"
-#include <iostream>
-#include <fstream>
-#ifdef __UNIX
-#include <stdlib.h>
-#endif
 #include "vmmgr.h"
 Color Theming::AccentColor(0, 200, 255, 230);
 Color Theming::InactiveColor(255, 255, 255, 230);
@@ -64,7 +59,7 @@ void WindowManager::RenderWindows()
 	Graphics::SetColor(Theming::DesktopBackgroundColor);
 	Graphics::ClearScreen();
 	Graphics::SetColor(Theming::TextColorLight);
-	Graphics::DrawString(5, 5, "Neutrino Core OS - Only for evaluation purposes", "Helvetica 8");
+	Graphics::DrawString(5, 5, aboutNeutrino + " - Only for evaluation purposes", "Helvetica 8");
 	if (dragging && activeWindow != -1) RenderWindow(windows[activeWindow], activeWindow, true);
 	for (pair<int, Window> w : windows)
 	{
@@ -400,8 +395,10 @@ void WindowManager::FireEvent(EffigyEvent evt)
 void WindowManager::Update()
 {
 	SDL_Event evt;
-	if (SDL_PollEvent(&evt))
+	int er = SDL_PollEvent(&evt);
+	if (er)
 	{
+		vmmgr::doze(false);
 		if (evt.type == SDL_QUIT) WindowManager::FireEvent(EffigyEvent::Shutdown);
 		else if (evt.type == SDL_MOUSEBUTTONDOWN)
 		{
@@ -477,7 +474,6 @@ void WindowManager::Initialize()
 	Graphics::LoadFont("graphics\\fonts\\logisoso.ttf", "Logisoso 28", 37);
 	Graphics::LoadFont("graphics\\fonts\\logisoso.ttf", "Logisoso 32", 43);
 	Graphics::LoadFont("graphics\\fonts\\logisoso.ttf", "Logisoso 38", 22);
-	Theming::ApplyTheme("themes\\Glare.lnth");
 	#elif defined(__UNIX)
 	Graphics::LoadImageE("graphics/close.png", "close");
 	Graphics::LoadImageE("graphics/closelight.png", "closelight");
@@ -486,13 +482,46 @@ void WindowManager::Initialize()
 	Graphics::LoadImageE("graphics/minimize.png", "minimize");
 	Graphics::LoadImageE("graphics/NeutrinoIconLight.png", "icon_light");
 	Graphics::LoadImageE("graphics/NeutrinoIconDark.png", "icon_dark");
-	Graphics::LoadFont("graphics/micro.ttf", "Micro 4", 8);
-	Graphics::LoadFont("graphics/micro.ttf", "Micro 5", 8);
-	Graphics::LoadFont("graphics/arial.ttf", "Helvetica 8", 11);
-	Graphics::LoadFont("graphics/arial.ttf", "Helvetica 12", 16);
-	Graphics::LoadFont("graphics/logisoso20.bdf", "Logisoso 16", 20);
-	Theming::ApplyTheme("themes/Honey.lnth");
+	Graphics::LoadFont("graphics/fonts/micro.ttf", "Micro 4", 8);
+	Graphics::LoadFont("graphics/fonts/micro.ttf", "Micro 5", 8);
+	Graphics::LoadFont("graphics/fonts/console.fon", "Console 7", 9);
+	Graphics::LoadFont("graphics/fonts/console.fon", "Console 10", 13);
+	Graphics::LoadFont("graphics/fonts/openico.ttf", "Open Iconic 8", 11);
+	Graphics::LoadFont("graphics/fonts/openico.ttf", "Open Iconic 16", 22);
+	Graphics::LoadFont("graphics/fonts/openico.ttf", "Open Iconic 32", 44);
+	Graphics::LoadFont("graphics/fonts/openico.ttf", "Open Iconic 48", 66);
+	Graphics::LoadFont("graphics/fonts/openico.ttf", "Open Iconic 64", 88);
+	Graphics::LoadFont("graphics/fonts/courier.fon", "Courier New 11", 15);
+	Graphics::LoadFont("graphics/fonts/courier.fon", "Courier New 19", 25);
+	Graphics::LoadFont("graphics/fonts/7segment.ttf", "Segments 42 Numbers", 56);
+	Graphics::LoadFont("graphics/fonts/battery.fon", "Battery 19", 25);
+	Graphics::LoadFont("graphics/fonts/arial.ttf", "Helvetica 8", 11);
+	Graphics::LoadFont("graphics/fonts/arialb.ttf", "Helvetica 8 Bold", 11);
+	Graphics::LoadFont("graphics/fonts/arial.ttf", "Helvetica 11", 15);
+	Graphics::LoadFont("graphics/fonts/arialb.ttf", "Helvetica 11 Bold", 15);
+	Graphics::LoadFont("graphics/fonts/arial.ttf", "Helvetica 12", 16);
+	Graphics::LoadFont("graphics/fonts/arial.ttf", "Helvetica 12 Thin", 16);
+	Graphics::LoadFont("graphics/fonts/arial.ttf", "Helvetica 14", 19);
+	Graphics::LoadFont("graphics/fonts/arial.ttf", "Helvetica 19", 25);
+	Graphics::LoadFont("graphics/fonts/arial.ttf", "Helvetica 25", 33);
+	Graphics::LoadFont("graphics/fonts/arialb.ttf", "Helvetica 25 Bold", 33);
+	Graphics::LoadFont("graphics/fonts/times.ttf", "Times New Roman 7", 9);
+	Graphics::LoadFont("graphics/fonts/times.ttf", "Times New Roman 7 Bold", 9);
+	Graphics::LoadFont("graphics/fonts/times.ttf", "Times New Roman 10", 13);
+	Graphics::LoadFont("graphics/fonts/timesb.ttf", "Times New Roman 10 Bold", 13);
+	Graphics::LoadFont("graphics/fonts/times.ttf", "Times New Roman 13", 17);
+	Graphics::LoadFont("graphics/fonts/timesb.ttf", "Times New Roman 13 Bold", 17);
+	Graphics::LoadFont("graphics/fonts/times.ttf", "Times New Roman 23", 31);
+	Graphics::LoadFont("graphics/fonts/logisoso.ttf", "Logisoso 16", 22);
+	Graphics::LoadFont("graphics/fonts/logisoso.ttf", "Logisoso 20", 27);
+	Graphics::LoadFont("graphics/fonts/logisoso.ttf", "Logisoso 22", 29);
+	Graphics::LoadFont("graphics/fonts/logisoso.ttf", "Logisoso 26", 36);
+	Graphics::LoadFont("graphics/fonts/logisoso.ttf", "Logisoso 28", 37);
+	Graphics::LoadFont("graphics/fonts/logisoso.ttf", "Logisoso 32", 43);
+	Graphics::LoadFont("graphics/fonts/logisoso.ttf", "Logisoso 38", 22);
 	#endif
+	if(file::fileExists(lvmgr::formatPath("0:\\Neutrino\\cfg\\effigy\\CurrentTheme"))) Theming::ApplyTheme(lvmgr::formatPath(file::readAllText(lvmgr::formatPath("0:\\Neutrino\\cfg\\effigy\\CurrentTheme"))));
+	RenderWindows();
 }
 void WindowManager::FireEvent(EffigyEvent evt, int p)
 {
