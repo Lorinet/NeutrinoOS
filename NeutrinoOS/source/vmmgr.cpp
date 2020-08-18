@@ -3,6 +3,8 @@
 #include "vt.h"
 bool vmmgr::running = false;
 bool vmmgr::dozing = false;
+int vmmgr::maxCpuFreq = 0;
+int vmmgr::minCpuFreq = 0;
 map<int, nvm*> vmmgr::processes;
 vector<int> vmmgr::procidx;
 void vmmgr::start()
@@ -19,8 +21,14 @@ void vmmgr::start()
 	running = true;
 	dozing = false;
 	int dog = 0;
-	#ifdef __ESP32
+	#if defined(__ESP32)
 	esp_task_wdt_init(3, false);
+	#elif defined(__UNIX)
+	if (file::fileExists(lvmgr::formatPath("0:\\Neutrino\\cfg\\neutrino\\CPUMaxFreq")) && file::fileExists(lvmgr::formatPath("0:\\Neutrino\\cfg\\neutrino\\CPUMinFreq")))
+	{
+		minCpuFreq = atoi(file::readAllText(lvmgr::formatPath("0:\\Neutrino\\cfg\\neutrino\\CPUMinFreq")).c_str());
+		maxCpuFreq = atoi(file::readAllText(lvmgr::formatPath("0:\\Neutrino\\cfg\\neutrino\\CPUMaxFreq")).c_str());
+	}
 	#endif
 	while (running)
 	{
@@ -180,15 +188,21 @@ void vmmgr::doze(bool d)
 {
 	dozing = d;
 #ifdef __UNIX
+	if (minCpuFreq == 0 || maxCpuFreq == 0) return;
 	//if(d) system("cgset -r cpu.cfs_quota_us=100000 cpulimit");
 	//else system("cgset -r cpu.cfs_quota_us=1000000 cpulimit");
-	if (d) system("cpufreq-set --cpu 0 --max 800MHz");
-	else system("cpufreq-set --cpu 0 --max 1.60GHz");
+	if (d) system(("cpufreq-set -r --max " + to_string(minCpuFreq) + "MHz").c_str());
+	else system(("cpufreq-set -r --max " + to_string(maxCpuFreq) + "MHz").c_str());
 #endif
 }
 void vmmgr::vmmerror(string error)
 {
-	cout << error << endl;
+#if defined(COMPONENT_EFFIGY)
+	WindowManager::ErrorScreen(error);
+#else
+	cout << "CRITICAL ERROR: " << error << endl;
+#endif
+	while (true);
 }
 void vmmgr::vmmerror(string error, int procid)
 {

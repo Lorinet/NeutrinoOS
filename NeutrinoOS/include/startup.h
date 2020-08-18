@@ -12,10 +12,27 @@ static void NeutrinoStartup()
 	lvmgr::initialize("/neutrino");
 #endif
 	IOManager::Initialize();
-	//int pid = vmmgr::createProcess(lvmgr::formatPath("0:\\Neutrino\\bin\\conhost.lex"));
-	//vmmgr::sendMessage(pid, bitconverter::toArray("0:\\Neutrino\\bin\\test.lex"));
-	vmmgr::createProcess(lvmgr::formatPath("0:\\Neutrino\\bin\\testeffigy.lex"));
-	//int pid = vmmgr::createProcess(lvmgr::formatPath("0:\\Neutrino\\bin\\error.lex"));
-	//vmmgr::sendMessage(pid, bitconverter::toArray("The application Test has stopped working."));
-	vmmgr::start();
+	if (file::fileExists(lvmgr::formatPath("0:\\Neutrino\\cfg\\neutrino\\InitExecutable")))
+	{
+		string init = lvmgr::formatPath(file::readAllText(lvmgr::formatPath("0:\\Neutrino\\cfg\\neutrino\\InitExecutable")));
+		if (file::fileExists(init))
+		{
+			vmmgr::createProcess(init);
+			vmmgr::start();
+		}
+		else
+		{
+#if defined(COMPONENT_EFFIGY)
+			Graphics::InitGraphicSystem();
+#endif
+			vmmgr::vmmerror("INIT_EXECUTABLE_NOT_FOUND");
+		}
+	}
+	else
+	{
+#if defined(COMPONENT_EFFIGY)
+		Graphics::InitGraphicSystem();
+#endif
+		vmmgr::vmmerror("INIT_CONFIGURATION_NOT_FOUND");
+	}
 }

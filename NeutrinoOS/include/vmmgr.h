@@ -19,6 +19,8 @@ class vmmgr
 public:
 	static bool running;
 	static bool dozing;
+	static int minCpuFreq;
+	static int maxCpuFreq;
 	static map<int, nvm*> processes;
 	static vector<int> procidx;
 	static void start();

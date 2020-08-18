@@ -422,6 +422,40 @@ void WindowManager::Update()
 			WindowManager::RenderWindows();
 	}
 }
+void WindowManager::ErrorScreen(string error)
+{
+#if defined(__UNIX)
+	Graphics::LoadImageE("graphics/face.png", "face");
+	Graphics::LoadFont("graphics/fonts/arialb.ttf", "Helvetica 25 Bold", 33);
+	Graphics::LoadFont("graphics/fonts/arial.ttf", "Helvetica 14", 19);
+	Graphics::LoadFont("graphics/fonts/arialb.ttf", "Helvetica 11 Bold", 15);
+	Graphics::LoadFont("graphics/fonts/console.fon", "Console 10", 13);
+#elif defined(__WIN32)
+	Graphics::LoadImageE("graphics\\face.png", "face");
+	Graphics::LoadFont("graphics\\fonts\\arialb.ttf", "Helvetica 25 Bold", 33);
+	Graphics::LoadFont("graphics\\fonts\\arial.ttf", "Helvetica 14", 19);
+	Graphics::LoadFont("graphics\\fonts\\arialb.ttf", "Helvetica 11 Bold", 15);
+	Graphics::LoadFont("graphics\\fonts\\console.fon", "Console 10", 13);
+#endif
+	Graphics::SetColor(0, 100, 255, 255);
+	Graphics::ClearScreen();
+	Graphics::SetColor(255, 255, 255, 255);
+	Graphics::DrawImage(10, 10, "face");
+	Graphics::DrawString(130, 45, "Neutrino", "Helvetica 25 Bold");
+	Graphics::DrawString(10, 110, "A critical error has been encountered and Neutrino has been shut down", "Helvetica 14");
+	Graphics::DrawString(10, 130, "to prevent damage to the system. Please restart your device manually.", "Helvetica 14");
+	Graphics::DrawString(10, 200, "Contact your system administrator, device manufacturer or visit the site below", "Helvetica 11 Bold");
+	Graphics::DrawString(10, 220, "for more information and possible fixes:", "Helvetica 11 Bold");
+	if (Graphics::resY >= 260)
+		Graphics::DrawString(10, 245, "http://neutrino.rf.gd/troubleshooting", "Helvetica 14");
+	else
+		Graphics::DrawString(10, 160, "http://neutrino.rf.gd/troubleshooting", "Helvetica 14");
+	if(Graphics::resY >= 480)
+		Graphics::DrawString(10, 450, error, "Console 10");
+	else
+		Graphics::DrawString(10, 5, error, "Console 10");
+	Graphics::UpdateScreen();
+}
 void WindowManager::Initialize()
 {
 	#if defined(__DESKTOP) && defined(__UNIX)

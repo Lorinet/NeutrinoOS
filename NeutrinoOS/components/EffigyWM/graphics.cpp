@@ -30,7 +30,11 @@ void Graphics::InitGraphicSystem()
 		printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
 	}
 	SDL_WM_SetCaption("Neutrino", "Neutrino");
+#if defined(__SANDBOX)
+	window = SDL_SetVideoMode(resX, resY, 0, 0);
+#elif defined(__DESKTOP)
 	window = SDL_SetVideoMode(resX, resY, 0, SDL_FULLSCREEN);
+#endif
 	IMG_Init(IMG_INIT_PNG);
 	TTF_Init();
 	ClearScreen();
