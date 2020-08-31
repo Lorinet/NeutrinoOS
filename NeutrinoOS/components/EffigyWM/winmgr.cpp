@@ -437,6 +437,7 @@ void WindowManager::ErrorScreen(string error)
 	Graphics::LoadFont("graphics\\fonts\\arialb.ttf", "Helvetica 11 Bold", 15);
 	Graphics::LoadFont("graphics\\fonts\\console.fon", "Console 10", 13);
 #endif
+	Graphics::fontSmoothing = true;
 	Graphics::SetColor(0, 100, 255, 255);
 	Graphics::ClearScreen();
 	Graphics::SetColor(255, 255, 255, 255);
@@ -554,7 +555,10 @@ void WindowManager::Initialize()
 	Graphics::LoadFont("graphics/fonts/logisoso.ttf", "Logisoso 32", 43);
 	Graphics::LoadFont("graphics/fonts/logisoso.ttf", "Logisoso 38", 22);
 	#endif
-	if(file::fileExists(lvmgr::formatPath("0:\\Neutrino\\cfg\\effigy\\CurrentTheme"))) Theming::ApplyTheme(lvmgr::formatPath(file::readAllText(lvmgr::formatPath("0:\\Neutrino\\cfg\\effigy\\CurrentTheme"))));
+	if(config::keyExists("effigy\\CurrentTheme")) Theming::ApplyTheme(lvmgr::formatPath(config::getValue("effigy\\CurrentTheme")));
+	if (config::keyExists("effigy\\GlareEnabled")) Graphics::glareEnabled = (config::getValueInt("effigy\\GlareEnabled") == 1 ? true : false);
+	if (config::keyExists("effigy\\TextSmoothing")) Graphics::fontSmoothing = (config::getValueInt("effigy\\TextSmoothing") == 1 ? true : false);
+
 	RenderWindows();
 }
 void WindowManager::FireEvent(EffigyEvent evt, int p)

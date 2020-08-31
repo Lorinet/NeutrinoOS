@@ -6,6 +6,7 @@
 #include "sysinfo.h"
 #include "filesystem.h"
 #include "lvmgr.h"
+#include "config.h"
 
 class vmmgr;
 

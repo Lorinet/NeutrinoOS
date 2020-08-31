@@ -2,6 +2,7 @@
 #include <iostream>
 #include "vmmgr.h"
 #include "lvmgr.h"
+#include "config.h"
 #include "iomgr.h"
 
 static void NeutrinoStartup()
@@ -12,9 +13,9 @@ static void NeutrinoStartup()
 	lvmgr::initialize("/neutrino");
 #endif
 	IOManager::Initialize();
-	if (file::fileExists(lvmgr::formatPath("0:\\Neutrino\\cfg\\neutrino\\InitExecutable")))
+	if (config::keyExists("neutrino\\InitExecutable"))
 	{
-		string init = lvmgr::formatPath(file::readAllText(lvmgr::formatPath("0:\\Neutrino\\cfg\\neutrino\\InitExecutable")));
+		string init = lvmgr::formatPath(config::getValue("neutrino\\InitExecutable"));
 		if (file::fileExists(init))
 		{
 			vmmgr::createProcess(init);

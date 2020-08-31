@@ -45,6 +45,7 @@ public:
 	static int resY;
 	static Color color;
 	static bool glareEnabled;
+	static bool fontSmoothing;
 	static void InitGraphicSystem();
 	static void ClearScreen();
 	static void UpdateScreen();

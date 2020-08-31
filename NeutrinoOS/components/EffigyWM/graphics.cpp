@@ -4,7 +4,8 @@ extern "C"
 {
 	FILE __iob_func[3] = { *stdin,*stdout,*stderr };
 }
-bool Graphics::glareEnabled = true;
+bool Graphics::glareEnabled = false;
+bool Graphics::fontSmoothing = false;
 SDL_Surface* Graphics::window;
 Color Graphics::color = Color(0, 0, 0, 0);
 map<string, FontType> Graphics::fonts;
@@ -23,8 +24,10 @@ void Graphics::InitGraphicSystem()
 		resX = 640;
 		resY = 480;
 	}
+#if defined(__DESKTOP) && defined(__UNIX)
 	setenv("SDL_VIDEODRIVER", "fbcon", 1);
 	setenv("SDL_FBDEV", "/dev/fb0", 1);
+#endif
 	if(SDL_Init(SDL_INIT_EVERYTHING) < 0)
     {
 		printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
@@ -88,7 +91,9 @@ void Graphics::DrawString(int x, int y, string text, string font)
 	sc.r = color.R;
 	sc.g = color.G;
 	sc.b = color.B;
-	SDL_Surface* ts = TTF_RenderText_Blended(fonts[font].font, text.c_str(), sc);
+	SDL_Surface* ts = NULL;
+	if (fontSmoothing) ts = TTF_RenderText_Blended(fonts[font].font, text.c_str(), sc);
+	else ts = TTF_RenderText_Solid(fonts[font].font, text.c_str(), sc);
 	int w, h;
 	TTF_SizeText(fonts[font].font, text.c_str(), &w, &h);
 	SDL_Rect sr;

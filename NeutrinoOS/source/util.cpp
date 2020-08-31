@@ -30,8 +30,13 @@ bool util::startsWith(string s, string sta)
 string util::combinePath(string p1, string p2)
 {
 	string path = p1;
-	if(path[path.size() - 1] != '/' && p2[0] != '/') path += "/";
-	else if(path[path.size() - 1] == '/' && p2[0] == '/') path = path.erase(path.size() - 1);
+#ifdef __WIN32
+	char delim = '\\';
+#else
+	char delim = '/';
+#endif
+	if(path[path.size() - 1] != delim && p2[0] != delim) path += delim;
+	else if(path[path.size() - 1] == delim && p2[0] == delim) path = path.erase(path.size() - 1);
 	path += p2;
 	return path;
 }
