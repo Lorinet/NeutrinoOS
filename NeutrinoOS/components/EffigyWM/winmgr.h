@@ -59,6 +59,7 @@ public:
 	static bool hoveringOnMaximize;
 	static bool hoveringOnMinimize;
 	static void Initialize();
+	static void Stop();
 	static void ErrorScreen(string error);
 	static void Update();
 	static void RenderWindows();

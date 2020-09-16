@@ -171,6 +171,12 @@ Array<byte> syscall::systemCall(byte* indata, int datasize, nvm* v)
 				#endif
 				break;
 			case 0x01:
+#if defined(COMPONENT_EFFIGY)
+				WindowManager::Stop();
+#endif
+#if defined(__UNIX)
+				system("shutdown now")
+#endif
 				exit(0);
 				break;
 			case 0x02:
