@@ -3,5 +3,5 @@ Operating system for embedded devices built on a modern, platform-independent VM
 
 ## Supported platforms
 - ESP32
-- Linux (tested on Raspberry Pi)
+- Linux kernel as base (tested on Raspberry Pi)
 - Windows (running as a sandboxed environment)
