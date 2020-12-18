@@ -561,6 +561,10 @@ void WindowManager::Initialize()
 
 	RenderWindows();
 }
+void WindowManager::Stop()
+{
+
+}
 void WindowManager::FireEvent(EffigyEvent evt, int p)
 {
 

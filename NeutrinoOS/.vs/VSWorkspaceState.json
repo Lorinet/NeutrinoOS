@@ -1,12 +1,9 @@
 {
   "ExpandedNodes": [
     "",
-    "\\components",
-    "\\components\\EffigyWM",
-    "\\components\\TiwazUI",
     "\\include",
     "\\source"
   ],
-  "SelectedNode": "\\source\\syscall.cpp",
+  "SelectedNode": "\\source\\vmmgr.cpp",
   "PreviewInSolutionExplorer": false
 }

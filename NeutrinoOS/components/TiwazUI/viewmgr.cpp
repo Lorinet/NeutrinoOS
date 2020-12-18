@@ -14,9 +14,13 @@ void ViewManager::Initialize()
 	Graphics::fonts.emplace("Helvetica 8", (FontType){(uint8_t *)u8g2_font_helvR08_tf, 8});
 	Graphics::fonts.emplace("Helvetica 8 Bold", (FontType){(uint8_t *)u8g2_font_helvB08_tf, 8});
 	Graphics::fonts.emplace("Open Iconic 8", (FontType){(uint8_t *)u8g2_font_open_iconic_all_1x_t, 8});
+	Graphics::fonts.emplace("Crox 9", (FontType){(uint8_t *)u8g2_font_crox1h_tf, 9});
+	Graphics::fonts.emplace("Crox 9 Bold", (FontType){(uint8_t *)u8g2_font_crox1hb_tf, 9});
+	Graphics::fonts.emplace("Profont 9", (FontType){(uint8_t *)u8g2_font_profont15_mf, 9});
 	Graphics::fonts.emplace("Times New Roman 10", (FontType){(uint8_t *)u8g2_font_timR10_tf, 10});
 	Graphics::fonts.emplace("Times New Roman 10 Bold", (FontType){(uint8_t *)u8g2_font_timB10_tf, 10});
 	Graphics::fonts.emplace("Console 10", (FontType){(uint8_t *)u8g2_font_pxplusibmvga9_tf, 10});
+	Graphics::fonts.emplace("Profont 11", (FontType){(uint8_t *)u8g2_font_profont17_tf, 11});
 	Graphics::fonts.emplace("Courier New 11", (FontType){(uint8_t *)u8g2_font_courB14_tf, 11});
 	Graphics::fonts.emplace("Helvetica 11", (FontType){(uint8_t *)u8g2_font_helvR10_tf, 11});
 	Graphics::fonts.emplace("Helvetica 11 Bold", (FontType){(uint8_t *)u8g2_font_helvB10_tf, 11});
@@ -25,16 +29,19 @@ void ViewManager::Initialize()
 	Graphics::fonts.emplace("Times New Roman 13", (FontType){(uint8_t *)u8g2_font_timR14_tf, 13});
 	Graphics::fonts.emplace("Times New Roman 13 Bold", (FontType){(uint8_t *)u8g2_font_timB14_tf, 13});
 	Graphics::fonts.emplace("Helvetica 14", (FontType){(uint8_t *)u8g2_font_helvR14_tf, 14});
+	Graphics::fonts.emplace("Inconsolata 16", (FontType){(uint8_t *)u8g2_font_inr16_mf, 16});
 	Graphics::fonts.emplace("Logisoso 16", (FontType){(uint8_t *)u8g2_font_logisoso16_tf, 16});
 	Graphics::fonts.emplace("Open Iconic 16", (FontType){(uint8_t *)u8g2_font_open_iconic_all_2x_t, 16});
 	Graphics::fonts.emplace("Courier New 19", (FontType){(uint8_t *)u8g2_font_courR24_tf, 19});
 	Graphics::fonts.emplace("Helvetica 19", (FontType){(uint8_t *)u8g2_font_helvR18_tf, 19});
+	Graphics::fonts.emplace("Inconsolata 19", (FontType){(uint8_t *)u8g2_font_inr19_mf, 19});
 	Graphics::fonts.emplace("Battery 19", (FontType){(uint8_t *)u8g2_font_battery19_tn, 19});
 	Graphics::fonts.emplace("Logisoso 20", (FontType){(uint8_t *)u8g2_font_logisoso20_tf, 20});
 	Graphics::fonts.emplace("Logisoso 22", (FontType){(uint8_t *)u8g2_font_logisoso22_tf, 22});
 	Graphics::fonts.emplace("Times New Roman 23", (FontType){(uint8_t *)u8g2_font_timR24_tf, 23});
 	Graphics::fonts.emplace("Helvetica 25", (FontType){(uint8_t *)u8g2_font_helvR24_tf, 25});
 	Graphics::fonts.emplace("Helvetica 25 Bold", (FontType){(uint8_t *)u8g2_font_helvB24_tf, 25});
+	Graphics::fonts.emplace("Freedoom 26 Numbers", (FontType){(uint8_t *)u8g2_font_freedoomr25_tn, 26});
 	Graphics::fonts.emplace("Logisoso 26", (FontType){(uint8_t *)u8g2_font_logisoso26_tf, 26});
 	Graphics::fonts.emplace("Logisoso 28", (FontType){(uint8_t *)u8g2_font_logisoso28_tf, 28});
 	Graphics::fonts.emplace("Logisoso 32", (FontType){(uint8_t *)u8g2_font_logisoso32_tf, 32});
@@ -310,13 +317,6 @@ void ViewManager::FireEvent(TiwazEvent e)
 				}
 			}
 			else if (elm->GetProperty("Type") == "Button")
-			{
-				if (elm->eventHandler != -1)
-				{
-					vmmgr::processes[views[activeView]->parentProcess]->branch(elm->eventHandler);
-				}
-			}
-			else if (elm->GetProperty("Type") == "CheckBox")
 			{
 				if (elm->eventHandler != -1)
 				{

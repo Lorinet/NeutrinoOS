@@ -9,7 +9,7 @@
 #elif defined(__ESP32)
 #define PIN_BACK 17
 #define PIN_ENTER 18
-#define PIN_SELECT 19
+#define PIN_SELECT 0
 #endif
 using namespace std;
 class inputmgr

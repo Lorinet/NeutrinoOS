@@ -1,0 +1,53 @@
+#exlink &__compare_eqf_func
+#exlink &__compare_nef_func
+#exlink &__compare_lf_func
+#exlink &__compare_gf_func
+#exlink &__compare_lef_func
+#exlink &__compare_gef_func
+#exlink &__compare_true_func
+
+:&__compare_eqf_func
+pop &__compare_func!op1
+pop &__compare_func!op2
+cmp &__compare_func!op1 &__compare_func!op2
+lje &__compare_true_func
+spush 0
+ret
+:&__compare_nef_func
+pop &__compare_func!op1
+pop &__compare_func!op2
+cmp &__compare_func!op1 &__compare_func!op2
+ljne &__compare_true_func
+spush 0
+ret
+:&__compare_lf_func
+pop &__compare_func!op1
+pop &__compare_func!op2
+cmp &__compare_func!op1 &__compare_func!op2
+ljl &__compare_true_func
+spush 0
+ret
+:&__compare_gf_func
+pop &__compare_func!op1
+pop &__compare_func!op2
+cmp &__compare_func!op1 &__compare_func!op2
+ljg &__compare_true_func
+spush 0
+ret
+:&__compare_lef_func
+pop &__compare_func!op1
+pop &__compare_func!op2
+cmp &__compare_func!op1 &__compare_func!op2
+ljle &__compare_true_func
+spush 0
+ret
+:&__compare_gef_func
+pop &__compare_func!op1
+pop &__compare_func!op2
+cmp &__compare_func!op1 &__compare_func!op2
+ljge &__compare_true_func
+spush 0
+ret
+:&__compare_true_func
+spush 1
+ret
