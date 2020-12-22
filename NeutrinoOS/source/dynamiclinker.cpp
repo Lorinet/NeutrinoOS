@@ -6,7 +6,7 @@ void dynamiclinker::dynamicLink(nvm* v)
 	replaceModulesByName(v->bytecode);
 	v->pages.insert({ 0, pair<int, int>(0, v->bytecode->size - 1) });
 	int ndx = 1;
-	link(v->bytecode, &offsets, &v->pages, &ndx);
+	if (!link(v->bytecode, &offsets, &v->pages, &ndx, v->processid)) return;
 	map<string, map<int, int>> sections;
 	int s;
 	byte* modcod;
@@ -54,12 +54,13 @@ void dynamiclinker::dynamicLink(nvm* v)
 	return;
 }
 
-void dynamiclinker::link(Array<instruction>* v, map<string, int>* off, map<int, pair<int, int>>* pages, int* ndx)
+bool dynamiclinker::link(Array<instruction>* v, map<string, int>* off, map<int, pair<int, int>>* pages, int* ndx, int pid)
 {
 	byte* bin;
 	int size;
 	Array<instruction>* dasm;
 	string file;
+	string path;
 	for (int i = 0; i < v->size; i++)
 	{
 		if ((*v)[i].opCode == opcode::LINK)
@@ -69,7 +70,13 @@ void dynamiclinker::link(Array<instruction>* v, map<string, int>* off, map<int, 
 			if (off->find(file) == off->end())
 			{
 				off->insert({ file, v->size });
-				bin = file::readAllBytes(lvmgr::formatPath("0:\\Neutrino\\sys\\" + file), &size);
+				path = lvmgr::formatPath("0:\\Neutrino\\sys\\" + file);
+				if (!file::fileExists(path))
+				{
+					vmmgr::vmmerror("Library " + file + " could not be found.", pid);
+					return false;
+				}
+				bin = file::readAllBytes(path, &size);
 				dasm = disassembler::disassembleExecutable(bin, size);
 				replaceModulesByName(dasm);
 				for (int j = 0; j < dasm->size; j++)
@@ -207,11 +214,12 @@ void dynamiclinker::link(Array<instruction>* v, map<string, int>* off, map<int, 
 				pages->insert({ *ndx, pair<int, int>(v->size, v->size + dasm->size - 1) });
 				(*ndx) += 1;
 				v->insert(dasm, v->size, 0, dasm->size);
-				link(v, off, pages, ndx);
+				if (!link(v, off, pages, ndx, pid)) return false;
 				break;
 			}
 		}
 	}
+	return true;
 }
 
 void dynamiclinker::replaceModulesByName(Array<instruction>* dasm)

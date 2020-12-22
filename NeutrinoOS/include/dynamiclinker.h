@@ -12,6 +12,6 @@ class dynamiclinker
 {
 public:
 	static void dynamicLink(nvm* v);
-	static void link(Array<instruction>* v, map<string, int>* off, map<int, pair<int, int>>* pages, int* ndx);
+	static bool link(Array<instruction>* v, map<string, int>* off, map<int, pair<int, int>>* pages, int* ndx, int pid);
 	static void replaceModulesByName(Array<instruction>* dasm);
 };
