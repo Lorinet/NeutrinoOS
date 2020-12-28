@@ -150,6 +150,9 @@ void nvm::cycle()
 		case opcode::MOV:
 			k1 = bitconverter::toint32(i.parameters, 0);
 			k2 = bitconverter::toint32(i.parameters, 4);
+			k = bitconverter::toint32(memory[curPage][k1]);
+			k = bitconverter::toint32(memory[curPage][k1]);
+
 			if (memory[curPage].count(k2)) memory[curPage][k2] = memory[curPage][k1];
 			else memory[curPage].emplace(k2, memory[curPage][k1]);
 			break;
@@ -229,7 +232,6 @@ void nvm::cycle()
 			k1 = i.parameters[0];
 			k2 = i.parameters[1];
 			bl = memory[curPage][k2];
-			//bl.insert(&memory[curPage][k1], 0, 0, memory[curPage][k1].size);
 			for (n = 0; n < memory[curPage][k1].size; n++)
 			{
 				bl.push(memory[curPage][k1][n]);
@@ -254,61 +256,66 @@ void nvm::cycle()
 			}
 			break;
 		case opcode::VAC:
-			k1 = bitconverter::toint32(i.parameters, 0);
 			ii = 0;
 			while (arrays.find(ii) != arrays.end())
 			{
 				ii++;
 			}
 			arrays.emplace(ii, arrayobj());
-			memory[curPage][k1] = bitconverter::toArray(ii);
+			astack.push(bitconverter::toArray(ii));
 			break;
 		case opcode::VAD:
-			k1 = bitconverter::toint32(memory[curPage][bitconverter::toint32(i.parameters, 0)], 0);
-			k2 = bitconverter::toint32(i.parameters, 4);
-			arrays[k1].data.push(memory[curPage][k2]);
+			k1 = bitconverter::toint32(astack.getTop());
+			astack.pop();
+			arrays[k1].data.push(astack.getTop());
+			astack.pop();
 			break;
 		case opcode::VAR:
-			k1 = bitconverter::toint32(memory[curPage][bitconverter::toint32(i.parameters, 0)], 0);
-			k2 = bitconverter::toint32(memory[curPage][bitconverter::toint32(i.parameters, 4)], 0);
+			k1 = bitconverter::toint32(astack.getTop());
+			astack.pop();
+			k2 = bitconverter::toint32(astack.getTop());
+			astack.pop();
 			arrays[k1].data.removeAt(k2);
 			break;
 		case opcode::VAI:
-			k = bitconverter::toint32(memory[curPage][bitconverter::toint32(i.parameters, 0)], 0); // indexand
-			k1 = bitconverter::toint32(memory[curPage][bitconverter::toint32(i.parameters, 4)], 0); // index
-			k2 = bitconverter::toint32(i.parameters, 8); // destination
-			memory[curPage][k2] = arrays[k].data[k1];
+			k1 = bitconverter::toint32(astack.getTop()); // array
+			astack.pop();
+			k2 = bitconverter::toint32(astack.getTop()); // index
+			astack.pop();
+			astack.push(arrays[k1].data[k2]);
 			break;
 		case opcode::VADE:
-			k = bitconverter::toint32(memory[curPage][bitconverter::toint32(i.parameters, 0)], 0);
+			k = bitconverter::toint32(astack.getTop());
+			astack.pop();
 			arrays.erase(k);
 			break;
 		case opcode::VAP:
-			k1 = bitconverter::toint32(memory[curPage][bitconverter::toint32(i.parameters, 0)], 0);
-			k2 = bitconverter::toint32(memory[curPage][bitconverter::toint32(i.parameters, 4)], 0);
+			k1 = bitconverter::toint32(astack.getTop());
+			astack.pop();
+			k2 = bitconverter::toint32(astack.getTop());
+			astack.pop();
 			arrays[k2].data.insert(arrays[k1].data, arrays[k2].data.size, 0, arrays[k1].data.size);
 			break;
 		case opcode::VPF:
-			k1 = bitconverter::toint32(memory[curPage][bitconverter::toint32(i.parameters, 0)], 0);
-			k2 = bitconverter::toint32(i.parameters, 4);
-			arrays[k1].data.pushFront(memory[curPage][k2]);
+			k = bitconverter::toint32(astack.getTop());
+			astack.pop();
+			arrays[k].data.pushFront(astack.getTop());
+			astack.pop();
 			break;
 		case opcode::VADI:
-			k1 = bitconverter::toint32(memory[curPage][bitconverter::toint32(i.parameters, 0)], 0);
-			v = Array<byte>(i.parameters, i.psize);
-			v.erase(0, 4);
-			arrays[k1].data.push(v);
 			break;
 		case opcode::VAL:
-			k1 = bitconverter::toint32(memory[curPage][bitconverter::toint32(i.parameters, 0)], 0);
-			k2 = bitconverter::toint32(i.parameters, 4);
-			memory[curPage][k2] = bitconverter::toArray(arrays[k1].data.size);
+			k = bitconverter::toint32(astack.getTop());
+			astack.pop();
+			astack.push(bitconverter::toArray(arrays[k].data.size));
 			break;
 		case opcode::VAS:
-			k = bitconverter::toint32(memory[curPage][bitconverter::toint32(i.parameters, 0)], 0); // indexand
-			k1 = bitconverter::toint32(memory[curPage][bitconverter::toint32(i.parameters, 4)], 0); // index
-			k2 = bitconverter::toint32(i.parameters, 8); // source
-			arrays[k].data[k1] = memory[curPage][k2];
+			k1 = bitconverter::toint32(astack.getTop()); // array
+			astack.pop();
+			k2 = bitconverter::toint32(astack.getTop()); // index
+			astack.pop();
+			arrays[k1].data[k2] = astack.getTop();
+			astack.pop();
 			break;
 		case opcode::MOVL:
 			k = bitconverter::toint32(i.parameters, 0);
@@ -318,24 +325,48 @@ void nvm::cycle()
 			else memory[curPage].emplace(k, v);
 			break;
 		case opcode::ADD:
-			k1 = bitconverter::toint32(i.parameters, 0);
-			k2 = bitconverter::toint32(i.parameters, 4);
-			memory[curPage][k2] = bitconverter::toArray(bitconverter::toint32(memory[curPage][k1], 0) + bitconverter::toint32(memory[curPage][k2], 0));
+			if (astack.size > 1)
+			{
+				k1 = bitconverter::toint32(astack.getTop(), 0);
+				astack.pop();
+				k2 = bitconverter::toint32(astack.getTop(), 0);
+				astack.pop();
+				astack.push(bitconverter::toArray(k1 + k2));
+			}
+			else vmmgr::vmmerror("Stack underflow at " + pc, processid);
 			break;
 		case opcode::SUB:
-			k1 = bitconverter::toint32(i.parameters, 0);
-			k2 = bitconverter::toint32(i.parameters, 4);
-			memory[curPage][k2] = bitconverter::toArray(bitconverter::toint32(memory[curPage][k1], 0) - bitconverter::toint32(memory[curPage][k2], 0));
+			if (astack.size > 1)
+			{
+				k1 = bitconverter::toint32(astack.getTop(), 0);
+				astack.pop();
+				k2 = bitconverter::toint32(astack.getTop(), 0);
+				astack.pop();
+				astack.push(bitconverter::toArray(k1 - k2));
+			}
+			else vmmgr::vmmerror("Stack underflow at " + pc, processid);
 			break;
 		case opcode::MUL:
-			k1 = bitconverter::toint32(i.parameters, 0);
-			k2 = bitconverter::toint32(i.parameters, 4);
-			memory[curPage][k2] = bitconverter::toArray(bitconverter::toint32(memory[curPage][k1], 0) * bitconverter::toint32(memory[curPage][k2], 0));
+			if (astack.size > 1)
+			{
+				k1 = bitconverter::toint32(astack.getTop(), 0);
+				astack.pop();
+				k2 = bitconverter::toint32(astack.getTop(), 0);
+				astack.pop();
+				astack.push(bitconverter::toArray(k1 * k2));
+			}
+			else vmmgr::vmmerror("Stack underflow at " + pc, processid);
 			break;
 		case opcode::DIV:
-			k1 = bitconverter::toint32(i.parameters, 0);
-			k2 = bitconverter::toint32(i.parameters, 4);
-			memory[curPage][k2] = bitconverter::toArray(bitconverter::toint32(memory[curPage][k1], 0) / bitconverter::toint32(memory[curPage][k2], 0));
+			if (astack.size > 1)
+			{
+				k1 = bitconverter::toint32(astack.getTop(), 0);
+				astack.pop();
+				k2 = bitconverter::toint32(astack.getTop(), 0);
+				astack.pop();
+				astack.push(bitconverter::toArray(k1 / k2));
+			}
+			else vmmgr::vmmerror("Stack underflow at " + pc, processid);
 			break;
 		case opcode::INC:
 			k = bitconverter::toint32(i.parameters, 0);
@@ -352,6 +383,20 @@ void nvm::cycle()
 		case opcode::IDIV:
 			k = bitconverter::toint32(i.parameters, 0);
 			memory[curPage][k] = bitconverter::toArray(bitconverter::toint32(memory[curPage][k], 0) / bitconverter::toint32(i.parameters, 4));
+			break;
+		case opcode::SCMP:
+			if (astack.size < 2) vmmgr::vmmerror("Stack underflow at " + pc, processid);
+			cv1 = bitconverter::toint32(astack.getTop(), 0);
+			astack.pop();
+			cv2 = bitconverter::toint32(astack.getTop(), 0);
+			astack.pop();
+			less = false;
+			greater = false;
+			equal = false;
+			zero = false;
+			if (cv1 < cv2) less = true;
+			if (cv1 > cv2) greater = true;
+			if (cv1 == cv2) equal = true;
 			break;
 		case opcode::CMP:
 			k1 = bitconverter::toint32(i.parameters, 0);
@@ -562,7 +607,7 @@ void nvm::cycle()
 		case opcode::EMIT:
 			k = bitconverter::toint32(i.parameters, 0);
 			v = memory[curPage][k];
-			emc = *disassembler::disassembleExecutable(v.holder, v.size);
+			emc = *disassembler::disassembleCode(v.holder, v.size);
 			addr = bytecode->size;
 			for (n = 0; n < emc.size; n++) bytecode->push(emc[n]);
 			branch(addr);

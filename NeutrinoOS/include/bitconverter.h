@@ -7,6 +7,7 @@ class bitconverter
 {
 public:
 	static int toint32(byte* vc, int index);
+	static int toint32(Array<byte> vc);
 	static int toint32(Array<byte> vc, int index);
 	static vector<byte> toarray(string s);
 	static vector<byte> toarray(int i);

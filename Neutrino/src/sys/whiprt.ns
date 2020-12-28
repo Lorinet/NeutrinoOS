@@ -9,12 +9,9 @@
 #exlink &__logic_and_func
 #exlink &__logic_or_func
 #exlink &__logic_and_true_func
-#exlink &__add_func
-#exlink &__sub_func
-#exlink &__mul_func
-#exlink &__div_func
 #exlink &__mod_func
 #exlink &__not_func
+#exlink input
 
 
 :main
@@ -22,44 +19,32 @@ link neutrino.lnx
 ret
 
 :&__compare_eqf_func
-pop &__compare_eqf_func!op1
-pop &__compare_eqf_func!op2
-cmp &__compare_eqf_func!op1 &__compare_eqf_func!op2
+scmp
 lje &__compare_true_func
 spush 0
 ret
 :&__compare_nef_func
-pop &__compare_nef_func!op1
-pop &__compare_nef_func!op2
-cmp &__compare_nef_func!op1 &__compare_nef_func!op2
+scmp
 ljne &__compare_true_func
 spush 0
 ret
 :&__compare_lf_func
-pop &__compare_lf_func!op1
-pop &__compare_lf_func!op2
-cmp &__compare_lf_func!op1 &__compare_lf_func!op2
+scmp
 ljl &__compare_true_func
 spush 0
 ret
 :&__compare_gf_func
-pop &__compare_gf_func!op1
-pop &__compare_gf_func!op2
-cmp &__compare_gf_func!op1 &__compare_gf_func!op2
+scmp
 ljg &__compare_true_func
 spush 0
 ret
 :&__compare_lef_func
-pop &__compare_func!op1
-pop &__compare_func!op2
-cmp &__compare_func!op1 &__compare_func!op2
+scmp
 ljle &__compare_true_func
 spush 0
 ret
 :&__compare_gef_func
-pop &__compare_gef_func!op1
-pop &__compare_gef_func!op2
-cmp &__compare_gef_func!op1 &__compare_gef_func!op2
+scmp
 ljge &__compare_true_func
 spush 0
 ret
@@ -70,8 +55,8 @@ ret
 extcall NtrConsolePrint
 ret
 :&__logic_and_func
-pop &__logic_and_func!op1
 pop &__logic_and_func!op2
+pop &__logic_and_func!op1
 cmp &__logic_and_func!op1 &__logic_and_func!op2
 lje &__logic_and_true_func
 spush 0
@@ -82,48 +67,28 @@ lje &__compare_true_func
 spush 0
 ret
 :&__logic_or_func
-pop &__logic_or_func!op1
 pop &__logic_or_func!op2
+pop &__logic_or_func!op1
 cmpi &__logic_or_func!op1 1
 lje &__compare_true_func
 cmpi &__logic_or_func!op2 1
 lje &__compare_true_func
 spush 0
 ret
-:&__add_func
-pop &__add_func!op1
-pop &__add_func!op2
-add &__add_func!op1 &__add_func_op2 &__add_result
-push &__add_result
-ret
-:&__sub_func
-pop &__sub_func!op1
-pop &__sub_func!op2
-sub &__sub_func!op1 &__sub_func_op2 &__sub_result
-push &__sub_result
-ret
-:&__mul_func
-pop &__mul_func!op1
-pop &__mul_func!op2
-mul &__mul_func!op1 &__mul_func_op2 &__mul_result
-push &__mul_result
-ret
-:&__div_func
-pop &__div_func!op1
-pop &__div_func!op2
-div &__div_func!op1 &__div_func_op2 &__div_result
-push &__div_result
-ret
 :&__mod_func
-pop &__mod_func!op1
 pop &__mod_func!op2
-div &__mod_func!op1 &__mod_func_op2 &__mod_result
-sub &__mod_func!op1 &__mod_result &__mod_result
-push &__mod_result
+pop &__mod_func!op1
+div &__mod_func!op1 &__mod_func!op2
+sub &__mod_func!op1 &__mod_func!op2
+push &__mod_func!op1
 ret
 :&__not_func
 pop &__not_func!op
 cmpi &__not_func!op 0
 lje &__compare_true_func
 spush 0
+ret
+:input
+call print
+extcall NtrConsoleGetString
 ret

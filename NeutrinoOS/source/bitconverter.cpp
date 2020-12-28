@@ -7,6 +7,10 @@ int bitconverter::toint32(Array<byte> vc, int index)
 {
 	return vc[index + 3] << 24 | vc[index + 2] << 16 | vc[index + 1] << 8 | vc[index];
 }
+int bitconverter::toint32(Array<byte> vc)
+{
+	return vc[3] << 24 | vc[2] << 16 | vc[1] << 8 | vc[0];
+}
 vector<byte> bitconverter::toarray(string s)
 {
 	vector<byte> a;

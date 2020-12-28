@@ -9,9 +9,6 @@ print:0
 &__logic_and_func:8
 &__logic_or_func:9
 &__logic_and_true_func:10
-&__add_func:11
-&__sub_func:12
-&__mul_func:13
-&__div_func:14
-&__mod_func:15
-&__not_func:16
+&__mod_func:11
+&__not_func:12
+input:13
