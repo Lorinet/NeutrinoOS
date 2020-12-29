@@ -331,7 +331,7 @@ void nvm::cycle()
 				astack.pop();
 				k2 = bitconverter::toint32(astack.getTop(), 0);
 				astack.pop();
-				astack.push(bitconverter::toArray(k1 + k2));
+				astack.push(bitconverter::toArray(k2 + k1));
 			}
 			else vmmgr::vmmerror("Stack underflow at " + pc, processid);
 			break;
@@ -342,7 +342,7 @@ void nvm::cycle()
 				astack.pop();
 				k2 = bitconverter::toint32(astack.getTop(), 0);
 				astack.pop();
-				astack.push(bitconverter::toArray(k1 - k2));
+				astack.push(bitconverter::toArray(k2 - k1));
 			}
 			else vmmgr::vmmerror("Stack underflow at " + pc, processid);
 			break;
@@ -353,7 +353,7 @@ void nvm::cycle()
 				astack.pop();
 				k2 = bitconverter::toint32(astack.getTop(), 0);
 				astack.pop();
-				astack.push(bitconverter::toArray(k1 * k2));
+				astack.push(bitconverter::toArray(k2 * k1));
 			}
 			else vmmgr::vmmerror("Stack underflow at " + pc, processid);
 			break;
@@ -364,7 +364,7 @@ void nvm::cycle()
 				astack.pop();
 				k2 = bitconverter::toint32(astack.getTop(), 0);
 				astack.pop();
-				astack.push(bitconverter::toArray(k1 / k2));
+				astack.push(bitconverter::toArray(k2 / k1));
 			}
 			else vmmgr::vmmerror("Stack underflow at " + pc, processid);
 			break;
