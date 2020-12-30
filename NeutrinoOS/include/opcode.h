@@ -49,7 +49,7 @@ enum opcode
 	VADE = 0x5C, // array deallocate
 	VAP = 0x5D,  // array append
 	VPF = 0x5E,  // array push front
-	VADI = 0x5F, // array add immediate value
+	SWAP = 0x5F,
 	JMP = 0x60,
 	JEQ = 0x61,
 	JNE = 0x62,

@@ -1,0 +1,75 @@
+#define TIMER_CREATE 0x00
+#define TIMER_DESTROY 0x01
+#define TIMER_LOOP 0x02
+#define TIMER_ONCE 0x03
+#define TIMER_START 0x04
+#define TIMER_STOP 0x05
+
+#exlink NtrCreateTimer
+#exlink NtrDestroyTimer
+#exlink NtrSetTimerLoop
+#exlink NtrSetTimerOnce
+#exlink NtrStartTimer
+#exlink NtrStopTimer
+#exlink NtrDelay
+
+:main
+link neutrino.lnx
+ret
+
+:NtrCreateTimer
+clr ___T4
+stb ___T1 TIMER_CREATE
+pop ___T2 ; interval
+pop ___T3 ; callback
+append ___T1 ___T4
+concat ___T2 ___T4
+concat ___T3 ___T4
+push ___T4
+extcall NtrTimerInterrupt
+ret
+
+:NtrDestroyTimer
+pushb TIMER_DESTROY
+call NtrTimerInterruptEx
+ret
+
+:NtrSetTimerLoop
+pushb TIMER_LOOP
+call NtrTimerInterruptEx
+ret
+
+:NtrSetTimerOnce
+pushb TIMER_ONCE
+call NtrTimerInterruptEx
+ret
+
+:NtrStartTimer
+pushb TIMER_START
+call NtrTimerInterruptEx
+ret
+
+:NtrStopTimer
+pushb TIMER_STOP
+call NtrTimerInterruptEx
+ret
+
+:NtrTimerInterruptEx
+clr ___T3
+pop ___T1 ; cmd
+pop ___T2 ; timer id
+append ___T1 ___T3
+concat ___T2 ___T3
+push ___T3
+extcall NtrTimerInterrupt
+ret
+
+:NtrDelay
+pop ___T1 ; interval
+extmovl NtrWakeProcess ___T2
+push ___T2
+push ___T1
+call NtrCreateTimer
+call NtrStartTimer
+extcall NtrSuspendProcess
+ret

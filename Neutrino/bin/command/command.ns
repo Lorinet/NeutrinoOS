@@ -1,0 +1,180 @@
+
+
+#include neutrino.ns
+
+:main
+link neutrino.lnx
+goto :readcmd
+ret
+
+:readcmd
+push path
+extcall NtrConsolePrint
+extcall NtrConsoleGetString
+pop _command
+cmpi _command "help"
+jeq :help
+cmpi _command "ver"
+jeq :splash
+cmpi _command "dir"
+jeq :dir
+cmpi _command "restart"
+jeq reboot
+cmpi _command "shutdown"
+jeq shutdown
+cmpi _command "refresh"
+jeq refresh
+cmpi _command "clear"
+jeq :clear
+cmpi _command ""
+jeq :readcmd
+mov _command _cmds
+split _cmds _ccd 3
+cmpi _cmds "cd "
+jeq :cd
+jmp :startprogram
+goto :readcmd
+ret
+
+:help
+ldstr "help - Show command list\ncd - Change working directory\ndir - Get all files and folders from working dir\nclear - Clear screen\nfcolor - Set foreground color\nbcolor - Set background color\nrestart - Reboot computer\nshutdown - Shutdown computer\nrefresh - Warm reboot\nver - Neutrino OS Version"
+extcall NtrConsolePrintLine
+goto :readcmd
+ret
+
+:dir
+push path
+extcall NtrDirectoryExists
+pop exists
+cmpi exists 1
+jeq :showdir
+jne :wrongdir
+goto :readcmd
+ret
+
+:showdir
+ldstr "Directories:"
+extcall NtrConsolePrint
+push path
+extcall NtrGetDirectories
+extcall NtrConsolePrintLine
+ldstr "Files:"
+extcall NtrConsolePrint
+push path
+extcall NtrGetFiles
+extcall NtrConsolePrintLine
+ret
+
+:wrongdir
+ldstr "Invalid path!"
+extcall NtrConsolePrintLine
+str path "0:\"
+ret
+
+:cd
+cmpi _ccd "\"
+jeq :back
+jne :append
+goto :readcmd
+ret
+
+:append
+concat _ccd path
+push path
+extcall NtrDirectoryExists
+pop exists
+cmpi exists 1
+jne :wrongdir
+size path _ndx
+dec _ndx 1
+index path _ndx _chara
+cmpi _chara 92
+jne :appendslash
+ret
+
+:appendslash
+str _chara 92
+append _chara path
+ret
+
+:back
+str path "0:\"
+ret
+
+:startprogram
+mov path exec
+concat _command exec
+push exec
+extcall NtrFileExists
+pop exists
+cmpi exists 1
+jeq :startapp
+jne :absolute
+ret
+
+:absolute
+push _command
+extcall NtrFileExists
+pop exists
+cmpi exists 1
+jeq :goodfile
+jne :wrongfile
+ret
+
+:goodfile
+mov _command exec
+goto :startapp
+ret
+
+:startapp
+clr _command
+push exec
+extcall NtrCreateProcess
+ret
+
+:wrongfile
+str _ics "Invalid command: "
+mov _command _icmd
+concat _icmd _ics
+push _ics
+extcall NtrConsolePrintLine
+ret
+
+:launch
+push _command
+extcall NtrFileExists
+pop exists
+cmpi exists 1
+jeq :runapp
+goto :readcmd
+ret
+
+:runapp
+push _command
+extcall NtrCreateProcess
+ret
+
+:clear
+; nop
+goto :readcmd
+ret
+
+:splash
+ldstr STRING_ABOUT_OS
+extcall NtrGetInformationString
+;extcall NtrConsoleNewLine
+extcall NtrConsolePrintLine
+goto :readcmd
+ret
+
+:reboot
+extcall NtrSystemReboot
+ret
+
+:shutdown
+extcall NtrSystemShutdown
+ret
+
+:refresh
+extcall NtrSystemWarmReboot
+ret

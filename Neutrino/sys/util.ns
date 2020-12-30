@@ -1,0 +1,131 @@
+; -----------------------------------------------
+;  Neutrino Operating System Project
+;  Utility function library
+;  by Kovacs Lorand -- 2020.07.25.
+; -----------------------------------------------
+
+#exlink ReplaceChars
+#exlink SplitString
+#exlink RebuildString
+:main
+ret
+
+:ReplaceChars
+pop ___charb ; string to replace with
+pop ___chara ; char to replace
+pop ___txt ; string
+size ___txt ___l
+str ___i 0
+str ___reb ""
+goto :loopReplaceChars
+push ___reb
+clr ___txt
+clr ___chara
+clr ___charb
+clr ___i
+clr ___l
+clr ___cc
+clr ___reb
+ret
+
+:loopReplaceChars
+cmp ___i ___l
+ljge :returnProc
+bits 8
+index ___txt ___i ___cc
+bits 32
+cmp ___cc ___chara
+jeq replaceChar
+jne doNotReplaceChar
+inc ___i 1
+lj :loopReplaceChars
+ret
+
+:replaceChar
+concat ___charb ___reb
+ret
+
+:doNotReplaceChar
+append ___cc ___reb
+ret
+
+:returnProc
+ret
+
+:SplitString
+pop ___sto
+pop ___txt
+size ___txt ___l
+str ___i 0
+str ___reb ""
+vac ___spla
+goto :loopSplitString
+vad ___spla ___reb
+push ___spla
+clr ___sto
+clr ___txt
+clr ___l
+clr ___i
+clr ___cc
+clr ___spla
+clr ___reb
+ret
+
+:loopSplitString
+cmp ___i ___l
+ljge :returnProc
+bits 8
+index ___txt ___i ___cc
+bits 32
+cmp ___cc ___sto
+jeq :breakString
+jne :addChar
+inc ___i 1
+lj :loopSplitString
+ret
+
+:addChar
+append ___cc ___reb
+ret
+
+:breakString
+vad ___spla ___reb
+clr ___reb
+ret
+
+:RebuildString
+pop ___del
+pop ___ara
+val ___ara ___l
+str ___i 0
+str ___reb ""
+goto :loopRebuildString
+push ___reb
+clr ___del
+clr ___ara
+clr ___l
+clr ___i
+clr ___cc
+clr ___reb
+ret
+
+:loopRebuildString
+cmp ___i ___l
+ljge :returnProc
+vai ___ara ___i ___cc
+goto :appendString
+inc ___i 1
+lj :loopRebuildString
+ret
+
+:appendString
+concat ___cc ___reb
+mov ___i ___ia
+inc ___ia 1
+cmp ___ia ___l
+jlt :appendDelimiter
+ret
+
+:appendDelimiter
+append ___del ___reb
+ret

@@ -1,0 +1,154 @@
+; -----------------------------------------------
+;  The Neutrino Operating System Project
+;  Neutrino OS Input/Output Library
+;  by Kovacs Lorand -- 2020.03.30.
+; -----------------------------------------------
+
+#define IO_GPIO_INIT 0x00
+#define IO_GPIO_WRITE 0x01
+#define IO_GPIO_READ 0x02
+#define IO_GPIO_PWM_OUT 0x03
+
+#define IO_GPIO_INPUT 0x00
+#define IO_GPIO_OUTPUT 0x01
+#define IO_GPIO_NONE 0x00
+#define IO_GPIO_PULLDOWN 0x01
+#define IO_GPIO_PULLUP 0x02
+
+#define IO_UART_OPEN 0x00
+#define IO_UART_WRITE 0x01
+#define IO_UART_READ 0x02
+#define IO_UART_READ_BYTES 0x03
+#define IO_UART_READ_BYTE 0x04
+#define IO_UART_AVAILABLE 0x05
+#define IO_UART_CLOSE 0x06
+
+:main
+link neutrino.lnx
+ret
+
+:GPIOInitPin
+pop ___1 ; pull
+pop ___2 ; direction
+pop ___3 ; pin number
+bits 8
+stb ___4 IO_GPIO_INIT
+bits 32
+concat ___3 ___4
+concat ___2 ___4
+concat ___1 ___4
+push ___4
+extcall NtrIOPinInterrupt
+ret
+
+:GPIOWritePin
+pop ___1 ; value
+pop ___2 ; pin number
+bits 8
+stb ___3 IO_GPIO_WRITE
+bits 32
+concat ___2 ___3
+concat ___1 ___3
+push ___3
+extcall NtrIOPinInterrupt
+ret
+
+:GPIOReadPin
+pop ___1
+bits 8
+stb ___2 IO_GPIO_READ
+bits 32
+concat ___1 ___2
+push ___2
+extcall NtrIOPinInterrupt
+ret
+
+:GPIOWritePWM
+pop ___1 ; value
+pop ___2 ; pin number
+bits 8
+stb ___3 IO_GPIO_PWM_OUT
+bits 32
+concat ___2 ___3
+concat ___1 ___3
+push ___3
+extcall NtrIOPinInterrupt
+ret
+
+:UARTOpen
+pop ___1 ; bitrate
+pop ___2 ; port name e.g. ser0
+bits 8
+stb ___3 IO_UART_OPEN
+bits 32
+concat ___2 ___3
+concat ___1 ___3
+push ___3
+extcall NtrIOSerialInterrupt
+ret
+
+:UARTWrite
+pop ___1 ; data
+pop ___2 ; port name e.g. ser0
+bits 8
+stb ___3 IO_UART_OPEN
+stb ___0 0
+bits 32
+concat ___2 ___3
+concat ___0 ___3
+concat ___1 ___3
+push ___3
+extcall NtrIOSerialInterrupt
+ret
+
+:UARTRead
+pop ___1
+bits 8
+stb ___2 IO_UART_READ
+bits 32
+concat ___1 ___2
+push ___2
+extcall NtrIOSerialInterrupt
+ret
+
+:UARTReadByte
+pop ___1
+bits 8
+stb ___2 IO_UART_READ_BYTE
+bits 32
+concat ___1 ___2
+push ___2
+extcall NtrIOSerialInterrupt
+ret
+
+:UARTReadBytes
+pop ___1 ; length
+pop ___2 ; port
+bits 8
+stb ___3 IO_UART_READ_BYTES
+bits 32
+concat ___1 ___3
+concat ___2 ___3
+push ___3
+extcall NtrIOSerialInterrupt
+ret
+
+:UARTGetAvailableBytes
+pop ___1
+bits 8
+stb ___2 IO_UART_AVAILABLE
+bits 32
+concat ___1 ___2
+push ___2
+extcall NtrIOSerialInterrupt
+ret
+
+:UARTClose
+pop ___1
+bits 8
+stb ___2 IO_UART_CLOSE
+bits 32
+concat ___1 ___2
+push ___2
+extcall NtrIOSerialInterrupt
+ret

@@ -1,0 +1,32 @@
+#include ErrorView.ns
+#include neutrino.ns
+:main
+link neutrino.lnx
+link userlib.lnx
+call ErrorView_CreateView
+extcall NtrAwaitMessage
+extcall NtrGetFirstMessage
+pop _errmsg
+str _fullstr "Text:"
+concat _errmsg _fullstr
+push __ErrorView_hwnd
+spush 1
+push _fullstr
+extcall WMSetUserElementProperty
+push __ErrorView_hwnd
+ldstr 2
+movl exit _ela
+push _ela
+extcall WMAttachEventHandler
+goto wasteTime
+ret
+
+:wasteTime
+; make sure the process stays alive and isn't running in a dead loop
+extcall NtrSuspendProcess
+lj wasteTime
+ret
+
+:exit
+extcall NtrShutdownProcess
+ret

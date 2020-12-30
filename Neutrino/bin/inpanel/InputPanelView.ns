@@ -1,0 +1,18 @@
+; InputPanelView View Layout
+
+:InputPanelView_CreateView
+spush "ID:0;Type:Label;Position X:5;Position Y:5;Width:0;Height:0;Font:Console 7;Border:0;|ID:1;Type:Button;Position X:5;Position Y:15;Width:0;Height:0;Text:abcde;Font:Micro 5;Selectable:1;|ID:2;Type:Button;Position X:35;Position Y:15;Width:0;Height:0;Text:fghij;Font:Micro 5;Selectable:1;|ID:3;Type:Button;Position X:65;Position Y:15;Width:0;Height:0;Text:klmno;Font:Micro 5;Selectable:1;|ID:4;Type:Button;Position X:95;Position Y:15;Width:0;Height:0;Text:pqrst;Font:Micro 5;Selectable:1;|ID:5;Type:Button;Position X:5;Position Y:28;Width:0;Height:0;Text:uvwxyz;Font:Micro 5;Selectable:1;|ID:6;Type:Button;Position X:40;Position Y:28;Width:0;Height:0;Text:01234;Font:Micro 5;Selectable:1;|ID:7;Type:Button;Position X:70;Position Y:28;Width:0;Height:0;Text:456789;Font:Micro 5;Selectable:1;|ID:8;Type:Button;Position X:106;Position Y:28;Width:15;Height:0;Text:_;Font:Micro 5;Selectable:1;|ID:9;Type:Button;Position X:5;Position Y:41;Width:0;Height:0;Text:.,?!;:;Font:Micro 5;Selectable:1;|ID:10;Type:Button;Position X:77;Position Y:41;Width:0;Height:0;Text:;Font:Open Iconic 8;Selectable:1;|ID:11;Type:Button;Position X:92;Position Y:41;Width:0;Height:0;Text:s;Font:Open Iconic 8;Selectable:1;|ID:12;Type:Button;Position X:107;Position Y:41;Width:0;Height:0;Text:t;Font:Open Iconic 8;Selectable:1;|"
+extcall WMCreateWindow
+pop __InputPanelView_hwnd ; Do not modify the handle variable!
+push __InputPanelView_hwnd
+extcall WMSetActiveWindow
+extcall WMUpdateView
+ret
+
+:InputPanelView_DestroyView
+push __InputPanelView_hwnd
+extcall WMDestroyWindow
+ret
+
+; Auto-generated with Neutrino UI Design Tool
+; #include InputPanelView.ns

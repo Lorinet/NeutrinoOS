@@ -1,7 +1,0 @@
-#include FontView.ns
-
-:main
-link neutrino.lnx
-link userlib.lnx
-call FontView_CreateView
-ret

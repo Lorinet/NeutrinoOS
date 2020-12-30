@@ -1,0 +1,99 @@
+#exlink print
+#exlink &__compare_eqf_func
+#exlink &__compare_nef_func
+#exlink &__compare_lf_func
+#exlink &__compare_gf_func
+#exlink &__compare_lef_func
+#exlink &__compare_gef_func
+#exlink &__compare_true_func
+#exlink &__logic_and_func
+#exlink &__logic_or_func
+#exlink &__logic_and_true_func
+#exlink &__mod_func
+#exlink &__not_func
+#exlink input
+
+
+:main
+link neutrino.lnx
+ret
+
+:&__compare_eqf_func
+scmp
+lje &__compare_true_func
+spush 0
+ret
+:&__compare_nef_func
+scmp
+ljne &__compare_true_func
+spush 0
+ret
+:&__compare_lf_func
+scmp
+ljl &__compare_true_func
+spush 0
+ret
+:&__compare_gf_func
+scmp
+ljg &__compare_true_func
+spush 0
+ret
+:&__compare_lef_func
+scmp
+ljle &__compare_true_func
+spush 0
+ret
+:&__compare_gef_func
+scmp
+ljge &__compare_true_func
+spush 0
+ret
+:&__compare_true_func
+spush 1
+ret
+:print
+extcall NtrConsolePrint
+ret
+:&__logic_and_func
+pop &__logic_and_func!op2
+pop &__logic_and_func!op1
+cmp &__logic_and_func!op1 &__logic_and_func!op2
+lje &__logic_and_true_func
+spush 0
+ret
+:&__logic_and_true_func
+cmpi &__logic_and_func!op1 1
+lje &__compare_true_func
+spush 0
+ret
+:&__logic_or_func
+pop &__logic_or_func!op2
+pop &__logic_or_func!op1
+cmpi &__logic_or_func!op1 1
+lje &__compare_true_func
+cmpi &__logic_or_func!op2 1
+lje &__compare_true_func
+spush 0
+ret
+:&__mod_func
+pop &__mod_func!op2
+pop &__mod_func!op1
+push &__mod_func!op1
+push &__mod_func!op2
+div
+push &__mod_func!op2
+mul
+push &__mod_func!op1
+swap
+sub
+ret
+:&__not_func
+pop &__not_func!op
+cmpi &__not_func!op 0
+lje &__compare_true_func
+spush 0
+ret
+:input
+call print
+extcall NtrConsoleGetString
+ret

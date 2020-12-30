@@ -302,7 +302,13 @@ void nvm::cycle()
 			arrays[k].data.pushFront(astack.getTop());
 			astack.pop();
 			break;
-		case opcode::VADI:
+		case opcode::SWAP:
+			v = astack.getTop();
+			astack.pop();
+			v1 = astack.getTop();
+			astack.pop();
+			astack.push(v);
+			astack.push(v1);
 			break;
 		case opcode::VAL:
 			k = bitconverter::toint32(astack.getTop());

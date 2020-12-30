@@ -1,0 +1,18 @@
+; ConhostView View Layout
+
+:ConhostView_CreateView
+spush "ID:0;Type:TextBuffer;Font:Micro 4;|ID:1;Type:StickyDraw;|"
+extcall WMCreateWindow
+pop __ConhostView_hwnd ; Do not modify the handle variable!
+push __ConhostView_hwnd
+extcall WMSetActiveWindow
+extcall WMUpdateView
+ret
+
+:ConhostView_DestroyView
+push __ConhostView_hwnd
+extcall WMDestroyWindow
+ret
+
+; Auto-generated with Neutrino UI Design Tool
+; #include ConhostView.ns

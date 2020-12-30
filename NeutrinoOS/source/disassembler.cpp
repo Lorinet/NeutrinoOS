@@ -36,16 +36,16 @@ Array<instruction>* disassembler::disassembleCode(byte* bc, int size)
 		byte op = bc[cntr];
 		cntr += 1;
 		int length;
-		if (op == opcode::ST || op == opcode::INTS || op == opcode::SPUSH || op == opcode::CMPS /*|| op == opcode::VADI*/)
+		if (op == opcode::ST || op == opcode::INTS || op == opcode::SPUSH || op == opcode::CMPS)
 		{
 			length = bitconverter::toint32(bc, cntr);
 			cntr += 4;
 		}
-		else if (op == opcode::ADD || op == opcode::SUB || op == opcode::MUL || op == opcode::DIV || op == opcode::VAC || op == opcode::VAD || op == opcode::VADE || op == opcode::VAI || op == opcode::VAR || op == opcode::VAL || op == opcode::VADI || op == opcode::VAP || op == opcode::VAS || op == opcode::VPF || op == opcode::NOP || op == opcode::RET || op == opcode::HALT || op == opcode::BREAK || op == opcode::SPOP || op == opcode::SCMP)
+		else if (op == opcode::ADD || op == opcode::SUB || op == opcode::MUL || op == opcode::DIV || op == opcode::VAC || op == opcode::VAD || op == opcode::VADE || op == opcode::VAI || op == opcode::VAR || op == opcode::VAL || op == opcode::SWAP || op == opcode::VAP || op == opcode::VAS || op == opcode::VPF || op == opcode::NOP || op == opcode::RET || op == opcode::HALT || op == opcode::BREAK || op == opcode::SPOP || op == opcode::SCMP)
 		{
 			length = 0;
 		}
-		else if (op == opcode::TOSTR || op == opcode::MOV || op == opcode::CONCAT || op == opcode::PARSE || op == opcode::SIZ || op == opcode::APPEND /*|| op == opcode::ADD || op == opcode::SUB || op == opcode::MUL || op == opcode::DIV */|| op == opcode::INC || op == opcode::DEC || op == opcode::IMUL || op == opcode::IDIV || op == opcode::CMPI || op == opcode::CMP || op == opcode::AND || op == opcode::OR || op == opcode::XOR || op == opcode::SHL || op == opcode::SHR || op == opcode::EXTCALL || op == opcode::MOVL /*|| op == opcode::VAD || op == opcode::VPF || op == opcode::VAR || op == opcode::VAP || op == opcode::VAL*/)
+		else if (op == opcode::TOSTR || op == opcode::MOV || op == opcode::CONCAT || op == opcode::PARSE || op == opcode::SIZ || op == opcode::APPEND|| op == opcode::INC || op == opcode::DEC || op == opcode::IMUL || op == opcode::IDIV || op == opcode::CMPI || op == opcode::CMP || op == opcode::AND || op == opcode::OR || op == opcode::XOR || op == opcode::SHL || op == opcode::SHR || op == opcode::EXTCALL || op == opcode::MOVL /*|| op == opcode::VAD || op == opcode::VPF || op == opcode::VAR || op == opcode::VAP || op == opcode::VAL*/)
 		{
 			length = 8;
 		}
@@ -53,7 +53,7 @@ Array<instruction>* disassembler::disassembleCode(byte* bc, int size)
 		{
 			length = 4;
 		}
-		else if (op == opcode::SPLIT || op == opcode::INDEX || op == opcode::INSERT || op == opcode::PUSHBLK/* || op == opcode::VAI || op == opcode::VAS */|| op == opcode::EXTMOVL)
+		else if (op == opcode::SPLIT || op == opcode::INDEX || op == opcode::INSERT || op == opcode::PUSHBLK || op == opcode::EXTMOVL)
 		{
 			length = 12;
 		}
