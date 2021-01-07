@@ -8,8 +8,7 @@ link util.lnx
 call FilesView_CreateView
 push __FilesView_hwnd
 ldstr 0
-movl handleEnter _hopen
-push _hopen
+pushl handleEnter
 extcall WMAttachEventHandler
 str _path "0:\"
 str _delim "\"
@@ -32,8 +31,7 @@ lje :up
 call FileMenu_CreateView
 push __FileMenu_hwnd
 ldstr 0
-movl handleAction _hact
-push _hact
+pushl handleAction
 extcall WMAttachEventHandler
 ret
 

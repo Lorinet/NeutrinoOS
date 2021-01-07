@@ -15,8 +15,7 @@ push _fullstr
 extcall WMSetUserElementProperty
 push __ErrorView_hwnd
 ldstr 2
-movl exit _ela
-push _ela
+pushl exit
 extcall WMAttachEventHandler
 goto wasteTime
 ret
