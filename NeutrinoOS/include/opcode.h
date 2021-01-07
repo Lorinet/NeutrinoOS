@@ -2,6 +2,7 @@
 enum opcode
 {
 	NOP = 0x01,
+	DELFLD = 0x02, // delete field
 	AND = 0x11,
 	OR = 0x12,
 	XOR = 0x13,
@@ -18,13 +19,13 @@ enum opcode
 	INDEX = 0x27,
 	SIZ = 0x28,
 	APPEND = 0x29,
-	PUSHBLK = 0x2A,
+	NEWOBJ = 0x2A, // new object
 	STB = 0x2B,
 	PUSHB = 0x2C,
 	CONCATB = 0x2D,
 	APPENDB = 0x2E,
 	CLRB = 0x2F,
-	MOVL = 0x30,
+	PUSHL = 0x30,
 	SCMP = 0x31,
 	ADD = 0x40,
 	SUB = 0x41,
@@ -42,13 +43,13 @@ enum opcode
 	CZB = 0x55,
 	CMPIB = 0x56,
 	INSERT = 0x57,
-	VAC = 0x58,  // array create
-	VAI = 0x59,  // array index get
-	VAD = 0x5A,  // array add
-	VAR = 0x5B,  // array remove
-	VADE = 0x5C, // array deallocate
-	VAP = 0x5D,  // array append
-	VPF = 0x5E,  // array push front
+	VAC = 0x58,   // array create
+	LDELEM = 0x59,// array index get
+	VAD = 0x5A,   // array add
+	DELELEM = 0x5B,   // array remove
+	VADE = 0x5C,  // array deallocate
+	LDFLD = 0x5D, // load field
+	STFLD = 0x5E, // store field
 	SWAP = 0x5F,
 	JMP = 0x60,
 	JEQ = 0x61,
@@ -72,8 +73,8 @@ enum opcode
 	SJG = 0x73,
 	SJZ = 0x74,
 	SJNZ = 0x75,
-	VAL = 0x76, // array length
-	VAS = 0x77, // array set index
+	LDLEN = 0x76, // array length
+	STELEM = 0x77, // array set index
     EXTMOVL = 0x78,
 	LJL = 0x79,
 	LJG = 0x7A,
@@ -81,6 +82,7 @@ enum opcode
 	LJNE = 0x7C,
 	LJGE = 0x7D,
 	LJLE = 0x7E,
+	JSP = 0x7F,
 	INTS = 0x80,
 	INTR = 0x81,
 	BREAK = 0x82,

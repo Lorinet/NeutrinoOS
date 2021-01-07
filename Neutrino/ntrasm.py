@@ -4,6 +4,7 @@ import sys
 import os
 
 OP_NOP = 0x01
+OP_DELFLD = 0x02
 OP_AND = 0x11
 OP_OR = 0x12
 OP_XOR = 0x13
@@ -20,13 +21,13 @@ OP_SPLIT = 0x26
 OP_INDEX = 0x27
 OP_SIZE = 0x28
 OP_APPEND = 0x29
-OP_PUSHBLK = 0x2A
+OP_NEWOBJ = 0x2A
 OP_STB = 0x2B
 OP_PUSHB = 0x2C
 OP_CONCATB = 0x2D
 OP_APPENDB = 0x2E
 OP_CLRB = 0x2F
-OP_MOVL = 0x30
+OP_PUSHL = 0x30
 OP_SCMP = 0x31
 OP_ADD = 0x40
 OP_SUB = 0x41
@@ -45,12 +46,12 @@ OP_CZB = 0x55
 OP_CMPIB = 0x56
 OP_INSERT = 0x57
 OP_VAC = 0x58
-OP_VAI = 0x59
+OP_LDELEM = 0x59
 OP_VAD = 0x5A
-OP_VAR = 0x5B
+OP_DELELEM = 0x5B
 OP_VADE = 0x5C
-OP_VAP = 0x5D
-OP_VPF = 0x5E
+OP_LDFLD = 0x5D
+OP_STFLD = 0x5E
 OP_SWAP = 0x5F
 OP_JMP = 0x60
 OP_JEQ = 0x61
@@ -74,8 +75,8 @@ OP_SJL = 0x72
 OP_SJG = 0x73
 OP_SJZ = 0x74
 OP_SJNZ = 0x75
-OP_VAL = 0x76
-OP_VAS = 0x77
+OP_LDLEN = 0x76
+OP_STELEM = 0x77
 OP_EXTMOVL = 0x78
 OP_LJL = 0x79
 OP_LJG = 0x7A
@@ -83,6 +84,7 @@ OP_LJE = 0x7B
 OP_LJNE = 0x7C
 OP_LJGE = 0x7D
 OP_LJLE = 0x7E
+OP_JSP = 0x7F
 OP_INTS = 0x80
 OP_INT = 0x81
 OP_BREAK = 0x82
@@ -493,7 +495,7 @@ else:
             spl = cl.split(' ')
             if len(spl) > 1:
                 lbl = spl[1].replace(":", "")
-                if cl.startswith("jmp") or cl.startswith("call") or cl.startswith("goto") or cl.startswith("jz") or cl.startswith("jnz") or cl.startswith("jeq") or cl.startswith("jne") or cl.startswith("jlt") or cl.startswith("jgt") or cl.startswith("jle") or cl.startswith("jge") or cl.startswith("movl") or cl.startswith("lj") or cl.startswith("lje") or cl.startswith("ljne") or cl.startswith("ljl") or cl.startswith("ljg") or cl.startswith("ljle") or cl.startswith("ljge"):
+                if cl.startswith("jmp") or cl.startswith("call") or cl.startswith("goto") or cl.startswith("jz") or cl.startswith("jnz") or cl.startswith("jeq") or cl.startswith("jne") or cl.startswith("jlt") or cl.startswith("jgt") or cl.startswith("jle") or cl.startswith("jge") or cl.startswith("pushl") or cl.startswith("lj") or cl.startswith("lje") or cl.startswith("ljne") or cl.startswith("ljl") or cl.startswith("ljg") or cl.startswith("ljle") or cl.startswith("ljge"):
                     if lbl not in executedSections:
                         executedSections.append(lbl)
 executedCode = []
@@ -544,6 +546,8 @@ for s in executedCode:
     op = arg[0].lower()
     if op == "nop":
         instr_simple(OP_NOP)
+    elif op == "delelem":
+        instr_simple(OP_DELELEM)
     elif op == "and":
         instr_var_var(OP_AND, arg[1], arg[2])
     elif op == "or":
@@ -601,11 +605,9 @@ for s in executedCode:
             pcode.extend(to_bytes(vkey))
     elif op == "mov":
         instr_var_var(OP_MOV, arg[1], arg[2])
-    elif op == "movl":
+    elif op == "pushl":
         if arg[1].replace(":", "") in labels:
-            cr_var(arg[2])
-            instr_simple(OP_MOVL)
-            pcode.extend(to_bytes(var[arg[2]]))
+            instr_simple(OP_PUSHL)
             pcode.extend(to_bytes(labels[arg[1].replace(":", "")]))
         else:
             rage_quit(9, "invalid label: " + arg[1])
@@ -626,28 +628,28 @@ for s in executedCode:
         instr_simple(OP_VAC)
     elif op == "vad":
         instr_simple(OP_VAD)
-    elif op == "vpf":
-        instr_simple(OP_VPF)
-    elif op == "vap":
-        instr_simple(OP_VAP)
+    elif op == "ldfld":
+        instr_simple(OP_LDFLD)
+    elif op == "stfld":
+        instr_simple(OP_STFLD)
     elif op == "vade":
         instr_simple(OP_VADE)
-    elif op == "var":
-        instr_simple(OP_VAR)
-    elif op == "vai":
-        instr_simple(OP_VAI)
+    elif op == "delelem":
+        instr_simple(OP_DELELEM)
+    elif op == "ldelem":
+        instr_simple(OP_LDELEM)
     elif op == "swap":
         instr_simple(OP_SWAP)
-    elif op == "val":
-        instr_simple(OP_VAL)
-    elif op == "vas":
-        instr_simple(OP_VAS)
+    elif op == "ldlen":
+        instr_simple(OP_LDLEN)
+    elif op == "stelem":
+        instr_simple(OP_STELEM)
     elif op == "size":
         instr_var_var(OP_SIZE, arg[1], arg[2])
     elif op == "append":
         instr_byte_var_var(OP_APPEND, OP_APPENDB, arg[1], arg[2])
-    elif op == "pushblk":
-        instr_var_var_var(OP_PUSHBLK, arg[1], arg[2], arg[3])
+    elif op == "newobj":
+        instr_simple(OP_NEWOBJ)
     elif op == "add":
         instr_simple(OP_ADD)
     elif op == "sub":
@@ -730,6 +732,8 @@ for s in executedCode:
         instr_lbranch(OP_LJLE, arg[1])
     elif op == "ljge":
         instr_lbranch(OP_LJGE, arg[1])
+    elif op == "jsp":
+        instr_simple(OP_JSP)
     elif op == "ints":
         instr_simple(OP_INTS)
         interrupt = int_lit(arg[1], 0)

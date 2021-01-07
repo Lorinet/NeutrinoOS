@@ -26,6 +26,7 @@ public:
 	Array<instruction>* bytecode;
 	map<int, map<int, Array<byte>>> memory;
 	map<int, arrayobj> arrays;
+	map<int, map<int, Array<byte>>> objects;
 	int curPage;
 	map<int, pair<int, int>> pages;
 	map<byte, int> eventHandlers;

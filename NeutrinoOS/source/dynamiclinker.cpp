@@ -135,15 +135,15 @@ bool dynamiclinker::link(Array<instruction>* v, map<string, int>* off, map<int, 
 						(*dasm)[j].parameters = bitconverter::toarray_p(((int)(*dasm)[j].parameters[0]) + v->size);
 						(*dasm)[j].psize = 4;
 					}
-					else if ((*dasm)[j].opCode == opcode::MOVL)
+					else if ((*dasm)[j].opCode == opcode::PUSHL)
 					{
-						int a = bitconverter::toint32((*dasm)[j].parameters, 4);
+						int a = bitconverter::toint32((*dasm)[j].parameters, 0);
 						a += v->size;
 						byte* vv = bitconverter::toarray_p(a);
-						(*dasm)[j].parameters[4] = vv[0];
-						(*dasm)[j].parameters[5] = vv[1];
-						(*dasm)[j].parameters[6] = vv[2];
-						(*dasm)[j].parameters[7] = vv[3];
+						(*dasm)[j].parameters[0] = vv[0];
+						(*dasm)[j].parameters[1] = vv[1];
+						(*dasm)[j].parameters[2] = vv[2];
+						(*dasm)[j].parameters[3] = vv[3];
 						delete vv;
 					}
 					else if((*dasm)[j].opCode == opcode::JMP)

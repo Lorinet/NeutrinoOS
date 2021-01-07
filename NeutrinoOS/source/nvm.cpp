@@ -24,6 +24,8 @@ nvm::nvm()
 	bits = 32;
 	awaitin = false;
 	waitForProcInput = -1;
+	arrays = map<int, arrayobj>();
+	objects = map<int, map<int, Array<byte>>>();
 	interm = new vt(processid, -1, vtype::StandardInput);
 	outterm = new vt(processid, -1, vtype::StandardOutput);
 }
@@ -50,6 +52,8 @@ nvm::nvm(Array<instruction>* code)
 	bits = 32;
 	waitForProcInput = -1;
 	awaitin = false;
+	arrays = map<int, arrayobj>();
+	objects = map<int, map<int, Array<byte>>>();
 	interm = new vt(processid, -1, vtype::StandardInput);
 	outterm = new vt(processid, -1, vtype::StandardOutput);
 }
@@ -81,6 +85,12 @@ void nvm::cycle()
 		switch (i.opCode)
 		{
 		case opcode::NOP:
+			break;
+		case opcode::DELFLD:
+			k = bitconverter::toint32(astack.getTop());
+			astack.pop();
+			objects[k].erase(bitconverter::toint32(astack.getTop()));
+			astack.pop();
 			break;
 		case opcode::AND:
 			k1 = bitconverter::toint32(i.parameters, 0);
@@ -174,9 +184,9 @@ void nvm::cycle()
 		case opcode::INDEX:
 			k1 = bitconverter::toint32(memory[curPage][bitconverter::toint32(i.parameters, 4)], 0);
 			k2 = bitconverter::toint32(i.parameters, 8);
-			if(bits == 32)
+			if (bits == 32)
 				memory[curPage][k2] = bitconverter::toArray((int)memory[curPage][bitconverter::toint32(i.parameters, 0)][k1]);
-			else if(bits == 8)
+			else if (bits == 8)
 			{
 				po = Array<byte>();
 				po.add(memory[curPage][bitconverter::toint32(i.parameters, 0)][k1]);
@@ -202,16 +212,14 @@ void nvm::cycle()
 			if (memory[curPage].count(k2)) memory[curPage][k2] = bl;
 			else memory[curPage].emplace(k2, bl);
 			break;
-		case opcode::PUSHBLK:
-			k = bitconverter::toint32(i.parameters, 0);
-			k1 = bitconverter::toint32(i.parameters, 4);
-			k2 = bitconverter::toint32(i.parameters, 8);
-			v = Array<byte>(k2);
-			for (sn = 0; sn < k2; sn++)
+		case opcode::NEWOBJ:
+			ii = 0;
+			while (objects.find(ii) != objects.end())
 			{
-				v[sn] = memory[curPage][k][k1 + sn];
+				ii++;
 			}
-			astack.push(v);
+			objects.emplace(ii, map<int, Array<byte>>());
+			astack.push(bitconverter::toArray(ii));
 			break;
 		case opcode::STB:
 			k = bitconverter::toint32(i.parameters, 0);
@@ -270,36 +278,39 @@ void nvm::cycle()
 			arrays[k1].data.push(astack.getTop());
 			astack.pop();
 			break;
-		case opcode::VAR:
-			k1 = bitconverter::toint32(astack.getTop());
+		case opcode::DELELEM:
+			k1 = bitconverter::toint32(astack.getTop()); // index
 			astack.pop();
-			k2 = bitconverter::toint32(astack.getTop());
+			k2 = bitconverter::toint32(astack.getTop()); // array
 			astack.pop();
-			arrays[k1].data.removeAt(k2);
+			arrays[k2].data.removeAt(k1);
 			break;
-		case opcode::VAI:
-			k1 = bitconverter::toint32(astack.getTop()); // array
+		case opcode::LDELEM:
+			k1 = bitconverter::toint32(astack.getTop()); // index
 			astack.pop();
-			k2 = bitconverter::toint32(astack.getTop()); // index
+			k2 = bitconverter::toint32(astack.getTop()); // array
 			astack.pop();
-			astack.push(arrays[k1].data[k2]);
+			astack.push(arrays[k2].data[k1]);
 			break;
 		case opcode::VADE:
 			k = bitconverter::toint32(astack.getTop());
 			astack.pop();
 			arrays.erase(k);
 			break;
-		case opcode::VAP:
-			k1 = bitconverter::toint32(astack.getTop());
+		case opcode::LDFLD:
+			k1 = bitconverter::toint32(astack.getTop()); // index
 			astack.pop();
-			k2 = bitconverter::toint32(astack.getTop());
+			k2 = bitconverter::toint32(astack.getTop()); // object
 			astack.pop();
-			arrays[k2].data.insert(arrays[k1].data, arrays[k2].data.size, 0, arrays[k1].data.size);
+			astack.push(objects[k2][k1]);
 			break;
-		case opcode::VPF:
-			k = bitconverter::toint32(astack.getTop());
+		case opcode::STFLD:
+			k1 = bitconverter::toint32(astack.getTop()); // index
 			astack.pop();
-			arrays[k].data.pushFront(astack.getTop());
+			k2 = bitconverter::toint32(astack.getTop()); // object
+			astack.pop();
+			if (objects[k2].find(k1) == objects[k2].end()) objects[k2].emplace(k1, astack.getTop());
+			else objects[k2][k1] = astack.getTop();
 			astack.pop();
 			break;
 		case opcode::SWAP:
@@ -310,25 +321,21 @@ void nvm::cycle()
 			astack.push(v);
 			astack.push(v1);
 			break;
-		case opcode::VAL:
+		case opcode::LDLEN:
 			k = bitconverter::toint32(astack.getTop());
 			astack.pop();
 			astack.push(bitconverter::toArray(arrays[k].data.size));
 			break;
-		case opcode::VAS:
-			k1 = bitconverter::toint32(astack.getTop()); // array
+		case opcode::STELEM:
+			k1 = bitconverter::toint32(astack.getTop()); // index
 			astack.pop();
 			k2 = bitconverter::toint32(astack.getTop()); // index
 			astack.pop();
-			arrays[k1].data[k2] = astack.getTop();
+			arrays[k2].data[k1] = astack.getTop();
 			astack.pop();
 			break;
-		case opcode::MOVL:
-			k = bitconverter::toint32(i.parameters, 0);
-			v = Array<byte>(i.parameters, i.psize);
-			v.erase(0, 4);
-			if (memory[curPage].count(k)) memory[curPage][k] = v;
-			else memory[curPage].emplace(k, v);
+		case opcode::PUSHL:
+			astack.push(Array<byte>(i.parameters, 4));
 			break;
 		case opcode::ADD:
 			if (astack.size > 1)
@@ -628,22 +635,26 @@ void nvm::cycle()
 			pc = bitconverter::toint32(i.parameters, 0);
 			break;
 		case opcode::LJE:
-			if(equal) pc = bitconverter::toint32(i.parameters, 0);
+			if (equal) pc = bitconverter::toint32(i.parameters, 0);
 			break;
 		case opcode::LJNE:
-			if(!equal) pc = bitconverter::toint32(i.parameters, 0);
+			if (!equal) pc = bitconverter::toint32(i.parameters, 0);
 			break;
 		case opcode::LJG:
-			if(greater) pc = bitconverter::toint32(i.parameters, 0);
+			if (greater) pc = bitconverter::toint32(i.parameters, 0);
 			break;
 		case opcode::LJL:
-			if(less) pc = bitconverter::toint32(i.parameters, 0);
+			if (less) pc = bitconverter::toint32(i.parameters, 0);
 			break;
 		case opcode::LJGE:
-			if(equal || greater) pc = bitconverter::toint32(i.parameters, 0);
+			if (equal || greater) pc = bitconverter::toint32(i.parameters, 0);
 			break;
 		case opcode::LJLE:
-			if(equal || less) pc = bitconverter::toint32(i.parameters, 0);
+			if (equal || less) pc = bitconverter::toint32(i.parameters, 0);
+			break;
+		case opcode::JSP:
+			branch(bitconverter::toint32(astack.getTop()));
+			astack.pop();
 			break;
 		case opcode::SJ:
 			branch((int)i.parameters[0]);
