@@ -129,14 +129,14 @@ void nvm::cycle()
 			else memory[curPage].emplace(k, v);
 			break;
 		case opcode::TOSTR:
-			k1 = bitconverter::toint32(memory[curPage][bitconverter::toint32(i.parameters, 0)], 0);
-			k2 = bitconverter::toint32(i.parameters, 4);
-			memory[curPage][k2] = bitconverter::toArray(to_string(k1));
+			v = astack.getTop();
+			astack.pop();
+			astack.push(bitconverter::toArray(to_string(bitconverter::toint32(v))));
 			break;
-		case opcode::PARSE:
-			k1 = bitconverter::toint32(i.parameters, 0);
-			k2 = bitconverter::toint32(i.parameters, 4);
-			memory[curPage][k2] = bitconverter::toArray(stoi(bitconverter::tostring(memory[curPage][k1])));
+		case opcode::PARSEINT:
+			v = astack.getTop();
+			astack.pop();
+			astack.push(bitconverter::toArray(stoi(bitconverter::tostring(v))));
 			break;
 		case opcode::CLR:
 			k = bitconverter::toint32(i.parameters, 0);

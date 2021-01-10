@@ -1,7 +1,4 @@
 NeutrinoOS/out/
 .vs/
 NeutrinoOS/.vs/
-NeutrinoOS/.vs/NeutrinoOS/v16/.suo
-NeutrinoOS/.vs/NeutrinoOS/v16/Browse.VC.db
-NeutrinoOS/.vs/slnx.sqlite
-NeutrinoOS/.vs/NeutrinoOS/v16/Browse.VC.db
+Neutrino/buildroot/

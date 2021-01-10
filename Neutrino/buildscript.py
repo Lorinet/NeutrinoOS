@@ -39,6 +39,8 @@ try:
     if os.path.exists(outDir):
         shutil.rmtree(outDir)
     os.system("mkdir " + outDir)
+    outDir = os.path.join(outDir, "Neutrino")
+    os.system("mkdir " + outDir)
     print("Building system libraries...")
     os.system("mkdir " + os.path.join(outDir, "sys"))
     os.system("mkdir " + os.path.join(outDir, "ndk"))

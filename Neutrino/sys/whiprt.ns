@@ -52,7 +52,7 @@ ret
 spush 1
 ret
 :print
-extcall NtrConsolePrint
+extcall NtrConsolePrintLine
 ret
 :&__logic_and_func
 pop &__logic_and_func!op2
