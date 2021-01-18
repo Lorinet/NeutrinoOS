@@ -24,6 +24,7 @@ nvm::nvm()
 	bits = 32;
 	awaitin = false;
 	waitForProcInput = -1;
+	millis = 0;
 	arrays = map<int, arrayobj>();
 	objects = map<int, map<int, Array<byte>>>();
 	interm = new vt(processid, -1, vtype::StandardInput);
@@ -43,6 +44,7 @@ nvm::nvm(Array<instruction>* code)
 	zero = false;
 	awaitmsg = false;
 	processid = 0;
+	processPriority = 1;
 	suspended = true;
 	eventsenabled = false;
 	extcalls = map<int, int>();
@@ -52,6 +54,7 @@ nvm::nvm(Array<instruction>* code)
 	bits = 32;
 	waitForProcInput = -1;
 	awaitin = false;
+	millis = 0;
 	arrays = map<int, arrayobj>();
 	objects = map<int, map<int, Array<byte>>>();
 	interm = new vt(processid, -1, vtype::StandardInput);
@@ -64,6 +67,7 @@ void nvm::start()
 	suspended = false;
 	eventsenabled = true;
 	bits = 32;
+	millis = ntime::getMillis();
 }
 void nvm::start(int procid, string file)
 {
@@ -796,6 +800,7 @@ void nvm::cycle()
 		}
 	}
 }
+
 void nvm::branch(int addr)
 {
 	callstack.push(pc);
@@ -805,11 +810,19 @@ void nvm::branch(int addr)
 		if (p.second.first <= pc && p.second.second >= pc) curPage = p.first;
 	}
 }
+
 void nvm::halt()
 {
 	running = false;
 }
+
 void nvm::halt(string err)
 {
 	running = false;
+}
+
+void nvm::setTerminals(vt in, vt out)
+{
+	*interm = in;
+	*outterm = out;
 }

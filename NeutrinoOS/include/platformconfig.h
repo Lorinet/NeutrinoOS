@@ -1,6 +1,6 @@
 #pragma once
 ///                                                  /// 
-/// Neutrino OS Portable Platform Buid Configuration ///
+/// Neutrino OS Portable Platform Build Configuration ///
 ///                                                  ///
 
 // Uncomment appropriate items to configure Neutrino Core OS for the target device

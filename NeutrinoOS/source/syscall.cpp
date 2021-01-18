@@ -111,13 +111,13 @@ Array<byte> syscall::systemCall(byte* indata, int datasize, nvm* v)
 		break;
 	case interrupts::START_PROCESS:
 		proc = bitconverter::toint32(data, 0);
-		if(vmmgr::processes.find(proc) == vmmgr::processes.end())
+		if(vmmgr::getProcess(proc) == NULL)
 		{
 			vmmgr::vmmerror("Can't find PID " + proc, v->processid);
 		}
 		else
 		{
-			vmmgr::processes[proc]->suspended = false;
+			vmmgr::getProcess(proc)->suspended = false;
 		}
 		break;
 	case interrupts::GETFILES:
@@ -209,7 +209,7 @@ Array<byte> syscall::systemCall(byte* indata, int datasize, nvm* v)
 		break;
 	case interrupts::KILL_PROCESS:
 		proc = bitconverter::toint32(data, 0);
-		if(vmmgr::processes.find(proc) == vmmgr::processes.end())
+		if(vmmgr::getProcess(proc) == NULL)
 		{
 			vmmgr::vmmerror("Can't find PID " + proc, v->processid);
 		}
@@ -269,7 +269,7 @@ Array<byte> syscall::systemCall(byte* indata, int datasize, nvm* v)
 		msg = Array<byte>();
 		for (n = 4; n < data.size; n++) msg.push(data[n]);
 		msg.push('\n');
-		if(vmmgr::processes.find(proc) == vmmgr::processes.end())
+		if(vmmgr::getProcess(proc) == NULL)
 		{
 			vmmgr::vmmerror("Can't find PID " + proc, v->processid);
 		}
@@ -290,7 +290,7 @@ Array<byte> syscall::systemCall(byte* indata, int datasize, nvm* v)
 		proc = bitconverter::toint32(data, 0);
 		msg = Array<byte>();
 		for (n = 4; n < data.size; n++) msg.push(data[n]);
-		if(vmmgr::processes.find(proc) == vmmgr::processes.end())
+		if(vmmgr::getProcess(proc) == NULL)
 		{
 			vmmgr::vmmerror("Can't find PID " + proc, v->processid);
 		}
@@ -307,7 +307,7 @@ Array<byte> syscall::systemCall(byte* indata, int datasize, nvm* v)
 		break;
 	case interrupts::WAIT_FOR_PROC_REQUEST_INPUT:
 		proc = bitconverter::toint32(data, 0);
-		if(vmmgr::processes.find(proc) == vmmgr::processes.end())
+		if(vmmgr::getProcess(proc) == NULL)
 		{
 			vmmgr::vmmerror("Can't find PID " + proc, v->processid);
 		}
@@ -318,13 +318,13 @@ Array<byte> syscall::systemCall(byte* indata, int datasize, nvm* v)
 		break;
 	case interrupts::SUSPEND_PROCESS_EX:
 		proc = bitconverter::toint32(data, 0);
-		if(vmmgr::processes.find(proc) == vmmgr::processes.end())
+		if(vmmgr::getProcess(proc) == NULL)
 		{
 			vmmgr::vmmerror("Can't find PID " + proc, v->processid);
 		}
 		else
 		{
-			vmmgr::processes[proc]->suspended = true;
+			vmmgr::getProcess(proc)->suspended = true;
 		}
 		break;
 	case interrupts::GETINFOSTRING:

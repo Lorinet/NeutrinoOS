@@ -18,8 +18,10 @@ static void NeutrinoStartup()
 		string init = lvmgr::formatPath(config::getValue("neutrino\\InitExecutable"));
 		if (file::fileExists(init))
 		{
-			vmmgr::createProcess(init);
 			vmmgr::start();
+			for(int i = 0; i < 100; i++) vmmgr::createProcess(init);
+			vmmgr::schedulers[0]->processes[0]->processPriority = 255;
+			vmmgr::kernelLoop();
 		}
 		else
 		{

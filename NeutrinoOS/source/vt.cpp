@@ -31,7 +31,7 @@ void vt::waitForInput()
 	// input logic ahead!
 	while (input[input.size - 1] != '\n')
 	{
-		vmmgr::stepAll();
+		//vmmgr::stepAll();
 	}
 	input.removeAt(input.size - 1);
 	input = Array<byte>();

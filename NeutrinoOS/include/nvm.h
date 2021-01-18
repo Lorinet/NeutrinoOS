@@ -41,6 +41,7 @@ public:
 	bool eventsenabled;
 	bool suspended;
 	int processid;
+	byte processPriority;
 	unsigned int pc;
 	bool running;
 	bool equal;
@@ -50,7 +51,6 @@ public:
 	bool awaitin;
 	byte bits;
 	int waitForProcInput;
-
 	int k, k1, k2, cv1, cv2, addr, cmpi, cmpid, ii, sn;
 	unsigned int n;
 	Array<byte> v, v1, bl, t, pu, po, arr1, arr2;
@@ -58,11 +58,10 @@ public:
 	string rep, lnkf;
 	Array<instruction> emc;
 	byte inter;
-	map<string, int> adlinks;
 	char c;
 	instruction i;
 	byte* bp;
-
+	long long millis;
 	nvm();
 	nvm(Array<instruction>* code);
 	void start();
@@ -71,5 +70,6 @@ public:
 	void branch(int addr);
 	void halt();
 	void halt(string err);
+	void setTerminals(vt in, vt out);
 };
 
