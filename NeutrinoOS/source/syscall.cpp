@@ -2,6 +2,15 @@
 #include "nvm.h"
 #include "vt.h"
 #include "event.h"
+#include "lvmgr.h"
+#include "vmmgr.h"
+#include "input.h"
+#include "sysinfo.h"
+#include "ntime.h"
+#include "timer.h"
+#include "components.h"
+#include "iomgr.h"
+#include "nfsdimp.h"
 string syscall::filename, syscall::files, syscall::folders, syscall::txt, syscall::txt1, syscall::txt2;
 Array<byte> syscall::contents, syscall::msg;
 unsigned int syscall::n;
@@ -13,6 +22,7 @@ interrupts syscall::syscll;
 Array<byte> syscall::data;
 Array<byte> syscall::systemCall(byte* indata, int datasize, nvm* v)
 {
+	vmmgr::enterCriticalSection();
 	syscll = (interrupts)indata[0];
 	data.clear();
 	eventid eid;
@@ -685,5 +695,6 @@ Array<byte> syscall::systemCall(byte* indata, int datasize, nvm* v)
 	default:
 		break;
 	}
+	vmmgr::leaveCriticalSection();
 	return Array<byte>();
 }

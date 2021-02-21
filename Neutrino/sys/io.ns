@@ -38,7 +38,7 @@ concat ___3 ___4
 concat ___2 ___4
 concat ___1 ___4
 push ___4
-extcall NtrIOPinInterrupt
+leap NtrIOPinInterrupt
 ret
 
 :GPIOWritePin
@@ -50,7 +50,7 @@ bits 32
 concat ___2 ___3
 concat ___1 ___3
 push ___3
-extcall NtrIOPinInterrupt
+leap NtrIOPinInterrupt
 ret
 
 :GPIOReadPin
@@ -60,7 +60,7 @@ stb ___2 IO_GPIO_READ
 bits 32
 concat ___1 ___2
 push ___2
-extcall NtrIOPinInterrupt
+leap NtrIOPinInterrupt
 ret
 
 :GPIOWritePWM
@@ -72,7 +72,7 @@ bits 32
 concat ___2 ___3
 concat ___1 ___3
 push ___3
-extcall NtrIOPinInterrupt
+leap NtrIOPinInterrupt
 ret
 
 :UARTOpen
@@ -84,7 +84,7 @@ bits 32
 concat ___2 ___3
 concat ___1 ___3
 push ___3
-extcall NtrIOSerialInterrupt
+leap NtrIOSerialInterrupt
 ret
 
 :UARTWrite
@@ -98,7 +98,7 @@ concat ___2 ___3
 concat ___0 ___3
 concat ___1 ___3
 push ___3
-extcall NtrIOSerialInterrupt
+leap NtrIOSerialInterrupt
 ret
 
 :UARTRead
@@ -108,7 +108,7 @@ stb ___2 IO_UART_READ
 bits 32
 concat ___1 ___2
 push ___2
-extcall NtrIOSerialInterrupt
+leap NtrIOSerialInterrupt
 ret
 
 :UARTReadByte
@@ -118,7 +118,7 @@ stb ___2 IO_UART_READ_BYTE
 bits 32
 concat ___1 ___2
 push ___2
-extcall NtrIOSerialInterrupt
+leap NtrIOSerialInterrupt
 ret
 
 :UARTReadBytes
@@ -130,7 +130,7 @@ bits 32
 concat ___1 ___3
 concat ___2 ___3
 push ___3
-extcall NtrIOSerialInterrupt
+leap NtrIOSerialInterrupt
 ret
 
 :UARTGetAvailableBytes
@@ -140,7 +140,7 @@ stb ___2 IO_UART_AVAILABLE
 bits 32
 concat ___1 ___2
 push ___2
-extcall NtrIOSerialInterrupt
+leap NtrIOSerialInterrupt
 ret
 
 :UARTClose
@@ -150,5 +150,5 @@ stb ___2 IO_UART_CLOSE
 bits 32
 concat ___1 ___2
 push ___2
-extcall NtrIOSerialInterrupt
+leap NtrIOSerialInterrupt
 ret

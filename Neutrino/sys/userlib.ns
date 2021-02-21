@@ -41,7 +41,7 @@ stb ___2 WMC_CREATE_VIEW
 bits 32
 concat ___1 ___2
 push ___2
-extcall NtrSystemUIInterrupt
+leap NtrSystemUIInterrupt
 clr ___1
 clr ___2
 ret
@@ -53,7 +53,7 @@ stb ___2 WMC_DESTROY_VIEW
 bits 32
 concat ___1 ___2
 push ___2
-extcall NtrSystemUIInterrupt
+leap NtrSystemUIInterrupt
 clr ___1
 clr ___2
 ret
@@ -65,7 +65,7 @@ stb ___2 WMC_ADD_ELEMENT
 bits 32
 concat ___1 ___2
 push ___2
-extcall NtrSystemUIInterrupt
+leap NtrSystemUIInterrupt
 clr ___1
 clr ___2
 ret
@@ -81,7 +81,7 @@ concat ___3 ___4
 concat ___2 ___4
 concat ___1 ___4
 push ___4
-extcall NtrSystemUIInterrupt
+leap NtrSystemUIInterrupt
 clr ___1
 clr ___2
 clr ___3
@@ -97,7 +97,7 @@ bits 32
 concat ___2 ___3
 concat ___1 ___3
 push ___3
-extcall NtrSystemUIInterrupt
+leap NtrSystemUIInterrupt
 clr ___1
 clr ___2
 clr ___3
@@ -114,7 +114,7 @@ concat ___3 ___4
 concat ___2 ___4
 concat ___1 ___4
 push ___4
-extcall NtrSystemUIInterrupt
+leap NtrSystemUIInterrupt
 clr ___1
 clr ___2
 clr ___3
@@ -132,7 +132,7 @@ concat ___3 ___4
 concat ___2 ___4
 concat ___1 ___4
 push ___4
-extcall NtrSystemUIInterrupt
+leap NtrSystemUIInterrupt
 clr ___1
 clr ___2
 clr ___3
@@ -146,7 +146,7 @@ stb ___2 WMC_SWITCH_VIEW
 bits 32
 concat ___1 ___2
 push ___2
-extcall NtrSystemUIInterrupt
+leap NtrSystemUIInterrupt
 clr ___1
 clr ___2
 ret
@@ -155,7 +155,7 @@ ret
 bits 8
 pushb WMC_UPDATE_VIEW
 bits 32
-extcall NtrSystemUIInterrupt
+leap NtrSystemUIInterrupt
 ret
 
 :WMAttachEventHandler
@@ -169,7 +169,7 @@ concat ___3 ___4
 concat ___2 ___4
 concat ___1 ___4
 push ___4
-extcall NtrSystemUIInterrupt
+leap NtrSystemUIInterrupt
 clr ___1
 clr ___2
 clr ___3
@@ -185,7 +185,7 @@ bits 32
 concat ___2 ___3
 concat ___1 ___3
 push ___3
-extcall NtrSystemUIInterrupt
+leap NtrSystemUIInterrupt
 clr ___1
 clr ___2
 clr ___3
@@ -197,7 +197,7 @@ pop ___2 ; element ID
 pop ___3 ; window handle
 str ___c "Items:"
 str ___s ","
-val ___1 ___ln
+ldlen ___1 ___ln
 str ___i 0
 jmp :loopAddItemToList
 push ___3
@@ -221,14 +221,14 @@ lj :addItemToList
 ret
 
 :addItemToList
-vai ___1 ___i ___e
+ldelem ___1 ___i ___e
 push ___e
 ldstr "\"
 ldstr "\\"
-extcall ReplaceChars
+leap ReplaceChars
 ldstr ":"
 ldstr "\:"
-extcall ReplaceChars
+leap ReplaceChars
 pop ___e
 concat ___e ___c
 concat ___s ___c

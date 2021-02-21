@@ -1,4 +1,5 @@
 #include "event.h"
+#include "bitconverter.h"
 ntrevent::ntrevent()
 {
 	id = eventid::NoEvent;

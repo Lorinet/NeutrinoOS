@@ -3,20 +3,14 @@
 #include <stack>
 #include "opcode.h"
 #include "util.h"
-#include "syscall.h"
-#include "disassembler.h"
-#include "bitconverter.h"
 #include "instruction.h"
-#include "event.h"
-#include "dynamiclinker.h"
-#include "timer.h"
 #include "vt.h"
 #include "arrayobj.h"
 #include "containers.h"
-#include "memorystats.h"
+#include "vmmem.h"
+#include "timer.h"
 using namespace std;
 class vt;
-class timerevt;
 class nvm
 {
 public:
@@ -24,10 +18,10 @@ public:
 	map<string, pair<int, int>> modules;
 	map<int, int> extcalls;
 	Array<instruction>* bytecode;
-	map<int, map<int, Array<byte>>> memory;
+	IntMap<vmobject> memory;
+	Array<vmobject> globalPages;
+	vmobject* globals;
 	map<int, arrayobj> arrays;
-	map<int, map<int, Array<byte>>> objects;
-	int curPage;
 	map<int, pair<int, int>> pages;
 	map<byte, int> eventHandlers;
 	map<int, timerevt> timers;
@@ -68,6 +62,7 @@ public:
 	void start(int procid, string file);
 	void cycle();
 	void branch(int addr);
+	void leap(int addr, byte page);
 	void halt();
 	void halt(string err);
 	void setTerminals(vt in, vt out);

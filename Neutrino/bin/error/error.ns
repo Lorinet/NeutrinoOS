@@ -4,28 +4,28 @@
 link neutrino.lnx
 link userlib.lnx
 call ErrorView_CreateView
-extcall NtrAwaitMessage
-extcall NtrGetFirstMessage
+leap NtrAwaitMessage
+leap NtrGetFirstMessage
 pop _errmsg
 str _fullstr "Text:"
 concat _errmsg _fullstr
 push __ErrorView_hwnd
 spush 1
 push _fullstr
-extcall WMSetUserElementProperty
+leap WMSetUserElementProperty
 push __ErrorView_hwnd
 ldstr 2
 pushl exit
-extcall WMAttachEventHandler
+leap WMAttachEventHandler
 goto wasteTime
 ret
 
 :wasteTime
 ; make sure the process stays alive and isn't running in a dead loop
-extcall NtrSuspendProcess
+leap NtrSuspendProcess
 lj wasteTime
 ret
 
 :exit
-extcall NtrShutdownProcess
+leap NtrShutdownProcess
 ret

@@ -1,5 +1,11 @@
 #include "dynamiclinker.h"
+#include "disassembler.h"
+#include "bitconverter.h"
+#include "filesystem.h"
+#include "opcode.h"
 #include "nvm.h"
+#include "lvmgr.h"
+#include "vmmem.h"
 void dynamiclinker::dynamicLink(nvm* v)
 {
 	map<string, int> offsets;
@@ -7,6 +13,7 @@ void dynamiclinker::dynamicLink(nvm* v)
 	v->pages.insert({ 0, pair<int, int>(0, v->bytecode->size - 1) });
 	int ndx = 1;
 	if (!link(v->bytecode, &offsets, &v->pages, &ndx, v->processid)) return;
+	for (int i = 0; i < v->pages.size(); i++) v->globalPages.add(vmobject());
 	map<string, map<int, int>> sections;
 	int s;
 	byte* modcod;
@@ -21,13 +28,15 @@ void dynamiclinker::dynamicLink(nvm* v)
 	byte* ab;
 	for (int i = 0; i < v->bytecode->size; i++)
 	{
-		if ((*v->bytecode)[i].opCode == opcode::EXTCALL)
+		if ((*v->bytecode)[i].opCode == opcode::LEAP)
 		{
 			sec = bitconverter::toint32((*v->bytecode)[i].parameters, 0);
 			key = bitconverter::tostring((*v->bytecode)[i].parameters, 4, (*v->bytecode)[i].psize);
-			(*v->bytecode)[i].opCode = opcode::JMP;
-			(*v->bytecode)[i].parameters = bitconverter::toarray_p(offsets[key] + sections[key][sec]);
-			(*v->bytecode)[i].psize = 4;
+			ab = bitconverter::toarray_p(offsets[key] + sections[key][sec]);
+			(*v->bytecode)[i].parameters = new byte[5];
+			for (int j = 0; j < 4; j++) (*v->bytecode)[i].parameters[j] = ab[j];
+			(*v->bytecode)[i].parameters[4] = sec;
+			(*v->bytecode)[i].psize = 5;
 		}
 		else if ((*v->bytecode)[i].opCode == opcode::EXTMOVL)
 		{
@@ -242,7 +251,7 @@ void dynamiclinker::replaceModulesByName(Array<instruction>* dasm)
 	int modind = 0;
 	for (int j = 0; j < dasm->size; j++)
 	{
-		if ((*dasm)[j].opCode == opcode::EXTCALL)
+		if ((*dasm)[j].opCode == opcode::LEAP)
 		{
 			modnm = bitconverter::toarray_p(imods[bitconverter::toint32((*dasm)[j].parameters, 0)] + '\0');
 			sec = bitconverter::toarray_p(bitconverter::toint32((*dasm)[j].parameters, 4));

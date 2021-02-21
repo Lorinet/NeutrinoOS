@@ -1,4 +1,6 @@
 #include "vt.h"
+#include "bitconverter.h"
+#include <stdio.h>
 vt::vt()
 {
 	input = Array<byte>();

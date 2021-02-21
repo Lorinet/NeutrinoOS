@@ -96,7 +96,7 @@ ret
 :RebuildString
 pop ___del
 pop ___ara
-val ___ara ___l
+ldlen ___ara ___l
 str ___i 0
 str ___reb ""
 goto :loopRebuildString
@@ -112,7 +112,7 @@ ret
 :loopRebuildString
 cmp ___i ___l
 ljge :returnProc
-vai ___ara ___i ___cc
+ldelem ___ara ___i ___cc
 goto :appendString
 inc ___i 1
 lj :loopRebuildString

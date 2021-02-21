@@ -52,7 +52,7 @@ ret
 spush 1
 ret
 :print
-extcall NtrConsolePrintLine
+leap NtrConsolePrintLine
 ret
 :&__logic_and_func
 pop &__logic_and_func!op2
@@ -95,5 +95,5 @@ spush 0
 ret
 :input
 call print
-extcall NtrConsoleGetString
+leap NtrConsoleGetString
 ret

@@ -9,8 +9,8 @@ ret
 
 :readcmd
 push path
-extcall NtrConsolePrint
-extcall NtrConsoleGetString
+leap NtrConsolePrint
+leap NtrConsoleGetString
 pop _command
 cmpi _command "help"
 jeq :help
@@ -38,13 +38,13 @@ ret
 
 :help
 ldstr "help - Show command list\ncd - Change working directory\ndir - Get all files and folders from working dir\nclear - Clear screen\nfcolor - Set foreground color\nbcolor - Set background color\nrestart - Reboot computer\nshutdown - Shutdown computer\nrefresh - Warm reboot\nver - Neutrino OS Version"
-extcall NtrConsolePrintLine
+leap NtrConsolePrintLine
 goto :readcmd
 ret
 
 :dir
 push path
-extcall NtrDirectoryExists
+leap NtrDirectoryExists
 pop exists
 cmpi exists 1
 jeq :showdir
@@ -54,20 +54,20 @@ ret
 
 :showdir
 ldstr "Directories:"
-extcall NtrConsolePrint
+leap NtrConsolePrint
 push path
-extcall NtrGetDirectories
-extcall NtrConsolePrintLine
+leap NtrGetDirectories
+leap NtrConsolePrintLine
 ldstr "Files:"
-extcall NtrConsolePrint
+leap NtrConsolePrint
 push path
-extcall NtrGetFiles
-extcall NtrConsolePrintLine
+leap NtrGetFiles
+leap NtrConsolePrintLine
 ret
 
 :wrongdir
 ldstr "Invalid path!"
-extcall NtrConsolePrintLine
+leap NtrConsolePrintLine
 str path "0:\"
 ret
 
@@ -81,7 +81,7 @@ ret
 :append
 concat _ccd path
 push path
-extcall NtrDirectoryExists
+leap NtrDirectoryExists
 pop exists
 cmpi exists 1
 jne :wrongdir
@@ -105,7 +105,7 @@ ret
 mov path exec
 concat _command exec
 push exec
-extcall NtrFileExists
+leap NtrFileExists
 pop exists
 cmpi exists 1
 jeq :startapp
@@ -114,7 +114,7 @@ ret
 
 :absolute
 push _command
-extcall NtrFileExists
+leap NtrFileExists
 pop exists
 cmpi exists 1
 jeq :goodfile
@@ -129,7 +129,7 @@ ret
 :startapp
 clr _command
 push exec
-extcall NtrCreateProcess
+leap NtrCreateProcess
 ret
 
 :wrongfile
@@ -137,12 +137,12 @@ str _ics "Invalid command: "
 mov _command _icmd
 concat _icmd _ics
 push _ics
-extcall NtrConsolePrintLine
+leap NtrConsolePrintLine
 ret
 
 :launch
 push _command
-extcall NtrFileExists
+leap NtrFileExists
 pop exists
 cmpi exists 1
 jeq :runapp
@@ -151,7 +151,7 @@ ret
 
 :runapp
 push _command
-extcall NtrCreateProcess
+leap NtrCreateProcess
 ret
 
 :clear
@@ -161,20 +161,20 @@ ret
 
 :splash
 ldstr STRING_ABOUT_OS
-extcall NtrGetInformationString
-;extcall NtrConsoleNewLine
-extcall NtrConsolePrintLine
+leap NtrGetInformationString
+;leap NtrConsoleNewLine
+leap NtrConsolePrintLine
 goto :readcmd
 ret
 
 :reboot
-extcall NtrSystemReboot
+leap NtrSystemReboot
 ret
 
 :shutdown
-extcall NtrSystemShutdown
+leap NtrSystemShutdown
 ret
 
 :refresh
-extcall NtrSystemWarmReboot
+leap NtrSystemWarmReboot
 ret

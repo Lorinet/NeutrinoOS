@@ -1,5 +1,6 @@
 #include "scheduler.h"
 #include "nvm.h"
+#include "input.h"
 
 scheduler::scheduler()
 {
@@ -60,11 +61,7 @@ void scheduler::runScheduler()
 				ii = 0;
 				input::inputLoop(ehu);
 				if (ehu->messages.size > 0) ehu->awaitmsg = false;
-				while (ii < ehu->processPriority)
-				{
-					ehu->cycle();
-					ii++;
-				}
+				ehu->cycle();
 			}
 			pi++;
 		}
@@ -144,7 +141,6 @@ void scheduler::sendTerminalInput(int pid, Array<byte> msg)
 
 void scheduler::removeProcessEx(int index)
 {
-	cout << "Time of execution: " << ntime::getMillis() - processes[index]->millis << endl;
 	delete processes[index];
 	processes.removeAt(index);
 }

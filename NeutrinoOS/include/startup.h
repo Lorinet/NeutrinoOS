@@ -4,6 +4,7 @@
 #include "lvmgr.h"
 #include "config.h"
 #include "iomgr.h"
+#include "nvm.h"
 
 static void NeutrinoStartup()
 {
@@ -19,8 +20,8 @@ static void NeutrinoStartup()
 		if (file::fileExists(init))
 		{
 			vmmgr::start();
-			for(int i = 0; i < 100; i++) vmmgr::createProcess(init);
-			vmmgr::schedulers[0]->processes[0]->processPriority = 255;
+			for(int i = 0; i < 10000; i++) vmmgr::createProcess(init);
+			vmmgr::schedulers[0]->processes[0]->processPriority = PRIORITY_HIGH;
 			vmmgr::kernelLoop();
 		}
 		else

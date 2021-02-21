@@ -2,14 +2,14 @@
 
 :FileMenu_CreateView
 spush "ID:0;Type:ListView;Font:Helvetica 8;Items:Open,Open with,Copy,Move,New,Cancel,Exit Files,;|ID:1;Type:WakeOnInteraction;|"
-extcall WMCreateWindow
+leap WMCreateWindow
 pop __FileMenu_hwnd ; Do not modify the handle variable!
 push __FileMenu_hwnd
-extcall WMSetActiveWindow
-extcall WMUpdateView
+leap WMSetActiveWindow
+leap WMUpdateView
 ret
 
 :FileMenu_DestroyView
 push __FileMenu_hwnd
-extcall WMDestroyWindow
+leap WMDestroyWindow
 ret

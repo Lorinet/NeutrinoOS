@@ -1,6 +1,10 @@
 #include "nvm.h"
-//#include "vt.h"
-#include "timer.h"
+#include "disassembler.h"
+#include "syscall.h"
+#include "bitconverter.h"
+#include "event.h"
+#include "dynamiclinker.h"
+#include "memorystats.h"
 nvm::nvm()
 {
 	fileName = "??";
@@ -20,15 +24,16 @@ nvm::nvm()
 	extcalls = map<int, int>();
 	modules = map<string, pair<int, int>>();
 	lnkndx = 0;
-	curPage = 0;
 	bits = 32;
 	awaitin = false;
 	waitForProcInput = -1;
 	millis = 0;
 	arrays = map<int, arrayobj>();
-	objects = map<int, map<int, Array<byte>>>();
+	memory = IntMap<vmobject>();
 	interm = new vt(processid, -1, vtype::StandardInput);
 	outterm = new vt(processid, -1, vtype::StandardOutput);
+	globalPages = Array<vmobject>();
+	globalPages.add(vmobject());
 }
 nvm::nvm(Array<instruction>* code)
 {
@@ -50,19 +55,21 @@ nvm::nvm(Array<instruction>* code)
 	extcalls = map<int, int>();
 	modules = map<string, pair<int, int>>();
 	lnkndx = 0;
-	curPage = 0;
 	bits = 32;
 	waitForProcInput = -1;
 	awaitin = false;
 	millis = 0;
 	arrays = map<int, arrayobj>();
-	objects = map<int, map<int, Array<byte>>>();
 	interm = new vt(processid, -1, vtype::StandardInput);
 	outterm = new vt(processid, -1, vtype::StandardOutput);
+	memory = IntMap<vmobject>();
+	globalPages = Array<vmobject>();
+	globalPages.add(vmobject());
 }
 void nvm::start()
 {
 	dynamiclinker::dynamicLink(this);
+	globals = &globalPages[0];
 	running = true;
 	suspended = false;
 	eventsenabled = true;
@@ -77,6 +84,7 @@ void nvm::start(int procid, string file)
 }
 void nvm::cycle()
 {
+	for(int pr = 0; pr < processPriority; pr++)
 	if (running && !awaitmsg && !awaitin && waitForProcInput == -1)
 	{
 		if (pc >= bytecode->size)
@@ -85,6 +93,7 @@ void nvm::cycle()
 			return;
 		}
 		i = bytecode->get(pc);
+		//cout << "OpCode " << i.opCode << endl;
 		pc += 1;
 		switch (i.opCode)
 		{
@@ -93,44 +102,43 @@ void nvm::cycle()
 		case opcode::DELFLD:
 			k = bitconverter::toint32(astack.getTop());
 			astack.pop();
-			objects[k].erase(bitconverter::toint32(astack.getTop()));
+			memory[k].remove(bitconverter::toint32(astack.getTop()));
 			astack.pop();
 			break;
 		case opcode::AND:
 			k1 = bitconverter::toint32(i.parameters, 0);
 			k2 = bitconverter::toint32(i.parameters, 4);
-			memory[curPage][k2] = bitconverter::toArray(bitconverter::toint32(memory[curPage][k1], 0) & bitconverter::toint32(memory[curPage][k2], 0));
+			globals->set(k2, bitconverter::toArray(bitconverter::toint32(globals->get(k1), 0) & bitconverter::toint32(globals->get(k2), 0)));
 			break;
 		case opcode::OR:
 			k1 = bitconverter::toint32(i.parameters, 0);
 			k2 = bitconverter::toint32(i.parameters, 4);
-			memory[curPage][k2] = bitconverter::toArray(bitconverter::toint32(memory[curPage][k1], 0) | bitconverter::toint32(memory[curPage][k2], 0));
+			globals->set(k2, bitconverter::toArray(bitconverter::toint32(globals->get(k1), 0) | bitconverter::toint32(globals->get(k2), 0)));
 			break;
 		case opcode::XOR:
 			k1 = bitconverter::toint32(i.parameters, 0);
 			k2 = bitconverter::toint32(i.parameters, 4);
-			memory[curPage][k2] = bitconverter::toArray(bitconverter::toint32(memory[curPage][k1], 0) ^ bitconverter::toint32(memory[curPage][k2], 0));
+			globals->set(k2, bitconverter::toArray(bitconverter::toint32(globals->get(k1), 0) ^ bitconverter::toint32(globals->get(k2), 0)));
 			break;
 		case opcode::SHL:
 			k1 = bitconverter::toint32(i.parameters, 0);
 			k2 = bitconverter::toint32(i.parameters, 4);
-			memory[curPage][k2] = bitconverter::toArray(bitconverter::toint32(memory[curPage][k1], 0) << bitconverter::toint32(memory[curPage][k2], 0));
+			globals->set(k2, bitconverter::toArray(bitconverter::toint32(globals->get(k1), 0) << bitconverter::toint32(globals->get(k2), 0)));
 			break;
 		case opcode::SHR:
 			k1 = bitconverter::toint32(i.parameters, 0);
 			k2 = bitconverter::toint32(i.parameters, 4);
-			memory[curPage][k2] = bitconverter::toArray(bitconverter::toint32(memory[curPage][k1], 0) >> bitconverter::toint32(memory[curPage][k2], 0));
+			globals->set(k2, bitconverter::toArray(bitconverter::toint32(globals->get(k1), 0) >> bitconverter::toint32(globals->get(k2), 0)));
 			break;
 		case opcode::NOT:
-			k1 = bitconverter::toint32(memory[curPage][bitconverter::toint32(i.parameters, 0)], 0);
-			memory[curPage][bitconverter::toint32(i.parameters, 0)] = bitconverter::toArray(~k1);
+			k1 = bitconverter::toint32(globals->get(bitconverter::toint32(i.parameters, 0)), 0);
+			globals->set(bitconverter::toint32(i.parameters, 0), bitconverter::toArray(~k1));
 			break;
 		case opcode::ST:
 			k = bitconverter::toint32(i.parameters, 0);
 			v = Array<byte>(i.parameters, i.psize);
 			v.erase(0, 4);
-			if (memory[curPage].count(k)) memory[curPage][k] = v;
-			else memory[curPage].emplace(k, v);
+			globals->set(k, v);
 			break;
 		case opcode::TOSTR:
 			v = astack.getTop();
@@ -143,38 +151,26 @@ void nvm::cycle()
 			astack.push(bitconverter::toArray(stoi(bitconverter::tostring(v))));
 			break;
 		case opcode::CLR:
-			k = bitconverter::toint32(i.parameters, 0);
-			if (memory[curPage].find(k) != memory[curPage].end()) memory[curPage][k].clear();
-			else
-			{
-				v = Array<byte>();
-				memory[curPage].emplace(k, v);
-			}
+			globals->set(bitconverter::toint32(i.parameters, 0), Array<byte>());
 			break;
 		case opcode::CONCAT:
 			k1 = bitconverter::toint32(i.parameters, 0);
 			k2 = bitconverter::toint32(i.parameters, 4);
-			bl = memory[curPage][k2];
-			for (n = 0; n < memory[curPage][k1].size; n++)
+			bl = globals->get(k2);
+			for (n = 0; n < globals->get(k1).size; n++)
 			{
-				bl.push(memory[curPage][k1][n]);
+				bl.push(globals->get(k1)[n]);
 			}
-			memory[curPage][k2] = bl;
+			globals->set(k2, bl);
 			break;
 		case opcode::MOV:
-			k1 = bitconverter::toint32(i.parameters, 0);
-			k2 = bitconverter::toint32(i.parameters, 4);
-			k = bitconverter::toint32(memory[curPage][k1]);
-			k = bitconverter::toint32(memory[curPage][k1]);
-
-			if (memory[curPage].count(k2)) memory[curPage][k2] = memory[curPage][k1];
-			else memory[curPage].emplace(k2, memory[curPage][k1]);
+			globals->set(bitconverter::toint32(i.parameters, 4), globals->get(bitconverter::toint32(i.parameters, 0)));
 			break;
 		case opcode::SPLIT:
 			k1 = bitconverter::toint32(i.parameters, 0);
 			k2 = bitconverter::toint32(i.parameters, 4);
 			k = bitconverter::toint32(i.parameters, 8);
-			po = memory[curPage][k1];
+			po = globals->get(k1);
 			t = Array<byte>();
 			pu = Array<byte>();
 			for (n = 0; n < po.size; n++)
@@ -182,47 +178,48 @@ void nvm::cycle()
 				if (n < (unsigned int)k) t.push(po[n]);
 				else pu.push(po[n]);
 			}
-			memory[curPage][k1] = t;
-			memory[curPage][k2] = pu;
+			globals->set(k1, t);
+			globals->set(k2, pu);
 			break;
 		case opcode::INDEX:
-			k1 = bitconverter::toint32(memory[curPage][bitconverter::toint32(i.parameters, 4)], 0);
+			k1 = bitconverter::toint32(globals->get(bitconverter::toint32(i.parameters, 4)), 0);
 			k2 = bitconverter::toint32(i.parameters, 8);
 			if (bits == 32)
-				memory[curPage][k2] = bitconverter::toArray((int)memory[curPage][bitconverter::toint32(i.parameters, 0)][k1]);
+				globals->set(k2, bitconverter::toArray((int)globals->get(bitconverter::toint32(i.parameters, 0))[k1]));
 			else if (bits == 8)
 			{
 				po = Array<byte>();
-				po.add(memory[curPage][bitconverter::toint32(i.parameters, 0)][k1]);
-				memory[curPage][k2] = Array<byte>(po);
+				po.add(globals->get(bitconverter::toint32(i.parameters, 0))[k1]);
+				globals->set(k2, Array<byte>(po));
 				po.clear();
 			}
 			break;
 		case opcode::INSERT:
-			k1 = bitconverter::toint32(memory[curPage][bitconverter::toint32(i.parameters, 4)], 0);
+			k1 = bitconverter::toint32(globals->get(bitconverter::toint32(i.parameters, 4)), 0);
 			k2 = bitconverter::toint32(i.parameters, 8);
-			memory[curPage][bitconverter::toint32(i.parameters, 0)][k1] = memory[curPage][k2][0];
+			v = globals->get(bitconverter::toint32(i.parameters, 0));
+			v[k1] = globals->get(k2)[0];
+			globals->set(bitconverter::toint32(i.parameters, 0), v);
 			break;
 		case opcode::SIZ:
-			v = memory[curPage][bitconverter::toint32(i.parameters, 0)];
+			v = globals->get(bitconverter::toint32(i.parameters, 0));
 			k1 = bitconverter::toint32(i.parameters, 4);
-			memory[curPage][k1] = bitconverter::toArray(v.size);
+			globals->set(k1, bitconverter::toArray(v.size));
 			break;
 		case opcode::APPEND:
-			k1 = bitconverter::toint32(i.parameters, 0);
-			k2 = bitconverter::toint32(i.parameters, 4);
-			bl = memory[curPage][k2];
-			bl.push(memory[curPage][k1][0]);
-			if (memory[curPage].count(k2)) memory[curPage][k2] = bl;
-			else memory[curPage].emplace(k2, bl);
+			k = bitconverter::toint32(i.parameters, 4);
+			bl = globals->get(k);
+			bl.push(globals->get(bitconverter::toint32(i.parameters, 0))[0]);
+			globals->set(bitconverter::toint32(i.parameters, 4), bl);
 			break;
 		case opcode::NEWOBJ:
 			ii = 0;
-			while (objects.find(ii) != objects.end())
+			while (memory.find(ii))
 			{
 				ii++;
 			}
-			objects.emplace(ii, map<int, Array<byte>>());
+			memory.add(ii, vmobject());
+			memory.get(ii);
 			astack.push(bitconverter::toArray(ii));
 			break;
 		case opcode::STB:
@@ -234,8 +231,7 @@ void nvm::cycle()
 				v = Array<byte>();
 				v.push(i.parameters[4]);
 			}
-			if (memory[curPage].count(k)) memory[curPage][k] = v;
-			else memory[curPage].emplace(k, v);
+			globals->set(k, v);
 			break;
 		case opcode::PUSHB:
 			astack.push(bitconverter::toArray((int)i.parameters[0]));
@@ -243,29 +239,21 @@ void nvm::cycle()
 		case opcode::CONCATB:
 			k1 = i.parameters[0];
 			k2 = i.parameters[1];
-			bl = memory[curPage][k2];
-			for (n = 0; n < memory[curPage][k1].size; n++)
+			bl = globals->get(k2);
+			for (n = 0; n < globals->get(k1).size; n++)
 			{
-				bl.push(memory[curPage][k1][n]);
+				bl.push(globals->get(k1)[n]);
 			}
-			memory[curPage][k2] = bl;
+			globals->set(k2, bl);
 			break;
 		case opcode::APPENDB:
-			k1 = i.parameters[0];
-			k2 = i.parameters[1];
-			bl = memory[curPage][k2];
-			bl.push(memory[curPage][k1][0]);
-			if (memory[curPage].count(k2)) memory[curPage][k2] = bl;
-			else memory[curPage].emplace(k2, bl);
+			k = i.parameters[1];
+			bl = globals->get(k);
+			bl.push(globals->get(i.parameters[0])[0]);
+			globals->set(k, bl);
 			break;
 		case opcode::CLRB:
-			k = i.parameters[0];
-			if (memory[curPage].find(k) != memory[curPage].end()) memory[curPage][k].clear();
-			else
-			{
-				v = Array<byte>();
-				memory[curPage].emplace(k, v);
-			}
+			globals->set(i.parameters[0], Array<byte>());
 			break;
 		case opcode::VAC:
 			ii = 0;
@@ -306,15 +294,14 @@ void nvm::cycle()
 			astack.pop();
 			k2 = bitconverter::toint32(astack.getTop()); // object
 			astack.pop();
-			astack.push(objects[k2][k1]);
+			astack.push(memory[k2].get(k1));
 			break;
 		case opcode::STFLD:
 			k1 = bitconverter::toint32(astack.getTop()); // index
 			astack.pop();
 			k2 = bitconverter::toint32(astack.getTop()); // object
 			astack.pop();
-			if (objects[k2].find(k1) == objects[k2].end()) objects[k2].emplace(k1, astack.getTop());
-			else objects[k2][k1] = astack.getTop();
+			memory[k2].set(k1, astack.getTop());
 			astack.pop();
 			break;
 		case opcode::SWAP:
@@ -387,19 +374,19 @@ void nvm::cycle()
 			break;
 		case opcode::INC:
 			k = bitconverter::toint32(i.parameters, 0);
-			memory[curPage][k] = bitconverter::toArray(bitconverter::toint32(memory[curPage][k], 0) + bitconverter::toint32(i.parameters, 4));
+			globals->set(k, bitconverter::toArray(bitconverter::toint32(globals->get(k), 0) + bitconverter::toint32(i.parameters, 4)));
 			break;
 		case opcode::DEC:
 			k = bitconverter::toint32(i.parameters, 0);
-			memory[curPage][k] = bitconverter::toArray(bitconverter::toint32(memory[curPage][k], 0) - bitconverter::toint32(i.parameters, 4));
+			globals->set(k, bitconverter::toArray(bitconverter::toint32(globals->get(k), 0) - bitconverter::toint32(i.parameters, 4)));
 			break;
 		case opcode::IMUL:
 			k = bitconverter::toint32(i.parameters, 0);
-			memory[curPage][k] = bitconverter::toArray(bitconverter::toint32(memory[curPage][k], 0) * bitconverter::toint32(i.parameters, 4));
+			globals->set(k, bitconverter::toArray(bitconverter::toint32(globals->get(k), 0) * bitconverter::toint32(i.parameters, 4)));
 			break;
 		case opcode::IDIV:
 			k = bitconverter::toint32(i.parameters, 0);
-			memory[curPage][k] = bitconverter::toArray(bitconverter::toint32(memory[curPage][k], 0) / bitconverter::toint32(i.parameters, 4));
+			globals->set(k, bitconverter::toArray(bitconverter::toint32(globals->get(k), 0) / bitconverter::toint32(i.parameters, 4)));
 			break;
 		case opcode::SCMP:
 			if (astack.size < 2) vmmgr::vmmerror("Stack underflow at " + pc, processid);
@@ -418,8 +405,8 @@ void nvm::cycle()
 		case opcode::CMP:
 			k1 = bitconverter::toint32(i.parameters, 0);
 			k2 = bitconverter::toint32(i.parameters, 4);
-			cv1 = bitconverter::toint32(memory[curPage][k1], 0);
-			cv2 = bitconverter::toint32(memory[curPage][k2], 0);
+			cv1 = bitconverter::toint32(globals->get(k1), 0);
+			cv2 = bitconverter::toint32(globals->get(k2), 0);
 			less = false;
 			greater = false;
 			equal = false;
@@ -431,8 +418,8 @@ void nvm::cycle()
 		case opcode::CMPB:
 			k1 = i.parameters[0];
 			k2 = i.parameters[1];
-			cv1 = bitconverter::toint32(memory[curPage][k1], 0);
-			cv2 = bitconverter::toint32(memory[curPage][k2], 0);
+			cv1 = bitconverter::toint32(globals->get(k1), 0);
+			cv2 = bitconverter::toint32(globals->get(k2), 0);
 			less = false;
 			greater = false;
 			equal = false;
@@ -443,13 +430,13 @@ void nvm::cycle()
 			break;
 		case opcode::CZ:
 			k1 = bitconverter::toint32(i.parameters, 0);
-			k2 = bitconverter::toint32(memory[curPage][k1], 0);
+			k2 = bitconverter::toint32(globals->get(k1), 0);
 			zero = false;
 			if (k2 == 0) zero = true;
 			break;
 		case opcode::CZB:
 			k1 = i.parameters[0];
-			k2 = bitconverter::toint32(memory[curPage][k1], 0);
+			k2 = bitconverter::toint32(globals->get(k1), 0);
 			zero = false;
 			if (k2 == 0) zero = true;
 			break;
@@ -458,7 +445,7 @@ void nvm::cycle()
 			greater = false;
 			equal = true;
 			zero = false;
-			v1 = memory[curPage][bitconverter::toint32(i.parameters, 0)];
+			v1 = globals->get(bitconverter::toint32(i.parameters, 0));
 			if (v1.size == i.psize - 4)
 			{
 				for (n = 4; n < i.psize; n++)
@@ -473,7 +460,7 @@ void nvm::cycle()
 			greater = false;
 			equal = false;
 			zero = false;
-			cmpi = bitconverter::toint32(memory[curPage][bitconverter::toint32(i.parameters, 0)], 0);
+			cmpi = bitconverter::toint32(globals->get(bitconverter::toint32(i.parameters, 0)), 0);
 			cmpid = bitconverter::toint32(i.parameters, 4);
 			if (cmpi == cmpid) equal = true;
 			if (cmpi < cmpid) less = true;
@@ -484,15 +471,17 @@ void nvm::cycle()
 			greater = false;
 			equal = false;
 			zero = false;
-			cmpi = bitconverter::toint32(memory[curPage][i.parameters[0]], 0);
+			cmpi = bitconverter::toint32(globals->get(i.parameters[0]), 0);
 			cmpid = i.parameters[1];
 			if (cmpi == cmpid) equal = true;
 			if (cmpi < cmpid) less = true;
 			if (cmpi > cmpid) greater = true;
 			break;
 		case opcode::JMP:
-			addr = bitconverter::toint32(i.parameters, 0);
-			branch(addr);
+			branch(bitconverter::toint32(i.parameters, 0));
+			break;
+		case opcode::LEAP:
+			leap(bitconverter::toint32(i.parameters, 0), i.parameters[4]);
 			break;
 		case opcode::JEQ:
 			addr = bitconverter::toint32(i.parameters, 0);
@@ -617,23 +606,23 @@ void nvm::cycle()
 				callstack.pop();
 				for (pair<int, pair<int, int>> p : pages)
 				{
-					if (p.second.first <= pc && p.second.second >= pc) curPage = p.first;
+					if (p.second.first <= pc && p.second.second >= pc)
+					{
+						globals = &globalPages[p.first];
+					}
 				}
 			}
 			break;
 		case opcode::EMIT:
 			k = bitconverter::toint32(i.parameters, 0);
-			v = memory[curPage][k];
+			v = globals->get(k);
 			emc = *disassembler::disassembleCode(v.holder, v.size);
 			addr = bytecode->size;
 			for (n = 0; n < emc.size; n++) bytecode->push(emc[n]);
 			branch(addr);
 			break;
 		case opcode::MOVPC:
-			k = bitconverter::toint32(i.parameters, 0);
-			v = bitconverter::toArray(pc);
-			if (memory[curPage].count(k)) memory[curPage][k] = v;
-			else memory[curPage].emplace(k, v);
+			globals->set(bitconverter::toint32(i.parameters, 0), bitconverter::toArray(pc));
 			break;
 		case opcode::LJ:
 			pc = bitconverter::toint32(i.parameters, 0);
@@ -670,7 +659,7 @@ void nvm::cycle()
 		case opcode::INTR:
 			inter = i.parameters[0];
 			k = bitconverter::toint32(i.parameters, 1);
-			v = memory[curPage][k];
+			v = globals->get(k);
 			v.insert(0, inter);
 			bp = bitconverter::toarray_p(v);
 			v = syscall::systemCall(bp, v.size, this);
@@ -683,7 +672,7 @@ void nvm::cycle()
 		case opcode::INTB:
 			inter = i.parameters[0];
 			k = i.parameters[1];
-			v = memory[curPage][k];
+			v = globals->get(k);
 			v.insert(0, inter);
 			bp = bitconverter::toarray_p(v);
 			v = syscall::systemCall(bp, v.size, this);
@@ -695,28 +684,25 @@ void nvm::cycle()
 			break;
 		case opcode::PUSH:
 			if (bits == 32)
-				astack.push(memory[curPage][bitconverter::toint32(i.parameters, 0)]);
+				astack.push(globals->get(bitconverter::toint32(i.parameters, 0)));
 			else if (bits == 8)
 			{
 				v = Array<byte>();
-				v.push(memory[curPage][bitconverter::toint32(i.parameters, 0)][0]);
+				v.push(globals->get(bitconverter::toint32(i.parameters, 0))[0]);
 				astack.push(v);
 			}
 			break;
 		case opcode::POP:
 			if (astack.size != 0)
 			{
-				k = bitconverter::toint32(i.parameters, 0);
-				if (memory[curPage].count(k)) memory[curPage][k] = astack.getTop();
-				else
-				{
-					memory[curPage].emplace(k, Array<byte>(astack.getTop()));
-				}
+				globals->set(bitconverter::toint32(i.parameters, 0), astack.getTop());
 				if (bits == 8)
 				{
 					v = Array<byte>();
 					v.push(0); v.push(0); v.push(0);
-					memory[curPage][k].insert(v, memory[curPage][k].size, 0, v.size);
+					k = bitconverter::toint32(i.parameters, 0);
+					v.add(globals->get(k)[0]);
+					globals->set(k, v);
 				}
 				astack.pop();
 			}
@@ -743,34 +729,27 @@ void nvm::cycle()
 		case opcode::POPB:
 			if (astack.top != -1)
 			{
-				k = (int)i.parameters[0];
-				if (memory[curPage].count(k)) memory[curPage][k] = astack.getTop();
-				else
-				{
-					v = astack.getTop();
-					memory[curPage].emplace(k, v);
-				}
+				globals->set(i.parameters[0], astack.getTop());
 				if (bits == 8)
 				{
 					v = Array<byte>();
 					v.push(0); v.push(0); v.push(0);
-					memory[curPage][k].insert(v, memory[curPage][k].size, 0, v.size);
+					k = (int)i.parameters[0];
+					v.add(globals->get(k)[0]);
+					globals->set(k, v);
 				}
 				astack.pop();
 			}
 			break;
 		case opcode::VPUSHB:
 			if (bits == 32)
-				astack.push(memory[curPage][i.parameters[0]]);
+				astack.push(globals->get(i.parameters[0]));
 			else if (bits == 8)
 			{
 				v = Array<byte>();
-				v.push(memory[curPage][i.parameters[0]][0]);
+				v.push(globals->get(i.parameters[0])[0]);
 				astack.push(v);
 			}
-			break;
-		case opcode::EXTCALL:
-			halt("Unresolved external symbol!");
 			break;
 		case opcode::HALT:
 			halt();
@@ -805,9 +784,19 @@ void nvm::branch(int addr)
 {
 	callstack.push(pc);
 	pc = addr;
+}
+
+void nvm::leap(int addr, byte page)
+{
+	callstack.push(pc);
+	pc = addr;
 	for (pair<int, pair<int, int>> p : pages)
 	{
-		if (p.second.first <= pc && p.second.second >= pc) curPage = p.first;
+		if (p.second.first <= pc && p.second.second >= pc)
+		{
+			globals = &globalPages[p.first];
+			return;
+		}
 	}
 }
 

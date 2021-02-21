@@ -1,6 +1,7 @@
 #pragma once
 #include "util.h"
 #include <iostream>
+#include <map>
 template<class T>
 class Array
 {
@@ -11,7 +12,7 @@ public:
 	Array()
 	{
 		size = 0;
-		holder = new T[size];
+		holder = new T[0];
 		alive = true;
 	}
 	Array(const Array<T>& c)
@@ -33,6 +34,10 @@ public:
 		size = s;
 		holder = new T[size];
 		for (int i = 0; i < size; i++) holder[i] = tc[i];
+		alive = true;
+	}
+	Array(string dummy)
+	{
 		alive = true;
 	}
 	~Array()
@@ -262,7 +267,7 @@ public:
 	}
 	void clear()
 	{
-		if(alive)
+		if (alive)
 		{
 			delete[] holder;
 			holder = new T[0];
@@ -270,88 +275,148 @@ public:
 		}
 	}
 };
-template<class K, class V>
-class Map
+
+//template<class V>
+//class IntMap
+//{
+//public:
+//	map<int, V> inmap;
+//	IntMap()
+//	{
+//		inmap = map<int, V>();
+//	}
+//	IntMap(const IntMap<V>& other)
+//	{
+//		operator=(other);
+//	}
+//	IntMap& operator=(IntMap<V>& other)
+//	{
+//		inmap = other.inmap;
+//		return *this;
+//	}
+//	~IntMap()
+//	{
+//		inmap.clear();
+//	}
+//	void add(int key, const V& value)
+//	{
+//		inmap.emplace(key, value);
+//	}
+//	void remove(int key)
+//	{
+//		if (find(key)) inmap.erase(inmap.find(key));
+//	}
+//	V& get(int key)
+//	{
+//		return inmap[key];
+//	}
+//	V& operator[](int key)
+//	{
+//		return inmap[key];
+//	}
+//	void set(int key, const V& value)
+//	{
+//		if (!find(key)) add(key, value);
+//		else inmap[key] = value;
+//	}
+//	int find(int key)
+//	{
+//		return inmap.find(key) != inmap.end();
+//	}
+//};
+
+template<class V>
+class IntMap
 {
 public:
-	Array<K>* keys;
-	Array<V>* values;
-	Map()
+	int* keys;
+	V** holder;
+	int size;
+	int hsize;
+	IntMap()
 	{
-		keys = new Array<K>();
-		values = new Array<V>();
+		keys = new int[0];
+		holder = new V*[0];
+		size = 0;
+		hsize = 0;
 	}
-	Map(const Map<K, V>& c)
+	IntMap(IntMap<V>& other)
 	{
-		keys = new Array<K>();
-		values = new Array<V>();
-		for (int i = 0; i < c.keys->size; i++) keys->add(c.keys->get(i));
-		for (int i = 0; i < c.values->size; i++) values->add(c.values->get(i));
+		operator=(other);
 	}
-	~Map()
+	IntMap& operator=(IntMap<V>& other)
 	{
-		delete keys;
-		delete values;
+		size = other.size;
+		hsize = other.hsize;
+		holder = new V*[hsize];
+		keys = new int[size];
+		for (int i = 0; i < size; i++) keys[i] = other.keys[i];
+		for (int i = 0; i < hsize; i++) holder[i] = other.holder[i];
+		return *this;
 	}
-	void emplace(K k, V v)
+	~IntMap()
 	{
-		set(k, v);
+		//for (int i = 0; i < hsize; i++) delete holder[i];
+		delete[] holder;
+		delete[] keys;
 	}
-	void set(K k, V v)
+	void add(int key, V& value)
 	{
-		if (!keys->contains(k))
+		int i;
+		if (size <= key)
 		{
-			keys->add(k);
-			values->add(v);
+			int* nk = new int[key + 1];
+			for (int j = 0; j < size; j++) nk[j] = keys[j];
+			nk[key] = -1;
+			int oc = size;
+			size = key + 1;
+			delete[] keys;
+			keys = nk;
 		}
-		else
+		if (keys[key] != -1)
 		{
-			get(k) = v;
+			i = keys[key];
+			delete holder[i];
+			holder[i] = NULL;
 		}
-	}
-	V& get(K& key)
-	{
-		int index = keys->indexOf(key);
-		if (index != -1) return values->get(index);
-		//else throw;
-		return values->get(0);
-	}
-	void remove(K& key)
-	{
-		int index = keys->indexOf(key);
-		if (index != -1)
+		i = 0;
+		while (i < hsize && holder[i] != NULL)
+			i++;
+		if (i == hsize)
 		{
-			keys->removeAt(index);
-			values->removeAt(index);
+			V** nh = new V * [hsize + 1];
+			for (int j = 0; j < hsize; j++) nh[j] = holder[j];
+			delete[] holder;
+			holder = nh;
+			hsize++;
 		}
+		keys[key] = i;
+		holder[i] = new V(value);
 	}
-	V& operator[](K key)
+	void remove(int key)
 	{
-		return get(key);
+		int i = keys[key];
+		delete[] holder[i];
+		holder[i] = NULL;
+		keys[key] = -1;
 	}
-	void operator=(const Map<K, V>& c)
+	V& get(int key)
 	{
-		keys = new Array<K>();
-		values = new Array<V>();
-		for (int i = 0; i < c.keys->size; i++) keys->add(c.keys->get(i));
-		for (int i = 0; i < c.values->size; i++) values->add(c.values->get(i));
+		return *holder[keys[key]];
 	}
-	bool operator==(const Map<K, V>& c)
+	V& operator[](int key)
 	{
-		if (keys->size != c.keys->size || values->size != c.values->size) return false;
-		for (int i = 0; i < keys->size; i++)
-		{
-			if (keys->get(i) != c.keys->get(i)) return false;
-		}
-		for (int i = 0; i < values->size; i++)
-		{
-			if (values->get(i) != c.valuse->get(i)) return false;
-		}
-		return true;
+		return *holder[keys[key]];
 	}
-	bool operator!=(const Map<K, V>& other)
+	void set(int key, V& value)
 	{
-		return !(this == other);
+		if (keys[key] == -1) add(key, value);
+		else *holder[keys[key]] = value;
+	}
+	int find(int key)
+	{
+		if (key >= size) return false;
+		return keys[key] != -1;
 	}
 };
 class BufferedStack

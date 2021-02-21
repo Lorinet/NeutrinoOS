@@ -8,6 +8,6 @@ goto :wasteTime
 ret
 
 :wasteTime
-extcall NtrSuspendProcess
+leap NtrSuspendProcess
 lj :wasteTime
 ret

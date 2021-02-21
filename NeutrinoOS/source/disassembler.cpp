@@ -45,7 +45,7 @@ Array<instruction>* disassembler::disassembleCode(byte* bc, int size)
 		{
 			length = 0;
 		}
-		else if (op == opcode::MOV || op == opcode::CONCAT || op == opcode::SIZ || op == opcode::APPEND|| op == opcode::INC || op == opcode::DEC || op == opcode::IMUL || op == opcode::IDIV || op == opcode::CMPI || op == opcode::CMP || op == opcode::AND || op == opcode::OR || op == opcode::XOR || op == opcode::SHL || op == opcode::SHR || op == opcode::EXTCALL /*|| op == opcode::VAD || op == opcode::VPF || op == opcode::VAR || op == opcode::VAP || op == opcode::VAL*/)
+		else if (op == opcode::MOV || op == opcode::CONCAT || op == opcode::SIZ || op == opcode::APPEND || op == opcode::INC || op == opcode::DEC || op == opcode::IMUL || op == opcode::IDIV || op == opcode::CMPI || op == opcode::CMP || op == opcode::AND || op == opcode::OR || op == opcode::XOR || op == opcode::SHL || op == opcode::SHR || op == opcode::LEAP /*|| op == opcode::VAD || op == opcode::VPF || op == opcode::VAR || op == opcode::VAP || op == opcode::VAL*/)
 		{
 			length = 8;
 		}

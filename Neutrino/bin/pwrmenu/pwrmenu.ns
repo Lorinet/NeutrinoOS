@@ -8,17 +8,17 @@ push __PowerMenuView_hwnd
 ldstr 1
 extmovl NtrSystemShutdown _faddr
 push _faddr
-extcall WMAttachEventHandler
+leap WMAttachEventHandler
 push __PowerMenuView_hwnd
 ldstr 2
 extmovl NtrSystemReboot _faddr
 push _faddr
-extcall WMAttachEventHandler
+leap WMAttachEventHandler
 goto timeWaste
 ret
 
 :timeWaste
 ; make sure the process stays alive and isn't running in a dead loop
-extcall NtrSuspendProcess
+leap NtrSuspendProcess
 lj timeWaste
 ret

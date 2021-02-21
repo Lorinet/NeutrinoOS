@@ -97,6 +97,6 @@ enum opcode
 	POPB = 0x96,
 	VPUSHB = 0x97,
 	LINK = 0x98,
-	EXTCALL = 0x99,
+	LEAP = 0x99,
 	HALT = 0xB0
 };

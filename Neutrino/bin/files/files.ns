@@ -9,7 +9,7 @@ call FilesView_CreateView
 push __FilesView_hwnd
 ldstr 0
 pushl handleEnter
-extcall WMAttachEventHandler
+leap WMAttachEventHandler
 str _path "0:\"
 str _delim "\"
 call buildList
@@ -18,7 +18,7 @@ ret
 
 :wasteTime
 ; make sure the process stays alive and isn't running in a dead loop
-extcall NtrSuspendProcess
+leap NtrSuspendProcess
 lj wasteTime
 ret
 
@@ -32,7 +32,7 @@ call FileMenu_CreateView
 push __FileMenu_hwnd
 ldstr 0
 pushl handleAction
-extcall WMAttachEventHandler
+leap WMAttachEventHandler
 ret
 
 :returnEnter
@@ -43,14 +43,14 @@ cmpi _path "0:\"
 lje returnEnter
 push _path
 ldstr "\"
-extcall SplitString
+leap SplitString
 pop _pathsplit
-val _pathsplit _tokn
+ldlen _pathsplit _tokn
 dec _tokn 2
-var _pathsplit _tokn
+delelem _pathsplit _tokn
 push _pathsplit
 ldstr "\"
-extcall RebuildString
+leap RebuildString
 pop _path
 call buildList
 call resetMarker
@@ -70,7 +70,7 @@ ret
 mov _path _checkpath
 concat _choice _checkpath
 push _checkpath
-extcall NtrDirectoryExists
+leap NtrDirectoryExists
 pop _fldr
 cz _fldr
 jnz navigate
@@ -95,36 +95,38 @@ ret
 
 :buildList
 push _path
-extcall NtrGetDirectories
+leap NtrGetDirectories
 pop _fileList
-val _fileList _dirLimit
+ldlen _fileList _dirLimit
 inc _dirLimit 2
 push _path
-extcall NtrGetFiles
+leap NtrGetFiles
 pop _fileList2
-vap _fileList2 _fileList
+; TODO: New opcodes
+;vap _fileList2 _fileList
 str _fldi ".."
-vpf _fileList _fldi
-vpf _fileList _path
+; TODO: Util methods for array append / vpf
+;vpf _fileList _fldi
+;vpf _fileList _path
 push __FilesView_hwnd
 ldstr 0
 push _fileList
-extcall WMSetListViewItems
+leap WMSetListViewItems
 ret
 
 :resetMarker
 push __FilesView_hwnd
 spush 0
 spush "SelectedIndex:1"
-extcall WMSetUserElementProperty
+leap WMSetUserElementProperty
 push __FilesView_hwnd
 spush 0
 spush "FrameStart:0"
-extcall WMSetUserElementProperty
+leap WMSetUserElementProperty
 ret
 
 :exitFiles
 call FileMenu_DestroyView
 call FilesView_DestroyView
-extcall NtrShutdownProcess
+leap NtrShutdownProcess
 ret

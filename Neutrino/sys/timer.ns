@@ -26,7 +26,7 @@ append ___T1 ___T4
 concat ___T2 ___T4
 concat ___T3 ___T4
 push ___T4
-extcall NtrTimerInterrupt
+leap NtrTimerInterrupt
 ret
 
 :NtrDestroyTimer
@@ -61,7 +61,7 @@ pop ___T2 ; timer id
 append ___T1 ___T3
 concat ___T2 ___T3
 push ___T3
-extcall NtrTimerInterrupt
+leap NtrTimerInterrupt
 ret
 
 :NtrDelay
@@ -71,5 +71,5 @@ push ___T2
 push ___T1
 call NtrCreateTimer
 call NtrStartTimer
-extcall NtrSuspendProcess
+leap NtrSuspendProcess
 ret
