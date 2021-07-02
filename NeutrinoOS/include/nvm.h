@@ -18,8 +18,8 @@ public:
 	map<string, pair<int, int>> modules;
 	map<int, int> extcalls;
 	Array<instruction>* bytecode;
-	IntMap<vmobject> memory;
-	Array<vmobject> globalPages;
+	IntMap<vmobject>* memory;
+	Array<vmobject>* globalPages;
 	vmobject* globals;
 	map<int, arrayobj> arrays;
 	map<int, pair<int, int>> pages;
@@ -36,7 +36,9 @@ public:
 	bool suspended;
 	int processid;
 	byte processPriority;
-	unsigned int pc;
+	Array<uint32_t> threads;
+	uint16_t curThrd;
+	uint32_t pc;
 	bool running;
 	bool equal;
 	bool less;
@@ -58,6 +60,7 @@ public:
 	long long millis;
 	nvm();
 	nvm(Array<instruction>* code);
+	~nvm();
 	void start();
 	void start(int procid, string file);
 	void cycle();

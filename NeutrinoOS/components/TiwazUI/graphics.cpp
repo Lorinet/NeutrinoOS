@@ -1,4 +1,5 @@
 #include "graphics.h"
+#include "kernlog.h"
 int Graphics::posX = 0;
 int Graphics::posY = 0;
 int Graphics::width = 0;
@@ -12,8 +13,10 @@ u8g2_t Graphics::u8g2;
 bool Graphics::running = false;
 void Graphics::InitGraphicSystem()
 {
+	klog("TiwazGraphics", "Initializing graphics system...");
 	if (!running)
 	{
+		klog("TiwazGraphics", "Initializing I2C Display: ssd1306 128x64");
 #if defined(__UNIX)
 		u8g2_Setup_ssd1306_128x64_noname_f(&u8g2, U8G2_MIRROR, u8x8_byte_arm_linux_hw_spi, u8x8_arm_linux_gpio_and_delay);
 		u8x8_SetPin(u8g2_GetU8x8(&u8g2), U8X8_PIN_DC, 5);
@@ -22,9 +25,12 @@ void Graphics::InitGraphicSystem()
 		u8g2_esp32_hal_t u8g2_esp32_hal = U8G2_ESP32_HAL_DEFAULT;
 		u8g2_esp32_hal.sda = GPIO_NUM_21;
 		u8g2_esp32_hal.scl = GPIO_NUM_22;
+		klog("TiwazGraphics", "Initializing u8g2 I2C driver: sda GPIO" + to_string(u8g2_esp32_hal.sda) + "; scl GPIO" + to_string(u8g2_esp32_hal.scl));
 		u8g2_esp32_hal_init(u8g2_esp32_hal);
+		klog("TiwazGraphics", "Intializing u8g2 display driver...");
 		u8g2_Setup_ssd1306_i2c_128x64_noname_f(&u8g2, U8G2_R0, u8g2_esp32_i2c_byte_cb, u8g2_esp32_gpio_and_delay_cb);
 #endif
+		klog("TiwazGraphics", "Configuring display parameters...");
 		u8x8_SetI2CAddress(&u8g2.u8x8, 0x78);
 		u8g2_InitDisplay(&u8g2);
 		u8g2_SetPowerSave(&u8g2, 0);
@@ -34,6 +40,7 @@ void Graphics::InitGraphicSystem()
 		u8g2_DrawStr(&u8g2, 2, 5, "Neutrino Core OS [Version 1.0f]");
 		u8g2_SendBuffer(&u8g2);
 		running = true;
+		klog("TiwazGraphics", "Graphics system loaded.");
 	}
 }
 void Graphics::ClearScreen()

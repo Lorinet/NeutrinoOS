@@ -11,6 +11,7 @@
 #include "components.h"
 #include "iomgr.h"
 #include "nfsdimp.h"
+#include "kernlog.h"
 string syscall::filename, syscall::files, syscall::folders, syscall::txt, syscall::txt1, syscall::txt2;
 Array<byte> syscall::contents, syscall::msg;
 unsigned int syscall::n;
@@ -22,7 +23,6 @@ interrupts syscall::syscll;
 Array<byte> syscall::data;
 Array<byte> syscall::systemCall(byte* indata, int datasize, nvm* v)
 {
-	vmmgr::enterCriticalSection();
 	syscll = (interrupts)indata[0];
 	data.clear();
 	eventid eid;
@@ -190,7 +190,6 @@ Array<byte> syscall::systemCall(byte* indata, int datasize, nvm* v)
 				exit(0);
 				break;
 			case 0x02:
-				vmmgr::reload();
 				break;
 			case 0x03:
 			break;
@@ -645,6 +644,9 @@ Array<byte> syscall::systemCall(byte* indata, int datasize, nvm* v)
 		case uicmd::GetPropertyValue:
 			return bitconverter::toArray("0");
 			break;
+		case uicmd::CreateView:
+			return bitconverter::toArray(0);
+			break;
 #endif
 		}
 		break;
@@ -695,6 +697,5 @@ Array<byte> syscall::systemCall(byte* indata, int datasize, nvm* v)
 	default:
 		break;
 	}
-	vmmgr::leaveCriticalSection();
 	return Array<byte>();
 }

@@ -1,6 +1,7 @@
 #include "vt.h"
 #include "bitconverter.h"
 #include <stdio.h>
+#include "kernlog.h"
 vt::vt()
 {
 	input = Array<byte>();
@@ -20,8 +21,7 @@ void vt::write(Array<byte> data)
 	}
 	else if (type == vtype::StandardOutput)
 	{
-		// implement console
-		cout << bitconverter::tostring(data);
+		klog("PID " + to_string(process), bitconverter::tostring(data));
 	}
 }
 void vt::write(string data)

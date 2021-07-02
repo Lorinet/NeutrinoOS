@@ -1,11 +1,14 @@
 #include "viewmgr.h"
+#include "kernlog.h"
 map<int, View *> ViewManager::views;
 int ViewManager::activeView;
 
 void ViewManager::Initialize()
 {
+	klog("TiwazViewManager", "Initializing...");
 	Graphics::InitGraphicSystem();
 	views = map<int, View *>();
+	klog("TiwazViewManager", "Loading resources...");
 	Graphics::fonts.emplace("Micro 4", (FontType){(uint8_t *)u8g2_font_u8glib_4_tf, 4});
 	Graphics::fonts.emplace("Micro 5", (FontType){(uint8_t *)u8g2_font_micro_mr, 5});
 	Graphics::fonts.emplace("Console 7", (FontType){(uint8_t *)u8g2_font_pxplusibmcga_8f, 7});
@@ -51,6 +54,7 @@ void ViewManager::Initialize()
 	Graphics::fonts.emplace("Open Iconic 48", (FontType){(uint8_t *)u8g2_font_open_iconic_all_6x_t, 48});
 	Graphics::fonts.emplace("Open Iconic 64", (FontType){(uint8_t *)u8g2_font_open_iconic_all_8x_t, 64});
 	Graphics::ClearScreen();
+	klog("TiwazWindowManager", "Loaded");
 }
 
 void ViewManager::RenderView(View *v)

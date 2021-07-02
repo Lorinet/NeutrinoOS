@@ -4,7 +4,7 @@
 #include <map>
 #include <mutex>
 #include "util.h"
-#include "scheduler.h";
+#include "scheduler.h"
 #if defined(__ESP32)
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -13,7 +13,7 @@
 #include <Windows.h>
 #endif
 
-#define MAX_THREADS_ALLOWED	2
+#define MAX_THREADS_ALLOWED	1
 using namespace std;
 class nvm;
 class vt;
@@ -27,15 +27,16 @@ public:
 	static Array<scheduler*> schedulers;
 	static IntMap<nvm*> processes;
 	static thread eventloop;
-	static mutex kernelLock;
+	static mutex kernelMutex;
+	static unique_lock<mutex> kernelLock;
 	static void start();
 	static int createProcess(string file, bool start = true);
 	static int createProcessEx(string file, vt in, vt out);
+	static int createThread(nvm* parent, int entrypc);
 	static nvm* getProcess(int pid);
 	static void terminateProcess(int pid);
 	static void sendMessage(int pid, Array<byte> msg);
 	static void sendInput(int pid, Array<byte> input);
-	static void reload();
 	static void enterCriticalSection();
 	static void leaveCriticalSection();
 	static void kernelLoop();

@@ -19,6 +19,8 @@ public:
 	void remove(int key);
 	Array<byte>& get(int key);
 	void set(int key, const Array<byte>& val);
+	void append(int key, byte b);
+	void concat(int key, Array<byte>& a);
 	void preallocate(int keys);
 	int find(int key);
 };

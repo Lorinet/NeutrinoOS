@@ -1,4 +1,5 @@
 #include "memorystats.h"
+#include "kernlog.h"
 char *memorystats::basePtr;
 void memorystats::init()
 {

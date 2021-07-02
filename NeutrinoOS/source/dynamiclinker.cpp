@@ -6,6 +6,8 @@
 #include "nvm.h"
 #include "lvmgr.h"
 #include "vmmem.h"
+#include "memorystats.h"
+#include "kernlog.h"
 void dynamiclinker::dynamicLink(nvm* v)
 {
 	map<string, int> offsets;
@@ -13,7 +15,7 @@ void dynamiclinker::dynamicLink(nvm* v)
 	v->pages.insert({ 0, pair<int, int>(0, v->bytecode->size - 1) });
 	int ndx = 1;
 	if (!link(v->bytecode, &offsets, &v->pages, &ndx, v->processid)) return;
-	for (int i = 0; i < v->pages.size(); i++) v->globalPages.add(vmobject());
+	for (int i = 0; i < v->pages.size(); i++) v->globalPages->add(vmobject());
 	map<string, map<int, int>> sections;
 	int s;
 	byte* modcod;
@@ -37,6 +39,7 @@ void dynamiclinker::dynamicLink(nvm* v)
 			for (int j = 0; j < 4; j++) (*v->bytecode)[i].parameters[j] = ab[j];
 			(*v->bytecode)[i].parameters[4] = sec;
 			(*v->bytecode)[i].psize = 5;
+			delete[] ab;
 		}
 		else if ((*v->bytecode)[i].opCode == opcode::EXTMOVL)
 		{
@@ -66,6 +69,7 @@ void dynamiclinker::dynamicLink(nvm* v)
 bool dynamiclinker::link(Array<instruction>* v, map<string, int>* off, map<int, pair<int, int>>* pages, int* ndx, int pid)
 {
 	byte* bin;
+	byte* parm;
 	int size;
 	Array<instruction>* dasm;
 	string file;
@@ -87,142 +91,72 @@ bool dynamiclinker::link(Array<instruction>* v, map<string, int>* off, map<int, 
 				}
 				bin = file::readAllBytes(path, &size);
 				dasm = disassembler::disassembleExecutable(bin, size);
+				delete[] bin;
 				replaceModulesByName(dasm);
 				for (int j = 0; j < dasm->size; j++)
 				{
-					if ((*dasm)[j].opCode == opcode::SJ)
+					if ((*dasm)[j].opCode == opcode::SJ || (*dasm)[j].opCode == opcode::SJE || (*dasm)[j].opCode == opcode::SJNE || (*dasm)[j].opCode == opcode::SJL || (*dasm)[j].opCode == opcode::SJG || (*dasm)[j].opCode == opcode::SJLE || (*dasm)[j].opCode == opcode::SJGE || (*dasm)[j].opCode == opcode::SJZ || (*dasm)[j].opCode == opcode::SJNZ)
 					{
-						(*dasm)[j].opCode = opcode::JMP;
-						(*dasm)[j].parameters = bitconverter::toarray_p(((int)(*dasm)[j].parameters[0]) + v->size);
-						(*dasm)[j].psize = 4;
-					}
-					else if ((*dasm)[j].opCode == opcode::SJE)
-					{
-						(*dasm)[j].opCode = opcode::JEQ;
-						(*dasm)[j].parameters = bitconverter::toarray_p(((int)(*dasm)[j].parameters[0]) + v->size);
-						(*dasm)[j].psize = 4;
-					}
-					else if ((*dasm)[j].opCode == opcode::SJNE)
-					{
-						(*dasm)[j].opCode = opcode::JNE;
-						(*dasm)[j].parameters = bitconverter::toarray_p(((int)(*dasm)[j].parameters[0]) + v->size);
-						(*dasm)[j].psize = 4;
-					}
-					else if ((*dasm)[j].opCode == opcode::SJL)
-					{
-						(*dasm)[j].opCode = opcode::JLT;
-						(*dasm)[j].parameters = bitconverter::toarray_p(((int)(*dasm)[j].parameters[0]) + v->size);
-						(*dasm)[j].psize = 4;
-					}
-					else if ((*dasm)[j].opCode == opcode::SJG)
-					{
-						(*dasm)[j].opCode = opcode::JGT;
-						(*dasm)[j].parameters = bitconverter::toarray_p(((int)(*dasm)[j].parameters[0]) + v->size);
-						(*dasm)[j].psize = 4;
-					}
-					else if ((*dasm)[j].opCode == opcode::SJLE)
-					{
-						(*dasm)[j].opCode = opcode::JLE;
-						(*dasm)[j].parameters = bitconverter::toarray_p(((int)(*dasm)[j].parameters[0]) + v->size);
-						(*dasm)[j].psize = 4;
-					}
-					else if ((*dasm)[j].opCode == opcode::SJGE)
-					{
-						(*dasm)[j].opCode = opcode::JGE;
-						(*dasm)[j].parameters = bitconverter::toarray_p(((int)(*dasm)[j].parameters[0]) + v->size);
-						(*dasm)[j].psize = 4;
-					}
-					else if ((*dasm)[j].opCode == opcode::SJZ)
-					{
-						(*dasm)[j].opCode = opcode::JZ;
-						(*dasm)[j].parameters = bitconverter::toarray_p(((int)(*dasm)[j].parameters[0]) + v->size);
-						(*dasm)[j].psize = 4;
-					}
-					else if ((*dasm)[j].opCode == opcode::SJNZ)
-					{
-						(*dasm)[j].opCode = opcode::JNZ;
-						(*dasm)[j].parameters = bitconverter::toarray_p(((int)(*dasm)[j].parameters[0]) + v->size);
+						switch((*dasm)[j].opCode)
+						{
+							case opcode::SJ:
+								(*dasm)[j].opCode = opcode::JMP;
+								break;
+							case opcode::SJE:
+								(*dasm)[j].opCode = opcode::JEQ;
+								break;
+							case opcode::SJNE:
+								(*dasm)[j].opCode = opcode::JNE;
+								break;
+							case opcode::SJL:
+								(*dasm)[j].opCode = opcode::JLT;
+								break;
+							case opcode::SJG:
+								(*dasm)[j].opCode = opcode::JGT;
+								break;
+							case opcode::SJLE:
+								(*dasm)[j].opCode = opcode::JLE;
+								break;
+							case opcode::SJGE:
+								(*dasm)[j].opCode = opcode::JGE;
+								break;
+							case opcode::SJZ:
+								(*dasm)[j].opCode = opcode::JZ;
+								break;
+							case opcode::SJNZ:
+								(*dasm)[j].opCode = opcode::JNZ;
+								break;
+							default:
+								break;
+						}
+						parm = bitconverter::toarray_p(((int)(*dasm)[j].parameters[0]) + v->size);
+						delete[] (*dasm)[j].parameters;
+						(*dasm)[j].parameters = parm;
 						(*dasm)[j].psize = 4;
 					}
 					else if ((*dasm)[j].opCode == opcode::PUSHL)
 					{
 						int a = bitconverter::toint32((*dasm)[j].parameters, 0);
 						a += v->size;
-						byte* vv = bitconverter::toarray_p(a);
-						(*dasm)[j].parameters[0] = vv[0];
-						(*dasm)[j].parameters[1] = vv[1];
-						(*dasm)[j].parameters[2] = vv[2];
-						(*dasm)[j].parameters[3] = vv[3];
-						delete vv;
+						parm = bitconverter::toarray_p(a);
+						(*dasm)[j].parameters[0] = parm[0];
+						(*dasm)[j].parameters[1] = parm[1];
+						(*dasm)[j].parameters[2] = parm[2];
+						(*dasm)[j].parameters[3] = parm[3];
+						delete[] parm;
 					}
-					else if((*dasm)[j].opCode == opcode::JMP)
+					else if((*dasm)[j].opCode == opcode::JMP || (*dasm)[j].opCode == opcode::JEQ || (*dasm)[j].opCode == opcode::JNE || (*dasm)[j].opCode == opcode::JLT || (*dasm)[j].opCode == opcode::JGT || (*dasm)[j].opCode == opcode::JLE || (*dasm)[j].opCode == opcode::JGE || (*dasm)[j].opCode == opcode::JZ || (*dasm)[j].opCode == opcode::JNZ || (*dasm)[j].opCode == opcode::LJ || (*dasm)[j].opCode == opcode::LJE || (*dasm)[j].opCode == opcode::LJNE || (*dasm)[j].opCode == opcode::LJL || (*dasm)[j].opCode == opcode::LJG || (*dasm)[j].opCode == opcode::LJLE || (*dasm)[j].opCode == opcode::LJGE)
 					{
-						(*dasm)[j].parameters = bitconverter::toarray_p(bitconverter::toint32((*dasm)[j].parameters, 0) + v->size);
-					}
-					else if ((*dasm)[j].opCode == opcode::JEQ)
-					{
-						(*dasm)[j].parameters = bitconverter::toarray_p(bitconverter::toint32((*dasm)[j].parameters, 0) + v->size);
-					}
-					else if ((*dasm)[j].opCode == opcode::JNE)
-					{
-						(*dasm)[j].parameters = bitconverter::toarray_p(bitconverter::toint32((*dasm)[j].parameters, 0) + v->size);
-					}
-					else if ((*dasm)[j].opCode == opcode::JLT)
-					{
-						(*dasm)[j].parameters = bitconverter::toarray_p(bitconverter::toint32((*dasm)[j].parameters, 0) + v->size);
-					}
-					else if ((*dasm)[j].opCode == opcode::JGT)
-					{
-						(*dasm)[j].parameters = bitconverter::toarray_p(bitconverter::toint32((*dasm)[j].parameters, 0) + v->size);
-					}
-					else if ((*dasm)[j].opCode == opcode::JGE)
-					{
-						(*dasm)[j].parameters = bitconverter::toarray_p(bitconverter::toint32((*dasm)[j].parameters, 0) + v->size);
-					}
-					else if ((*dasm)[j].opCode == opcode::JLE)
-					{
-						(*dasm)[j].parameters = bitconverter::toarray_p(bitconverter::toint32((*dasm)[j].parameters, 0) + v->size);
-					}
-					else if ((*dasm)[j].opCode == opcode::JZ)
-					{
-						(*dasm)[j].parameters = bitconverter::toarray_p(bitconverter::toint32((*dasm)[j].parameters, 0) + v->size);
-					}
-					else if ((*dasm)[j].opCode == opcode::JNZ)
-					{
-						(*dasm)[j].parameters = bitconverter::toarray_p(bitconverter::toint32((*dasm)[j].parameters, 0) + v->size);
-					}
-					else if ((*dasm)[j].opCode == opcode::LJ)
-					{
-						(*dasm)[j].parameters = bitconverter::toarray_p(bitconverter::toint32((*dasm)[j].parameters, 0) + v->size);
-					}
-					else if ((*dasm)[j].opCode == opcode::LJE)
-					{
-						(*dasm)[j].parameters = bitconverter::toarray_p(bitconverter::toint32((*dasm)[j].parameters, 0) + v->size);
-					}
-					else if ((*dasm)[j].opCode == opcode::LJNE)
-					{
-						(*dasm)[j].parameters = bitconverter::toarray_p(bitconverter::toint32((*dasm)[j].parameters, 0) + v->size);
-					}
-					else if ((*dasm)[j].opCode == opcode::LJL)
-					{
-						(*dasm)[j].parameters = bitconverter::toarray_p(bitconverter::toint32((*dasm)[j].parameters, 0) + v->size);
-					}
-					else if ((*dasm)[j].opCode == opcode::LJG)
-					{
-						(*dasm)[j].parameters = bitconverter::toarray_p(bitconverter::toint32((*dasm)[j].parameters, 0) + v->size);
-					}
-					else if ((*dasm)[j].opCode == opcode::LJLE)
-					{
-						(*dasm)[j].parameters = bitconverter::toarray_p(bitconverter::toint32((*dasm)[j].parameters, 0) + v->size);
-					}
-					else if ((*dasm)[j].opCode == opcode::LJGE)
-					{
-						(*dasm)[j].parameters = bitconverter::toarray_p(bitconverter::toint32((*dasm)[j].parameters, 0) + v->size);
+						parm = bitconverter::toarray_p(bitconverter::toint32((*dasm)[j].parameters, 0) + v->size);
+						delete[] (*dasm)[j].parameters;
+						(*dasm)[j].parameters = parm;
 					}
 				}
 				pages->insert({ *ndx, pair<int, int>(v->size, v->size + dasm->size - 1) });
 				(*ndx) += 1;
 				v->insert(dasm, v->size, 0, dasm->size);
+				dasm->clear();
+				delete dasm;
 				if (!link(v, off, pages, ndx, pid)) return false;
 				break;
 			}

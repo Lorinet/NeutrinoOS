@@ -1,4 +1,6 @@
 #include "disassembler.h"
+#include "memorystats.h"
+#include "kernlog.h"
 Array<instruction>* disassembler::disassembleExecutable(byte* program, int size)
 {
 	//if (program.size() < 4) throw "Corrupted executable!";
@@ -25,15 +27,18 @@ Array<instruction>* disassembler::disassembleExecutable(byte* program, int size)
 	{
 		bc[i - codeindex] = program[i];
 	}
-	return disassembleCode(bc, size - codeindex);
+	Array<instruction>* rv = disassembleCode(bc, size - codeindex);
+	return rv;
 }
 Array<instruction>* disassembler::disassembleCode(byte* bc, int size)
 {
 	Array<instruction>* instr = new Array<instruction>();
 	unsigned int cntr = 0;
+	byte op;
+	byte* parameters;
 	while (cntr < size)
 	{
-		byte op = bc[cntr];
+		op = bc[cntr];
 		cntr += 1;
 		int length;
 		if (op == opcode::ST || op == opcode::INTS || op == opcode::SPUSH || op == opcode::CMPS)
@@ -74,14 +79,16 @@ Array<instruction>* disassembler::disassembleCode(byte* bc, int size)
 			length = bc[cntr];
 			cntr += 1;
 		}
-		byte* parameters = new byte[length];
+		parameters = new byte[length];
 		for(int i = 0; i < length; i++)
 		{
 			parameters[i] = bc[cntr];
 			cntr++;
 		}
 		instr->push(instruction((opcode)op, parameters, length));
+		delete[] parameters;
 	}
+	delete[] bc;
 	return instr;
 }
 map<int, int> disassembler::extractExternalMethods(byte* program, int size)

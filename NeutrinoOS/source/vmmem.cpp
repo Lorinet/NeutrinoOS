@@ -27,7 +27,7 @@ vmobject& vmobject::operator=(const vmobject& other)
 
 vmobject::~vmobject()
 {
-	//for (int i = 0; i < hsize; i++) delete[] holder[i];
+	for (int i = 0; i < hsize; i++) delete[] holder[i];
 	delete[] holder;
 	delete[] keys;
 }
@@ -115,6 +115,32 @@ void vmobject::set(int key, const Array<byte>& val)
 		delete[] ip;
 		holder[keys[key]] = jp;
 	}
+}
+
+void vmobject::append(int key, byte b)
+{
+	byte* ip = holder[keys[key]];
+	int xlen = bitconverter::toint32(ip, 0);
+	byte* jp = new byte[xlen + 5];
+	Array<byte> sb = bitconverter::toArray(xlen + 1);
+	for (int i = 0; i < 4; i++) jp[i] = sb[i];
+	for (int i = 0; i < xlen; i++) jp[i + 4] = ip[i + 4];
+	jp[xlen + 4] = b;
+	delete[] ip;
+	holder[keys[key]] = jp;
+}
+
+void vmobject::concat(int key, Array<byte>& a)
+{
+	byte* ip = holder[keys[key]];
+	int xlen = bitconverter::toint32(ip, 0);
+	byte* jp = new byte[xlen + a.size + 4];
+	Array<byte> sb = bitconverter::toArray(xlen + a.size);
+	for(int i = 0; i < 4; i++) jp[i] = sb[i];
+	for(int i = 0; i < xlen; i++) jp[i + 4] = ip[i + 4];
+	for(int i = 0; i < a.size; i++) jp[i + xlen + 4] = a[i];
+	delete[] ip;
+	holder[keys[key]] = jp;
 }
 
 int vmobject::find(int key)

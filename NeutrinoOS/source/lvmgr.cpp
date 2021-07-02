@@ -1,4 +1,5 @@
 #include "lvmgr.h"
+#include "kernlog.h"
 map<string, string> lvmgr::drives;
 void lvmgr::initialize(string zer0)
 {
@@ -9,11 +10,17 @@ void lvmgr::mount(string letter, string folder)
 	if (drives.find(letter) == drives.end())
 	{
 		drives.insert({ letter, folder });
+		klog("LogicalVolumeManager", "Mounted " + folder + " as volume " + letter + ":");
+	}
+	else
+	{
+		kwarn("LogicalVolumeManager", "Volume " + letter + ": already mounted: " + drives[letter]);
 	}
 }
 void lvmgr::unmount(string letter)
 {
 	drives.erase(letter);
+	klog("LogicalVolumeManager", "Unmounted volume " + letter + ":");
 }
 Array<string> lvmgr::getDrives()
 {

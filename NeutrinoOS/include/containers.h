@@ -246,11 +246,13 @@ public:
 		{
 			behold[i] = holder[i];
 		}
+		delete[] holder;
 		size = size + other.size;
 		for (int i = size - other.size; i < size; i++)
 		{
 			behold[i] = other.holder[i];
 		}
+		holder = behold;
 	}
 	void addRange(Array<T>* other)
 	{
@@ -259,11 +261,13 @@ public:
 		{
 			behold[i] = holder[i];
 		}
+		delete[] holder;
 		size = size + other->size;
 		for (int i = size - other->size; i < size; i++)
 		{
 			behold[i] = other->holder[i];
 		}
+		holder = behold;
 	}
 	void clear()
 	{
@@ -360,7 +364,7 @@ public:
 		delete[] holder;
 		delete[] keys;
 	}
-	void add(int key, V& value)
+	void add(int key, const V& value)
 	{
 		int i;
 		if (size <= key)

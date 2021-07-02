@@ -1,4 +1,5 @@
 #include "iomgr.h"
+#include "kernlog.h"
 map<string, int> IOManager::SerialIndex;
 string IOManager::GetPortNativeName(string dev)
 {
@@ -30,6 +31,7 @@ void IOManager::Initialize()
 
 	#endif
 #endif
+	klog("IOManager", "Started");
 }
 void IOManager::UARTBegin(string dev, int bitrate)
 {

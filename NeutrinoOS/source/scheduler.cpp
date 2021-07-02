@@ -1,6 +1,8 @@
 #include "scheduler.h"
 #include "nvm.h"
 #include "input.h"
+#include "memorystats.h"
+#include "kernlog.h"
 
 scheduler::scheduler()
 {
@@ -23,7 +25,7 @@ scheduler& scheduler::operator=(scheduler& other)
 
 scheduler::~scheduler()
 {
-	//processes.~Array();
+	
 }
 
 void scheduler::start()
@@ -99,6 +101,7 @@ nvm* scheduler::getProcess(int pid)
 	{
 		if (processes[i]->processid == pid) return processes[i];
 	}
+	return NULL;
 }
 
 void scheduler::removeProcess(int pid)
@@ -141,6 +144,7 @@ void scheduler::sendTerminalInput(int pid, Array<byte> msg)
 
 void scheduler::removeProcessEx(int index)
 {
+	vmmgr::processes.remove(processes[index]->processid);
 	delete processes[index];
 	processes.removeAt(index);
 }

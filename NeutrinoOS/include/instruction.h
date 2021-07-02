@@ -11,4 +11,5 @@ public:
 	int psize;
 	instruction();
 	instruction(opcode op, byte* params, int size);
+	~instruction();
 };

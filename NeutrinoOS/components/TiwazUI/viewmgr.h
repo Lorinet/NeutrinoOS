@@ -4,6 +4,8 @@
 #include "graphics.h"
 #include "vmmgr.h"
 #include "memorystats.h"
+#include "nvm.h"
+#include "bitconverter.h"
 using namespace std;
 enum TiwazEvent
 {

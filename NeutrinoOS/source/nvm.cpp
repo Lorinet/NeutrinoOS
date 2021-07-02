@@ -29,11 +29,11 @@ nvm::nvm()
 	waitForProcInput = -1;
 	millis = 0;
 	arrays = map<int, arrayobj>();
-	memory = IntMap<vmobject>();
+	memory = new IntMap<vmobject>();
 	interm = new vt(processid, -1, vtype::StandardInput);
 	outterm = new vt(processid, -1, vtype::StandardOutput);
-	globalPages = Array<vmobject>();
-	globalPages.add(vmobject());
+	globalPages = new Array<vmobject>();
+	globalPages->add(vmobject());
 }
 nvm::nvm(Array<instruction>* code)
 {
@@ -62,14 +62,49 @@ nvm::nvm(Array<instruction>* code)
 	arrays = map<int, arrayobj>();
 	interm = new vt(processid, -1, vtype::StandardInput);
 	outterm = new vt(processid, -1, vtype::StandardOutput);
-	memory = IntMap<vmobject>();
-	globalPages = Array<vmobject>();
-	globalPages.add(vmobject());
+	memory = new IntMap<vmobject>();
+	globalPages = new Array<vmobject>();
+	globalPages->add(vmobject());
+	threads = Array<uint32_t>();
+	threads.add(0);
 }
+
+nvm::~nvm()
+{
+	modules.clear();
+	extcalls.clear();
+	for(int i = 0; i < bytecode->size; i++) delete[] (*bytecode)[i].parameters;
+	bytecode->clear();
+	delete bytecode;
+	delete memory;
+	globalPages->clear();
+	delete globalPages;
+	arrays.clear();
+	pages.clear();
+	eventHandlers.clear();
+	timers.clear();
+	astack.clear();
+	callstack.clear();
+	messages.clear();
+	delete interm;
+	delete outterm;
+	threads.clear();
+	v.clear();
+	v1.clear();
+	bl.clear();
+	t.clear();
+	pu.clear();
+	po.clear();
+	arr1.clear();
+	arr2.clear();
+	sectionMap.clear();
+	emc.clear();
+}
+
 void nvm::start()
 {
 	dynamiclinker::dynamicLink(this);
-	globals = &globalPages[0];
+	globals = &(globalPages->get(0));
 	running = true;
 	suspended = false;
 	eventsenabled = true;
@@ -87,13 +122,14 @@ void nvm::cycle()
 	for(int pr = 0; pr < processPriority; pr++)
 	if (running && !awaitmsg && !awaitin && waitForProcInput == -1)
 	{
+		if (curThrd == threads.size) curThrd = 0;
+		pc = threads[curThrd++];
 		if (pc >= bytecode->size)
 		{
 			running = false;
 			return;
 		}
 		i = bytecode->get(pc);
-		//cout << "OpCode " << i.opCode << endl;
 		pc += 1;
 		switch (i.opCode)
 		{
@@ -102,7 +138,7 @@ void nvm::cycle()
 		case opcode::DELFLD:
 			k = bitconverter::toint32(astack.getTop());
 			astack.pop();
-			memory[k].remove(bitconverter::toint32(astack.getTop()));
+			memory->get(k).remove(bitconverter::toint32(astack.getTop()));
 			astack.pop();
 			break;
 		case opcode::AND:
@@ -156,12 +192,7 @@ void nvm::cycle()
 		case opcode::CONCAT:
 			k1 = bitconverter::toint32(i.parameters, 0);
 			k2 = bitconverter::toint32(i.parameters, 4);
-			bl = globals->get(k2);
-			for (n = 0; n < globals->get(k1).size; n++)
-			{
-				bl.push(globals->get(k1)[n]);
-			}
-			globals->set(k2, bl);
+			globals->concat(k2, globals->get(k1));
 			break;
 		case opcode::MOV:
 			globals->set(bitconverter::toint32(i.parameters, 4), globals->get(bitconverter::toint32(i.parameters, 0)));
@@ -207,50 +238,36 @@ void nvm::cycle()
 			globals->set(k1, bitconverter::toArray(v.size));
 			break;
 		case opcode::APPEND:
-			k = bitconverter::toint32(i.parameters, 4);
-			bl = globals->get(k);
-			bl.push(globals->get(bitconverter::toint32(i.parameters, 0))[0]);
-			globals->set(bitconverter::toint32(i.parameters, 4), bl);
+			k1 = bitconverter::toint32(i.parameters, 0);
+			k2 = bitconverter::toint32(i.parameters, 4);
+			globals->append(k2, globals->get(k1)[0]);
 			break;
 		case opcode::NEWOBJ:
 			ii = 0;
-			while (memory.find(ii))
+			while (memory->find(ii))
 			{
 				ii++;
 			}
-			memory.add(ii, vmobject());
-			memory.get(ii);
+			memory->add(ii, vmobject());
 			astack.push(bitconverter::toArray(ii));
 			break;
 		case opcode::STB:
 			k = bitconverter::toint32(i.parameters, 0);
-			if (bits == 32)
-				v = bitconverter::toArray((int)i.parameters[4]);
-			else if (bits == 8)
+			if(bits == 32) globals->set(k, Array<byte>(bitconverter::toArray((int)i.parameters[4])));
+			else if(bits == 8) 
 			{
-				v = Array<byte>();
-				v.push(i.parameters[4]);
+				globals->set(k, Array<byte>());
+				globals->append(k, i.parameters[4]);
 			}
-			globals->set(k, v);
 			break;
 		case opcode::PUSHB:
 			astack.push(bitconverter::toArray((int)i.parameters[0]));
 			break;
 		case opcode::CONCATB:
-			k1 = i.parameters[0];
-			k2 = i.parameters[1];
-			bl = globals->get(k2);
-			for (n = 0; n < globals->get(k1).size; n++)
-			{
-				bl.push(globals->get(k1)[n]);
-			}
-			globals->set(k2, bl);
+			globals->concat(i.parameters[1], globals->get(i.parameters[0]));
 			break;
 		case opcode::APPENDB:
-			k = i.parameters[1];
-			bl = globals->get(k);
-			bl.push(globals->get(i.parameters[0])[0]);
-			globals->set(k, bl);
+			globals->append(i.parameters[1], globals->get(i.parameters[0])[0]);
 			break;
 		case opcode::CLRB:
 			globals->set(i.parameters[0], Array<byte>());
@@ -294,14 +311,14 @@ void nvm::cycle()
 			astack.pop();
 			k2 = bitconverter::toint32(astack.getTop()); // object
 			astack.pop();
-			astack.push(memory[k2].get(k1));
+			astack.push(memory->get(k2).get(k1));
 			break;
 		case opcode::STFLD:
 			k1 = bitconverter::toint32(astack.getTop()); // index
 			astack.pop();
 			k2 = bitconverter::toint32(astack.getTop()); // object
 			astack.pop();
-			memory[k2].set(k1, astack.getTop());
+			memory->get(k2).set(k1, astack.getTop());
 			astack.pop();
 			break;
 		case opcode::SWAP:
@@ -608,7 +625,7 @@ void nvm::cycle()
 				{
 					if (p.second.first <= pc && p.second.second >= pc)
 					{
-						globals = &globalPages[p.first];
+						globals = &(globalPages->get(p.first));
 					}
 				}
 			}
@@ -653,7 +670,9 @@ void nvm::cycle()
 			branch((int)i.parameters[0]);
 			break;
 		case opcode::INTS:
+			vmmgr::enterCriticalSection();
 			v = syscall::systemCall(i.parameters, i.psize, this);
+			vmmgr::leaveCriticalSection();
 			if (v.size != 0) astack.push(v);
 			break;
 		case opcode::INTR:
@@ -662,7 +681,9 @@ void nvm::cycle()
 			v = globals->get(k);
 			v.insert(0, inter);
 			bp = bitconverter::toarray_p(v);
+			vmmgr::enterCriticalSection();
 			v = syscall::systemCall(bp, v.size, this);
+			vmmgr::leaveCriticalSection();
 			if (v.size != 0) astack.push(v);
 			delete[] bp;
 			break;
@@ -675,7 +696,9 @@ void nvm::cycle()
 			v = globals->get(k);
 			v.insert(0, inter);
 			bp = bitconverter::toarray_p(v);
+			vmmgr::enterCriticalSection();
 			v = syscall::systemCall(bp, v.size, this);
+			vmmgr::leaveCriticalSection();
 			if (v.size != 0) astack.push(v);
 			delete[] bp;
 			break;
@@ -757,6 +780,7 @@ void nvm::cycle()
 		default:
 			break;
 		}
+		threads[curThrd - 1] = pc;
 	}
 	else if (awaitin)
 	{
@@ -794,7 +818,7 @@ void nvm::leap(int addr, byte page)
 	{
 		if (p.second.first <= pc && p.second.second >= pc)
 		{
-			globals = &globalPages[p.first];
+			globals = &(globalPages->get(p.first));
 			return;
 		}
 	}

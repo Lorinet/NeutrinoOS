@@ -1,4 +1,5 @@
 #include "inputmgr.h"
+#include "kernlog.h"
 int inputmgr::prevStatBack = 0;
 int inputmgr::prevStatEnter = 0;
 int inputmgr::prevStatSelect = 0;
@@ -7,6 +8,7 @@ void inputmgr::initialize()
 	IOManager::PinMode(PIN_BACK, false, PULL_UP);
 	IOManager::PinMode(PIN_ENTER, false, PULL_UP);
 	IOManager::PinMode(PIN_SELECT, false, PULL_UP);
+	klog("TiwazInputManager", "Initialized");
 }
 void inputmgr::poll()
 {

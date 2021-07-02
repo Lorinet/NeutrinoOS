@@ -7,6 +7,9 @@
 #include "event.h"
 #include "syscall.h"
 #include "nvm.h"
+#include "kernlog.h"
+#include "components.h"
+#include "memorystats.h"
 bool vmmgr::running = false;
 bool vmmgr::dozing = false;
 int vmmgr::maxCpuFreq = 0;
@@ -15,10 +18,12 @@ int vmmgr::minCpuFreq = 0;
 Array<scheduler*> vmmgr::schedulers;
 IntMap<nvm*> vmmgr::processes;
 thread vmmgr::eventloop;
-mutex vmmgr::kernelLock;
+mutex vmmgr::kernelMutex;
+unique_lock<mutex> vmmgr::kernelLock;
 
 void vmmgr::start()
 {
+	klog("VirtualMachineManager", "Starting...");
 #if defined(COMPONENT_TIWAZ)
 	ViewManager::Initialize();
 	inputmgr::initialize();
@@ -33,6 +38,7 @@ void vmmgr::start()
 	int dog = 0;
 #if defined(__ESP32)
 	esp_task_wdt_init(3, false);
+	klog("ESP32", "Disabled idle task watchdog");
 #elif defined(__UNIX)
 	if (file::fileExists(lvmgr::formatPath("0:\\Neutrino\\cfg\\neutrino\\CPUMaxFreq")) && file::fileExists(lvmgr::formatPath("0:\\Neutrino\\cfg\\neutrino\\CPUMinFreq")))
 	{
@@ -42,6 +48,8 @@ void vmmgr::start()
 #elif defined(__WIN32)
 	SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
 #endif
+	klog("VirtualMachineManager", "Starting schedulers...");
+	kernelLock = unique_lock<mutex>(kernelMutex, defer_lock);
 	schedulers = Array<scheduler*>();
 	for (int thr = 0; thr < MAX_THREADS_ALLOWED; thr++)
 	{
@@ -51,6 +59,8 @@ void vmmgr::start()
 	{
 		schedulers[i]->start();
 	}
+	klog("VirtualMachineManager", to_string(schedulers.size) + " schedulers available.");
+	eventloop = thread([]() { vmmgr::kernelLoop(); });
 }
 
 void vmmgr::kernelLoop()
@@ -70,8 +80,10 @@ void vmmgr::kernelLoop()
 int vmmgr::createProcess(string file, bool start)
 {
 	int procid = 0;
+	#ifndef __ESP32
 	try
 	{
+	#endif
 		scheduler* sch = schedulers[0];
 		for (int i = 0; i < schedulers.size; i++)
 		{
@@ -80,6 +92,7 @@ int vmmgr::createProcess(string file, bool start)
 		int progsize;
 		byte* pcode = file::readAllBytes(file, &progsize);
 		nvm* n = new nvm(disassembler::disassembleExecutable(pcode, progsize));
+		delete[] pcode;
 		int pid = 0;
 		bool done = true;
 		while (!done)
@@ -101,11 +114,13 @@ int vmmgr::createProcess(string file, bool start)
 		processes.add(pid, n);
 		sch->addProcess(n);
 		return pid;
+	#ifndef __ESP32
 	}
 	catch (string ex)
 	{
 		vmmerror(ex);
 	}
+	#endif
 	return -1;
 }
 
@@ -180,33 +195,16 @@ void vmmgr::sendInput(int pid, Array<byte> msg)
 	if (psi != -1) schedulers[psi]->sendTerminalInput(pid, msg);
 }
 
-void vmmgr::reload()
-{
-	running = false;
-	eventloop.join();
-	for (int i = 0; i < schedulers.size; i++)
-	{
-		schedulers[i]->suspend();
-		schedulers[i]->run.join();
-		for (int j = 0; j < schedulers[i]->processes.size; j++)
-		{
-			delete schedulers[i]->processes[j];
-			schedulers[i]->processes.removeAt(j);
-		}
-		delete schedulers[i];
-		schedulers.removeAt(i);
-	}
-	start();
-}
-
 void vmmgr::enterCriticalSection()
 {
 	kernelLock.lock();
+	//klog("VirtualMachineManager", "Enter Critical Section");
 }
 
 void vmmgr::leaveCriticalSection()
 {
 	kernelLock.unlock();
+	//klog("VirtualMachineManager", "Leave Critical Section");
 }
 
 void vmmgr::doze(bool d)
