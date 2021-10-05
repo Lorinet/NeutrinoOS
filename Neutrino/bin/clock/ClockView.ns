@@ -1,17 +1,18 @@
 ; ClockView View Layout
 
 :ClockView_CreateView
-spush "ID:0;Type:Label;Position X:10;Position Y:10;Width:0;Height:0;Text:00\:00;Font:Segments 42 Numbers;Border:0;|"
-extcall WMCreateWindow
-pop __ClockView_hwnd ; Do not modify the handle variable!
-push __ClockView_hwnd
-extcall WMSetActiveWindow
-extcall WMUpdateView
+spush "ID:0;Type:WindowInfo;MaximizeButton:0;Width:128;Height:64;Title:Clock;|ID:1;Type:Label;Position X:5;Position Y:5;Width:0;Height:0;Text:00\:00;Font:Segments 42 Numbers;Border:0;|"
+leap WMCreateWindow
+; mangled name for Whiplash
+pop clock_main!__ClockView_hwnd ; Do not modify the handle variable!
+push clock_main!__ClockView_hwnd
+leap WMSetActiveWindow
+leap WMUpdateView
 ret
 
 :ClockView_DestroyView
-push __ClockView_hwnd
-extcall WMDestroyWindow
+push main!__ClockView_hwnd
+leap WMDestroyWindow
 ret
 
 ; Auto-generated with Neutrino UI Design Tool
