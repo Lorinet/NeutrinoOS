@@ -3,23 +3,27 @@
 #include "input.h"
 #include "memorystats.h"
 #include "kernlog.h"
+#include "components.h"
 
 scheduler::scheduler()
 {
 	running = false;
 	processes = Array<nvm*>();
+	eventSystem = new events(this);
 }
 
 scheduler::scheduler(scheduler& other)
 {
 	running = other.running;
 	processes = other.processes;
+	eventSystem = new events(this);
 }
 
 scheduler& scheduler::operator=(scheduler& other)
 {
 	running = other.running;
 	processes = other.processes;
+	eventSystem = new events(this);
 	return *this;
 }
 
@@ -65,8 +69,10 @@ void scheduler::runScheduler()
 				if (ehu->messages.size > 0) ehu->awaitmsg = false;
 				ehu->cycle();
 			}
+			if (processes[pi]->eventsenabled) processes[pi]->processEvents();
 			pi++;
 		}
+		eventSystem->eventLoop();
 		if (pi == 0)
 		{
 			running = false;

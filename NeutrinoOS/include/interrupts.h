@@ -38,7 +38,6 @@ enum interrupts
 	WAIT_FOR_PROC_REQUEST_INPUT = 0x33,
 	SUSPEND_PROCESS_EX = 0x34,
 	GETINFOSTRING = 0x35,
-	GRAPHICSINT = 0x36,
 	ATTACH_EVENT_HANDLER = 0x37,
 	DETACH_EVENT_HANDLER = 0x38,
 	ENABLE_EVENTS = 0x39,
@@ -48,26 +47,10 @@ enum interrupts
 	GETTIME = 0x3D,
 	SETTIMEZONE = 0x3E,
 	TIMERINT = 0x3F,
-	PIN_INTERRUPT = 0x40,
-	SERIAL_INTERRUPT = 0x41,
-	NFS_INTERRUPT = 0x42,
-	UI_INTERRUPT = 0x47,
+	COMPONENT_CALL = 0x47,
 	APP_DATA_INTERRUPT = 0x48
 };
-enum nfscmd
-{
-	OPEN = 0x00,
-	CLOSE = 0x01,
-	CREATE_NFS = 0x02,
-	ERASE = 0x03,
-	ADDFILE = 0x04,
-	REMOVEFILE = 0x05,
-	WRITEFILE = 0x06,
-	READFILE = 0x07,
-	EXTRACTIMAGE = 0x08,
-	COPYFILE = 0x09,
-	MOVEFILE = 0x0A
-};
+
 enum appdatacmd
 {
 	GETVALUE = 0x00,
@@ -80,21 +63,6 @@ enum procexih
 	MSGIN_STDOUT = 1, // new process gets input from IPC message and writes output to the inherited console
 	MSGIN_MSGOUT = 2, // new process gets input and sends output through IPC messaging
 	STDIN_STDOUT = 3  // new process inherits console from parent
-};
-enum graphcmd
-{
-	CLEARSCR = 0x00,
-	SETCOLOR = 0x01,
-	DRAWPOINT = 0x02,
-	DRAWRECT = 0x03,
-	FILLRECT = 0x04,
-	DRAWLINE = 0x05,
-	SETFONT = 0x06,
-	DRAWSTRING = 0x07,
-	SETPOS = 0x08,
-	INIT = 0x09,
-	DRAWXBITMAP = 0x0A,
-	SETXBMDIMS = 0x0B
 };
 enum timesel
 {
@@ -116,35 +84,4 @@ enum timercmd
 	ONCE = 0x03,
 	START_TIMER = 0x04,
 	STOP_TIMER = 0x05
-};
-enum pinint
-{
-	PININIT = 0x00,
-	DIGITALWRITE = 0x01,
-	DIGITALREAD = 0x02,
-	PWMWRITE = 0x03
-};
-enum serint
-{
-	SERINIT = 0x00,
-	SERWRITE = 0x01,
-	SERREAD = 0x02,
-	SERREADBYTES = 0x03,
-	SERREADBYTE = 0x04,
-	SERAVAILABLE = 0x05,
-	SERCLOSE = 0x06
-};
-enum uicmd
-{
-	CreateView = 0,
-	DestroyView = 1,
-	AddElement = 2,
-	ModifyElement = 3,
-	DeleteElement = 4,
-	GetPropertyValue = 5,
-	SetPropertyValue = 6,
-	SwitchView = 7,
-	UpdateScreen = 8,
-	AttachEventHandler = 9,
-	DetachEventHandler = 10
 };

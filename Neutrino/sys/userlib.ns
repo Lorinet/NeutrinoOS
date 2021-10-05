@@ -4,6 +4,8 @@
 ;  by Kovacs Lorand -- 2020.07.24.
 ; -----------------------------------------------
 
+#define WM_API 0
+
 #define WMC_CREATE_VIEW 0
 #define WMC_DESTROY_VIEW 1
 #define WMC_ADD_ELEMENT 2
@@ -16,6 +18,7 @@
 #define WMC_ATTACH_EVENT_HANDLER 9
 #define WMC_DETACH_EVENT_HANDLER 10
 
+#exlink WMInterrupt
 #exlink WMCreateWindow
 #exlink WMDestroyWindow
 #exlink WMAddUserElement
@@ -34,6 +37,18 @@ link neutrino.lnx
 link util.lnx
 ret
 
+:WMInterrupt
+pop ___1
+bits 8
+stb ___2 WM_API
+bits 32
+concat ___1 ___2
+push ___2
+leap NtrKernelExec
+clr ___1
+clr ___2
+ret
+
 :WMCreateWindow
 pop ___1
 bits 8
@@ -41,7 +56,7 @@ stb ___2 WMC_CREATE_VIEW
 bits 32
 concat ___1 ___2
 push ___2
-leap NtrSystemUIInterrupt
+leap WMInterrupt
 clr ___1
 clr ___2
 ret
@@ -53,7 +68,7 @@ stb ___2 WMC_DESTROY_VIEW
 bits 32
 concat ___1 ___2
 push ___2
-leap NtrSystemUIInterrupt
+leap WMInterrupt
 clr ___1
 clr ___2
 ret
@@ -65,7 +80,7 @@ stb ___2 WMC_ADD_ELEMENT
 bits 32
 concat ___1 ___2
 push ___2
-leap NtrSystemUIInterrupt
+leap WMInterrupt
 clr ___1
 clr ___2
 ret
@@ -81,7 +96,7 @@ concat ___3 ___4
 concat ___2 ___4
 concat ___1 ___4
 push ___4
-leap NtrSystemUIInterrupt
+leap WMInterrupt
 clr ___1
 clr ___2
 clr ___3
@@ -97,7 +112,7 @@ bits 32
 concat ___2 ___3
 concat ___1 ___3
 push ___3
-leap NtrSystemUIInterrupt
+leap WMInterrupt
 clr ___1
 clr ___2
 clr ___3
@@ -114,7 +129,7 @@ concat ___3 ___4
 concat ___2 ___4
 concat ___1 ___4
 push ___4
-leap NtrSystemUIInterrupt
+leap WMInterrupt
 clr ___1
 clr ___2
 clr ___3
@@ -132,7 +147,7 @@ concat ___3 ___4
 concat ___2 ___4
 concat ___1 ___4
 push ___4
-leap NtrSystemUIInterrupt
+leap WMInterrupt
 clr ___1
 clr ___2
 clr ___3
@@ -146,7 +161,7 @@ stb ___2 WMC_SWITCH_VIEW
 bits 32
 concat ___1 ___2
 push ___2
-leap NtrSystemUIInterrupt
+leap WMInterrupt
 clr ___1
 clr ___2
 ret
@@ -155,7 +170,7 @@ ret
 bits 8
 pushb WMC_UPDATE_VIEW
 bits 32
-leap NtrSystemUIInterrupt
+leap WMInterrupt
 ret
 
 :WMAttachEventHandler
@@ -169,7 +184,7 @@ concat ___3 ___4
 concat ___2 ___4
 concat ___1 ___4
 push ___4
-leap NtrSystemUIInterrupt
+leap WMInterrupt
 clr ___1
 clr ___2
 clr ___3
@@ -185,7 +200,7 @@ bits 32
 concat ___2 ___3
 concat ___1 ___3
 push ___3
-leap NtrSystemUIInterrupt
+leap WMInterrupt
 clr ___1
 clr ___2
 clr ___3

@@ -46,7 +46,7 @@ Array<instruction>* disassembler::disassembleCode(byte* bc, int size)
 			length = bitconverter::toint32(bc, cntr);
 			cntr += 4;
 		}
-		else if (op == opcode::TOSTR || op == opcode::PARSEINT || op == opcode::NEWOBJ || op == opcode::JSP || op == opcode::ADD || op == opcode::SUB || op == opcode::MUL || op == opcode::DIV || op == opcode::VAC || op == opcode::VAD || op == opcode::VADE || op == opcode::LDELEM || op == opcode::DELELEM || op == opcode::LDLEN || op == opcode::SWAP || op == opcode::LDFLD || op == opcode::STELEM || op == opcode::STFLD || op == opcode::NOP || op == opcode::RET || op == opcode::HALT || op == opcode::BREAK || op == opcode::SPOP || op == opcode::SCMP)
+		else if (op == opcode::TOSTR || op == opcode::PARSEINT || op == opcode::NEWOBJ || op == opcode::JSP || op == opcode::ADD || op == opcode::SUB || op == opcode::MUL || op == opcode::DIV || op == opcode::VAC || op == opcode::VAD || op == opcode::VADE || op == opcode::LDELEM || op == opcode::DELELEM || op == opcode::LDLEN || op == opcode::SWAP || op == opcode::LDFLD || op == opcode::STELEM || op == opcode::STFLD || op == opcode::NOP || op == opcode::RET || op == opcode::HALT || op == opcode::BREAK || op == opcode::SPOP || op == opcode::SCMP || op == opcode::ADDS)
 		{
 			length = 0;
 		}

@@ -3,9 +3,9 @@
 #include "vmmgr.h"
 #include "lvmgr.h"
 #include "config.h"
-#include "iomgr.h"
 #include "nvm.h"
 #include "kernlog.h"
+#include "components.h"
 
 static void NeutrinoStartup()
 {
@@ -14,21 +14,24 @@ static void NeutrinoStartup()
 #elif defined(__UNIX) || defined(__ESP32)
 	lvmgr::initialize("/neutrino");
 #endif
-	IOManager::Initialize();
+	klog("Init", "Registering system components and drivers...");
+	components::registerComponents();
+	klog("Init", "System components registered and available for use.");
 	//if (config::keyExists("neutrino\\init"))
 	//{
 		//string init = lvmgr::formatPath(config::getValue("neutrino\\InitExecutable"));
-		string init = lvmgr::formatPath("0:\\Neutrino\\bin\\inpanel.lex");
-		string init1 = lvmgr::formatPath("0:\\Neutrino\\bin\\out.lex");
+		string init = lvmgr::formatPath("0:\\Neutrino\\bin\\out.lex");
+		//string init1 = lvmgr::formatPath("0:\\Neutrino\\bin\\out.lex");
 		if (file::fileExists(init))
 		{
 			vmmgr::start();
-			for(int i = 0; i < 10; i++) vmmgr::createProcess(init1);
+			//for(int i = 0; i < 10; i++) vmmgr::createProcess(init1);
 			vmmgr::createProcess(init);
-			vmmgr::schedulers[0]->processes[0]->processPriority = PRIORITY_HIGH;
+			//vmmgr::schedulers[0]->processes[0]->processPriority = PRIORITY_HIGH;
 			//vmmgr::kernelLoop();
 			klog("Init", "System startup finished.");
-			vmmgr::eventloop.join();
+			vmmgr::kernelLoopThread = thread(vmmgr::kernelLoop);
+			vmmgr::kernelLoopThread.join();
 		}
 		else
 		{

@@ -1,9 +1,38 @@
 #pragma once
+#include "components.h"
+
+#ifdef COMPONENT_NFS
 #include <map>
 #include "util.h"
 #include "bitconverter.h"
 #include "filesystem.h"
 #include "lvmgr.h"
+#include "iapi.h"
+
+enum nfscmd
+{
+	OPEN = 0x00,
+	CLOSE = 0x01,
+	CREATE_NFS = 0x02,
+	ERASE = 0x03,
+	ADDFILE = 0x04,
+	REMOVEFILE = 0x05,
+	WRITEFILE = 0x06,
+	READFILE = 0x07,
+	EXTRACTIMAGE = 0x08,
+	COPYFILE = 0x09,
+	MOVEFILE = 0x0A
+};
+
+class nfs_api : public iapi
+{
+public:
+	static nfs_api instance;
+	static const int id = 1;
+	static void initialize();
+	Array<byte> message(Array<byte> indata, nvm* v);
+};
+
 class nfs_file
 {
 public:
@@ -56,3 +85,5 @@ public:
 	static nfs* GetNFS(int hndl, int process);
 	static int OpenImage(nfs n, int process);
 };
+
+#endif

@@ -17,22 +17,13 @@ int vmmgr::minCpuFreq = 0;
 
 Array<scheduler*> vmmgr::schedulers;
 IntMap<nvm*> vmmgr::processes;
-thread vmmgr::eventloop;
 mutex vmmgr::kernelMutex;
+thread vmmgr::kernelLoopThread;
 unique_lock<mutex> vmmgr::kernelLock;
 
 void vmmgr::start()
 {
 	klog("VirtualMachineManager", "Starting...");
-#if defined(COMPONENT_TIWAZ)
-	ViewManager::Initialize();
-	inputmgr::initialize();
-#elif defined(COMPONENT_EFFIGY)
-	WindowManager::Initialize();
-#endif
-#if defined(FEATURE_SERIAL) || defined(FEATURE_GPIO)
-	IOManager::Initialize();
-#endif
 	running = true;
 	dozing = false;
 	int dog = 0;
@@ -46,7 +37,7 @@ void vmmgr::start()
 		maxCpuFreq = atoi(file::readAllText(lvmgr::formatPath("0:\\Neutrino\\cfg\\neutrino\\CPUMaxFreq")).c_str());
 	}
 #elif defined(__WIN32)
-	SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
+	//SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
 #endif
 	klog("VirtualMachineManager", "Starting schedulers...");
 	kernelLock = unique_lock<mutex>(kernelMutex, defer_lock);
@@ -60,21 +51,6 @@ void vmmgr::start()
 		schedulers[i]->start();
 	}
 	klog("VirtualMachineManager", to_string(schedulers.size) + " schedulers available.");
-	eventloop = thread([]() { vmmgr::kernelLoop(); });
-}
-
-void vmmgr::kernelLoop()
-{
-	while (running)
-	{
-		this_thread::sleep_for(chrono::milliseconds(100));
-		//events::eventLoop();
-#if defined(COMPONENT_TIWAZ)
-		inputmgr::poll();
-#elif defined(COMPONENT_EFFIGY)
-		WindowManager::Update();
-#endif
-	}
 }
 
 int vmmgr::createProcess(string file, bool start)
@@ -261,4 +237,11 @@ bool vmmgr::inputRequested(int pid)
 		return n->awaitin;
 	}
 	return false;
+}
+void vmmgr::kernelLoop()
+{
+	while (running)
+	{
+
+	}
 }

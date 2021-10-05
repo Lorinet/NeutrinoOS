@@ -3,6 +3,7 @@
 #include "containers.h"
 #include "util.h"
 #include "interrupts.h"
+#include "iapi.h"
 using namespace std;
 class nvm;
 class vt;
@@ -17,6 +18,7 @@ public:
 	static bool bl;
 	static vt vi, vo;
 	static interrupts syscll;
+	static IntMap<iapi*> interfaces;
 	static Array<byte> data;
 	static Array<byte> systemCall(byte* indata, int datasize, nvm* v);
 };

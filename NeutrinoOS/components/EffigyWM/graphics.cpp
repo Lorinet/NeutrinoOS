@@ -1,5 +1,6 @@
 #include "graphics.h"
 #include <iostream>
+#include "config.h"
 extern "C" 
 {
 	FILE __iob_func[3] = { *stdin,*stdout,*stderr };
@@ -14,16 +15,8 @@ int Graphics::resX;
 int Graphics::resY;
 void Graphics::InitGraphicSystem()
 {
-	if (file::fileExists(lvmgr::formatPath("0:\\Neutrino\\cfg\\effigy\\ScreenWidth")) && file::fileExists(lvmgr::formatPath("0:\\Neutrino\\cfg\\effigy\\ScreenHeight")))
-	{
-		resX = atoi(file::readAllText(lvmgr::formatPath("0:\\Neutrino\\cfg\\effigy\\ScreenWidth")).c_str());
-		resY = atoi(file::readAllText(lvmgr::formatPath("0:\\Neutrino\\cfg\\effigy\\ScreenHeight")).c_str());
-	}
-	else
-	{
-		resX = 640;
-		resY = 480;
-	}
+	resX = config::getValueInt("effigy\\ScreenWidth");
+	resY = config::getValueInt("effigy\\ScreenHeight");
 #if defined(__DESKTOP) && defined(__UNIX)
 	setenv("SDL_VIDEODRIVER", "fbcon", 1);
 	setenv("SDL_FBDEV", "/dev/fb0", 1);
@@ -33,11 +26,10 @@ void Graphics::InitGraphicSystem()
 		printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
 	}
 	SDL_WM_SetCaption("Neutrino", "Neutrino");
-#if defined(__SANDBOX)
-	window = SDL_SetVideoMode(resX, resY, 0, 0);
-#elif defined(__DESKTOP)
-	window = SDL_SetVideoMode(resX, resY, 0, SDL_FULLSCREEN);
-#endif
+	if(config::getValueInt("effigy\\Fullscreen"))
+		window = SDL_SetVideoMode(resX, resY, 0, SDL_FULLSCREEN);
+	else
+		window = SDL_SetVideoMode(resX, resY, 0, 0);
 	IMG_Init(IMG_INIT_PNG);
 	TTF_Init();
 	ClearScreen();

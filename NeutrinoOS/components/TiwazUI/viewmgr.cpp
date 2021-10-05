@@ -1,5 +1,108 @@
 #include "viewmgr.h"
+
+#ifdef COMPONENT_TIWAZ
+#include "nvm.h"
 #include "kernlog.h"
+#include "graphics.h"
+#include "vmmgr.h"
+#include "memorystats.h"
+#include "bitconverter.h"
+
+winmgr_api winmgr_api::instance;
+
+void winmgr_api::initialize()
+{
+	instance = winmgr_api();
+	ViewManager::Initialize();
+	inputmgr::initialize();
+}
+
+Array<byte> winmgr_api::message(Array<byte> indata, nvm* v)
+{
+	int id = 0;
+	int id2 = 0;
+	int proc = 0;
+	bool bl = false;
+	string txt = "";
+	string txt1 = "";
+	string txt2 = "";
+	switch (indata[0])
+	{
+	case uicmd::CreateView:
+		id = ViewManager::CreateView(UISerialization::DeserializeView(bitconverter::tostring(indata, 1)));
+		ViewManager::views[id]->parentProcess = v->processid;
+		return bitconverter::toArray(id);
+		break;
+	case uicmd::DestroyView:
+		ViewManager::CloseView(bitconverter::toint32(indata, 1));
+		break;
+	case uicmd::AddElement:
+		id = bitconverter::toint32(indata, 1);
+		txt = bitconverter::tostring(indata, 5);
+		ViewManager::views[id]->elements.push(UISerialization::DeserializeElement(txt));
+		ViewManager::RenderView(ViewManager::views[ViewManager::activeView]);
+		break;
+	case uicmd::ModifyElement:
+		id = bitconverter::toint32(indata, 1);
+		id2 = bitconverter::toint32(indata, 5);
+		txt = bitconverter::tostring(indata, 9);
+		*ViewManager::views[id]->GetElementByID(id2) = UISerialization::DeserializeElement(txt);
+		ViewManager::RenderView(ViewManager::views[ViewManager::activeView]);
+		break;
+	case uicmd::DeleteElement:
+		id = bitconverter::toint32(indata, 1);
+		id2 = bitconverter::toint32(indata, 5);
+		ViewManager::views[id]->elements.removeAt(ViewManager::views[id]->GetElementIndexByID(id2));
+		ViewManager::RenderView(ViewManager::views[ViewManager::activeView]);
+		break;
+	case uicmd::GetPropertyValue:
+		id = bitconverter::toint32(indata, 1);
+		id2 = bitconverter::toint32(indata, 5);
+		txt = bitconverter::tostring(indata, 9);
+		return bitconverter::toArray(ViewManager::views[id]->elements[ViewManager::views[id]->GetElementIndexByID(id2)].GetProperty(txt));
+		break;
+	case uicmd::SetPropertyValue:
+		id = bitconverter::toint32(indata, 1);
+		id2 = bitconverter::toint32(indata, 5);
+		txt = bitconverter::tostring(indata, 9);
+		bl = false;
+		txt1 = "";
+		txt2 = "";
+		for (int i = 0; i < txt.size(); i++)
+		{
+			if (txt[i] == ':' && txt[i - 1] != '\\')
+			{
+				bl = true;
+			}
+			else if (!bl) txt1 += txt[i];
+			else if (bl) txt2 += txt[i];
+		}
+		ViewManager::views[id]->elements[ViewManager::views[id]->GetElementIndexByID(id2)].properties[txt1] = util::replaceAll(txt2, "\\:", ":");
+		ViewManager::RenderView(ViewManager::views[ViewManager::activeView]);
+		break;
+	case uicmd::SwitchView:
+		id = bitconverter::toint32(indata, 1);
+		ViewManager::activeView = id;
+		ViewManager::RenderView(ViewManager::views[ViewManager::activeView]);
+		break;
+	case uicmd::UpdateScreen:
+		ViewManager::RenderView(ViewManager::views[ViewManager::activeView]);
+		break;
+	case uicmd::AttachEventHandler:
+		id = bitconverter::toint32(indata, 1);
+		id2 = bitconverter::toint32(indata, 5);
+		proc = bitconverter::toint32(indata, 9);
+		ViewManager::views[id]->elements[ViewManager::views[id]->GetElementIndexByID(id2)].eventHandler = proc;
+		break;
+	case uicmd::DetachEventHandler:
+		id = bitconverter::toint32(indata, 1);
+		id2 = bitconverter::toint32(indata, 5);
+		ViewManager::views[id]->elements[ViewManager::views[id]->GetElementIndexByID(id2)].eventHandler = -1;
+		break;
+	}
+	return Array<byte>();
+}
+
 map<int, View *> ViewManager::views;
 int ViewManager::activeView;
 
@@ -382,3 +485,5 @@ void ViewManager::FireEvent(TiwazEvent e)
 		}
 	}
 }
+
+#endif

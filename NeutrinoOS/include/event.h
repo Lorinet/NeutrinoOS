@@ -2,10 +2,12 @@
 #include "containers.h"
 #include <string>
 #include "util.h"
-#include "vmmgr.h"
 #include "ntime.h"
 #include "timer.h"
+#include "bitconverter.h"
 using namespace std;
+class nvm;
+
 class ntrevent
 {
 public:
@@ -65,10 +67,11 @@ enum eventid
 class events
 {
 public:
-	static Array<ntrevent> pending;
-	static int seconds;
-	static int minutes;
-	static int hours;
-	static bool timeSet;
-	static void eventLoop();
+	events(scheduler* s);
+	scheduler* sched;
+	int seconds;
+	int minutes;
+	int hours;
+	bool timeSet;
+	void eventLoop();
 };

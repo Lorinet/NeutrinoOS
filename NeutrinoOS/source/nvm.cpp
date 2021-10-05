@@ -12,6 +12,8 @@ nvm::nvm()
 	astack = BufferedStack(10);
 	eventHandlers = map<byte, int>();
 	timers = map<int, timerevt>();
+	eventQueue = Array<ntrevent>();
+	timerQueue = Array<ntrevent>();
 	pc = 0;
 	running = false;
 	equal = false;
@@ -20,7 +22,9 @@ nvm::nvm()
 	zero = false;
 	awaitmsg = false;
 	eventsenabled = true;
+	eventsuspended = false;
 	processid = 0;
+	inhandler = -1;
 	extcalls = map<int, int>();
 	modules = map<string, pair<int, int>>();
 	lnkndx = 0;
@@ -40,6 +44,8 @@ nvm::nvm(Array<instruction>* code)
 	fileName = "??";
 	bytecode = code;
 	eventHandlers = map<byte, int>();
+	eventQueue = Array<ntrevent>();
+	timerQueue = Array<ntrevent>();
 	astack.top = -1;
 	pc = 0;
 	running = false;
@@ -49,9 +55,11 @@ nvm::nvm(Array<instruction>* code)
 	zero = false;
 	awaitmsg = false;
 	processid = 0;
+	inhandler = -1;
 	processPriority = 1;
 	suspended = true;
 	eventsenabled = false;
+	eventsuspended = false;
 	extcalls = map<int, int>();
 	modules = map<string, pair<int, int>>();
 	lnkndx = 0;
@@ -65,8 +73,6 @@ nvm::nvm(Array<instruction>* code)
 	memory = new IntMap<vmobject>();
 	globalPages = new Array<vmobject>();
 	globalPages->add(vmobject());
-	threads = Array<uint32_t>();
-	threads.add(0);
 }
 
 nvm::~nvm()
@@ -88,7 +94,6 @@ nvm::~nvm()
 	messages.clear();
 	delete interm;
 	delete outterm;
-	threads.clear();
 	v.clear();
 	v1.clear();
 	bl.clear();
@@ -122,8 +127,6 @@ void nvm::cycle()
 	for(int pr = 0; pr < processPriority; pr++)
 	if (running && !awaitmsg && !awaitin && waitForProcInput == -1)
 	{
-		if (curThrd == threads.size) curThrd = 0;
-		pc = threads[curThrd++];
 		if (pc >= bytecode->size)
 		{
 			running = false;
@@ -613,22 +616,7 @@ void nvm::cycle()
 			}
 			break;
 		case opcode::RET:
-			if (callstack.size == 0)
-			{
-				halt();
-			}
-			else
-			{
-				pc = callstack.getTop();
-				callstack.pop();
-				for (pair<int, pair<int, int>> p : pages)
-				{
-					if (p.second.first <= pc && p.second.second >= pc)
-					{
-						globals = &(globalPages->get(p.first));
-					}
-				}
-			}
+			ret();
 			break;
 		case opcode::EMIT:
 			k = bitconverter::toint32(i.parameters, 0);
@@ -705,6 +693,14 @@ void nvm::cycle()
 		case opcode::BITS:
 			bits = i.parameters[0];
 			break;
+		case opcode::ADDS:
+			v = Array<byte>(astack.getTop());
+			astack.pop();
+			v1 = Array<byte>(astack.getTop());
+			astack.pop();
+			v1.addRange(v);
+			astack.push(v1);
+			break;
 		case opcode::PUSH:
 			if (bits == 32)
 				astack.push(globals->get(bitconverter::toint32(i.parameters, 0)));
@@ -780,7 +776,6 @@ void nvm::cycle()
 		default:
 			break;
 		}
-		threads[curThrd - 1] = pc;
 	}
 	else if (awaitin)
 	{
@@ -804,10 +799,67 @@ void nvm::cycle()
 	}
 }
 
+void nvm::processEvents()
+{
+	if (eventQueue.size > 0)
+	{
+		int eix = eventQueue.size - 1;
+		for (int i = 0; i < eventQueue[eix].parameters.size; i++)
+		{
+			Array<byte> pars = eventQueue[eix].parameters[i];
+			astack.push(pars);
+		}
+		inhandler = pc;
+		branch(eventHandlers[eventQueue[eix].id]);
+		eventQueue.removeAt(eix);
+		eventsenabled = false;
+		suspended = false;
+	}
+	if (timerQueue.size > 0)
+	{
+		int eix = timerQueue.size - 1;
+		for (int i = 0; i < timerQueue[eix].parameters.size; i++)
+		{
+			Array<byte> pars = timerQueue[eix].parameters[i];
+			astack.push(pars);
+		}
+		inhandler = pc;
+		branch(timers[timerQueue[eix].id].handler);
+		timerQueue.removeAt(eix);
+		eventsenabled = false;
+		suspended = false;
+	}
+}
+
 void nvm::branch(int addr)
 {
 	callstack.push(pc);
 	pc = addr;
+}
+
+void nvm::ret()
+{
+	if (callstack.size == 0)
+	{
+		halt();
+	}
+	else
+	{
+		pc = callstack.getTop();
+		callstack.pop();
+		for (pair<int, pair<int, int>> p : pages)
+		{
+			if (p.second.first <= pc && p.second.second >= pc)
+			{
+				globals = &(globalPages->get(p.first));
+			}
+		}
+		if (pc == inhandler)
+		{
+			inhandler = -1;
+			eventsenabled = true;
+		}
+	}
 }
 
 void nvm::leap(int addr, byte page)

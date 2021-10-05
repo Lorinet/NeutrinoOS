@@ -81,7 +81,7 @@ void vmobject::remove(int key)
 Array<byte>& vmobject::get(int key)
 {
 	byte* i = holder[keys[key]];
-	Array<byte>* ab = new Array<byte>(true);
+	Array<byte>* ab = new Array<byte>("");
 	ab->size = bitconverter::toint32(i, 0);
 	ab->holder = 4 + i;
 	return *ab;

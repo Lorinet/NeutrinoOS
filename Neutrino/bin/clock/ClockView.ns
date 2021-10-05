@@ -1,0 +1,18 @@
+; ClockView View Layout
+
+:ClockView_CreateView
+spush "ID:0;Type:Label;Position X:10;Position Y:10;Width:0;Height:0;Text:00\:00;Font:Segments 42 Numbers;Border:0;|"
+extcall WMCreateWindow
+pop __ClockView_hwnd ; Do not modify the handle variable!
+push __ClockView_hwnd
+extcall WMSetActiveWindow
+extcall WMUpdateView
+ret
+
+:ClockView_DestroyView
+push __ClockView_hwnd
+extcall WMDestroyWindow
+ret
+
+; Auto-generated with Neutrino UI Design Tool
+; #include ClockView.ns

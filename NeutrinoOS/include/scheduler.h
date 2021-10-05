@@ -8,10 +8,12 @@
 #define PRIORITY_MAX 64
 using namespace std;
 class nvm;
+class events;
 class scheduler
 {
 public:
 	Array<nvm*> processes;
+	events* eventSystem;
 	bool running;
 	thread run;
 	scheduler();

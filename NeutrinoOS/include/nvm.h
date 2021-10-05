@@ -24,6 +24,8 @@ public:
 	map<int, arrayobj> arrays;
 	map<int, pair<int, int>> pages;
 	map<byte, int> eventHandlers;
+	Array<ntrevent> eventQueue;
+	Array<ntrevent> timerQueue;
 	map<int, timerevt> timers;
 	BufferedStack astack;
 	Array<int> callstack;
@@ -34,9 +36,10 @@ public:
 	bool awaitmsg;
 	bool eventsenabled;
 	bool suspended;
+	bool eventsuspended;
 	int processid;
+	int inhandler;
 	byte processPriority;
-	Array<uint32_t> threads;
 	uint16_t curThrd;
 	uint32_t pc;
 	bool running;
@@ -65,9 +68,11 @@ public:
 	void start(int procid, string file);
 	void cycle();
 	void branch(int addr);
+	void ret();
 	void leap(int addr, byte page);
 	void halt();
 	void halt(string err);
 	void setTerminals(vt in, vt out);
+	void processEvents();
 };
 

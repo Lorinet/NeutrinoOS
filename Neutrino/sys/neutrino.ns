@@ -144,7 +144,7 @@
 #define SYSTEM_TIMER_INTERRUPT 0x3F
 #define SYSTEM_IO_PIN_INTERRUPT 0x40
 #define SYSTEM_IO_SERIAL_INTERRUPT 0x41
-#define SYSTEM_UI_INTERRUPT 0x47
+#define SYSTEM_KERNEL_EXEC 0x47
 
 #exlink NtrConsolePrint
 #exlink NtrConsolePrintLine
@@ -196,10 +196,8 @@
 #exlink NtrGetTime
 #exlink NtrSetTimeZone
 #exlink NtrTimerInterrupt
-#exlink NtrSystemUIInterrupt
+#exlink NtrKernelExec
 #exlink NtrSuspendProcessEx
-#exlink NtrIOPinInterrupt
-#exlink NtrIOSerialInterrupt
 
 :main
 
@@ -502,20 +500,8 @@ int SYSTEM_TIMER_INTERRUPT ___1
 clr ___1
 ret
 
-:NtrSystemUIInterrupt
+:NtrKernelExec
 pop ___1
-int SYSTEM_UI_INTERRUPT ___1
-clr ___1
-ret
-
-:NtrIOPinInterrupt
-pop ___1
-int SYSTEM_IO_PIN_INTERRUPT ___1
-clr ___1
-ret
-
-:NtrIOSerialInterrupt
-pop ___1
-int SYSTEM_IO_SERIAL_INTERRUPT ___1
+int SYSTEM_KERNEL_EXEC ___1
 clr ___1
 ret

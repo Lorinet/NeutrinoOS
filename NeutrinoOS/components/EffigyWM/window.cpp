@@ -1,76 +1,20 @@
 #include "window.h"
+#include "graphics.h"
+#include "windowinfo.h"
 Window::Window()
 {
-	properties = vector<string>();
-	posX = Graphics::resX / 3;
+	/*posX = Graphics::resX / 3;
 	posY = Graphics::resY / 3;
 	width = 150;
-	height = 120;
-	hidden = false;
-	maximized = false;
-	prevW = width;
-	prevH = height;
-	prevPosX = posX;
-	prevPosY = posY;
-	titleBar = 1;
-	drawableBase = 30;
+	height = 120;*/
 }
 Window::Window(vector<Element> el)
 {
-	properties = vector<string>();
-	posX = Graphics::resX / 3;
+	/*posX = Graphics::resX / 3;
 	posY = Graphics::resY / 3;
 	width = 150;
-	height = 120;
-	hidden = false;
-	maximized = false;
-	prevW = width;
-	prevH = height;
-	prevPosX = posX;
-	prevPosY = posY;
-	titleBar = 1;
-	drawableBase = 30;
+	height = 120;*/
 	elements = el;
-	for (int i = 0; i < el.size(); i++)
-	{
-		if (el[i].GetProperty("Type") == "StickyDraw")
-		{
-			properties.push_back("StickyDraw");
-		}
-		else if (el[i].GetProperty("Type") == "WakeOnInteraction")
-		{
-			properties.push_back("WakeOnInteraction");
-		}
-		else if (el[i].GetProperty("Type") == "WindowInfo")
-		{
-			title = el[i].GetProperty("Text");
-			width = el[i].IGetProperty("Width");
-			height = el[i].IGetProperty("Height");
-		}
-	}
-}
-Window::Window(int x, int y, int w, int h, string ttl, int titleBarStyle)
-{
-	posX = x;
-	posY = y;
-	width = w;
-	height = h;
-	hidden = false;
-	title = ttl;
-	maximized = false;
-	prevW = width;
-	prevH = height;
-	prevPosX = posX;
-	prevPosY = posY;
-	if (titleBarStyle == 0)
-	{
-		drawableBase = 0;
-	}
-	else if (titleBarStyle == 1)
-	{
-		drawableBase = 30;
-	}
-	titleBar = titleBarStyle;
 }
 void Window::AddElement(Element e)
 {
@@ -110,4 +54,28 @@ Element* Window::GetElementAt(int x, int y)
 		}
 	}
 	return NULL;
+}
+WindowInfo Window::GetWindowInfo()
+{
+	return WindowInfo(this);
+}
+void Window::SetWindowInfo(WindowInfo wi)
+{
+	Element* e = GetElementByID(0);
+	e->SetProperty("Position X", wi.X);
+	e->SetProperty("Position Y", wi.Y);
+	e->SetProperty("Prev X", wi.PrevX);
+	e->SetProperty("Prev Y", wi.PrevY);
+	e->SetProperty("Width", wi.Width);
+	e->SetProperty("Height", wi.Height);
+	e->SetProperty("Prev Width", wi.PrevWidth);
+	e->SetProperty("Prev Height", wi.PrevHeight);
+	e->SetProperty("Title", wi.Title);
+	e->SetProperty("TitleBar", wi.TitleBar);
+	e->SetProperty("MaximizeButton", wi.MaximizeButton);
+	e->SetProperty("Hidden", wi.Hidden);
+	e->SetProperty("Maximized", wi.Maximized);
+	e->SetProperty("StickyDraw", wi.StickyDraw);
+	e->SetProperty("WakeOnInteraction", wi.WakeOnInteraction);
+	e->SetProperty("Window ID", wi.WindowID);
 }

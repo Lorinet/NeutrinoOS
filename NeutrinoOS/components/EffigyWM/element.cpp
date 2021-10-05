@@ -18,7 +18,15 @@ string Element::GetProperty(string prop)
 int Element::IGetProperty(string prop)
 {
 	if (properties.find(prop) != properties.end()) return atoi(properties[prop].c_str());
-	else return 0;
+	else return -1;
+}
+void Element::SetProperty(string prop, string val)
+{
+	properties[prop] = val;
+}
+void Element::SetProperty(string prop, int val)
+{
+	properties[prop] = to_string(val);
 }
 bool Element::Hover(int x, int y)
 {

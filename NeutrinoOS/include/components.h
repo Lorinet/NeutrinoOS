@@ -1,9 +1,15 @@
 #pragma once
-#if defined(__HOLO)
-#define COMPONENT_TIWAZ
-#elif defined(__DESKTOP) || defined(__SANDBOX)
+// Kernel component configuration
+// Modify this to enable/disable drivers and other components
+
+//#define COMPONENT_IOMANAGER
+//#define COMPONENT_GPIO
+//#define COMPONENT_SERIAL
+//#define COMPONENT_TIWAZ
 #define COMPONENT_EFFIGY
-#endif
+
+// Include files for components
+
 #ifdef COMPONENT_TIWAZ
 #include "TiwazUI/viewmgr.h"
 #include "TiwazUI/bitmaps.h"
@@ -19,3 +25,9 @@
 #include "EffigyWM/window.h"
 #include "EffigyWM/winmgr.h"
 #endif
+
+class components
+{
+public:
+	static void registerComponents();
+};

@@ -92,17 +92,16 @@ set(sources
     "source/arrayobj.cpp"
     "source/bitconverter.cpp"
     "source/config.cpp"
+    "source/components.cpp"
     "source/disassembler.cpp"
     "source/dynamiclinker.cpp"
     "source/event.cpp"
     "source/filesystem.cpp"
     "source/input.cpp"
     "source/instruction.cpp"
-    "source/iomgr.cpp"
     "source/kernlog.cpp"
     "source/lvmgr.cpp"
     "source/memorystats.cpp"
-    "source/nfsdimp.cpp"
     "source/ntime.cpp"
     "source/nvm.cpp"
     "source/scheduler.cpp"
@@ -119,12 +118,16 @@ set(sources
     "components/TiwazUI/view.cpp"
     "components/TiwazUI/viewmgr.cpp"
     "components/TiwazUI/u8g2_esp32_hal.cpp"
+    "components/NFS/nfsdimp.cpp"
+    "components/IOManager/iomgr.cpp"
 )
 
 set(includes
     "include"
     "components"
     "components/TiwazUI"
+    "components/IOManager"
+    "components/NFS"
 )
 
 idf_component_register(SRCS "${sources}" "${u8g2_sources}" INCLUDE_DIRS "${includes}")

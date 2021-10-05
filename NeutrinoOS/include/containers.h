@@ -247,10 +247,11 @@ public:
 			behold[i] = holder[i];
 		}
 		delete[] holder;
+		int os = size;
 		size = size + other.size;
-		for (int i = size - other.size; i < size; i++)
+		for (int i = os; i < size; i++)
 		{
-			behold[i] = other.holder[i];
+			behold[i] = other.holder[i - os];
 		}
 		holder = behold;
 	}

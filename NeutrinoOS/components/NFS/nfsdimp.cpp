@@ -1,8 +1,64 @@
 #include "nfsdimp.h"
+#ifdef COMPONENT_NFS
+
+nfs_api nfs_api::instance;
+
+void nfs_api::initialize()
+{
+	instance = nfs_api();
+}
+
+Array<byte> nfs_api::message(Array<byte> indata, nvm* v)
+{
+	switch (indata[0])
+	{
+	case nfscmd::OPEN:
+		return bitconverter::toArray(nfsmgr::OpenImage(bitconverter::tostring(data, 1), v->processid));
+	case nfscmd::CLOSE:
+		nfsmgr::CloseImage(bitconverter::toint32(data, 1), v->processid);
+		break;
+	case nfscmd::CREATE_NFS:
+		return bitconverter::toArray(nfsmgr::OpenImage(nfs(bitconverter::tostring(data, 1)), v->processid));
+	case nfscmd::ERASE:
+		nfsmgr::GetNFS(bitconverter::toint32(data, 1), v->processid)->Erase();
+		break;
+	case nfscmd::ADDFILE:
+		nfsmgr::GetNFS(bitconverter::toint32(data, 1), v->processid)->AddFile(bitconverter::tostring(data, 5));
+		break;
+	case nfscmd::REMOVEFILE:
+		nfsmgr::GetNFS(bitconverter::toint32(data, 1), v->processid)->RemoveFile(bitconverter::tostring(data, 5));
+		break;
+	case nfscmd::WRITEFILE:
+		id = bitconverter::toint32(data, 1);
+		txt = bitconverter::readto0(data, 5);
+		txt1 = bitconverter::tostring(data, 5 + txt.size());
+		nfsmgr::GetNFS(id, v->processid)->WriteFile(txt, bitconverter::toarray(txt1));
+		break;
+	case nfscmd::READFILE:
+		return nfsmgr::GetNFS(bitconverter::toint32(data, 1), v->processid)->ReadFile(bitconverter::tostring(data, 5));
+	case nfscmd::COPYFILE:
+		id = bitconverter::toint32(data, 1);
+		txt = bitconverter::readto0(data, 5);
+		txt1 = bitconverter::tostring(data, 5 + txt.size());
+		nfsmgr::GetNFS(id, v->processid)->CopyFile(txt, txt1);
+		break;
+	case nfscmd::MOVEFILE:
+		id = bitconverter::toint32(data, 1);
+		txt = bitconverter::readto0(data, 5);
+		txt1 = bitconverter::tostring(data, 5 + txt.size());
+		nfsmgr::GetNFS(id, v->processid)->MoveFile(txt, txt1);
+		break;
+	case nfscmd::EXTRACTIMAGE:
+		nfsmgr::GetNFS(bitconverter::toint32(data, 1), v->processid)->ExtractAllFiles(bitconverter::tostring(data, 5));
+		break;
+	}
+	return Array<byte>();
+}
+
 map<int, nfs> nfsmgr::handles;
 int nfsmgr::OpenImage(string filename, int process)
 {
-	/*for (pair<const int, nfs> const &p : handles)
+	for (pair<const int, nfs> const &p : handles)
 	{
 		if (p.second.fileName == filename) return -1;
 	}
@@ -10,12 +66,12 @@ int nfsmgr::OpenImage(string filename, int process)
 	while (handles.find(index) != handles.end()) index++;
 	handles.emplace(index, nfs(filename));
 	handles[index].ownerProcess = process;
-	return index;*/
+	return index;
 	return 0;
 }
 int nfsmgr::OpenImage(nfs n, int process)
 {
-	/*for (pair<const int, nfs> const& p : handles)
+	for (pair<const int, nfs> const& p : handles)
 	{
 		if (p.second.fileName == n.fileName) return -1;
 	}
@@ -23,7 +79,7 @@ int nfsmgr::OpenImage(nfs n, int process)
 	while (handles.find(index) != handles.end()) index++;
 	handles.emplace(index, n);
 	handles[index].ownerProcess = process;
-	return index;*/
+	return index;
 	return 0;
 }
 void nfsmgr::CloseImage(int hndl, int process)
@@ -273,3 +329,4 @@ nfs_file::nfs_file(string n, int s, int off)
 	size = s;
 	offset = off;
 }
+#endif

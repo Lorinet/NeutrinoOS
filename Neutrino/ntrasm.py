@@ -90,6 +90,7 @@ OP_INT = 0x81
 OP_BREAK = 0x82
 OP_INTB = 0x83
 OP_BITS = 0x84
+OP_ADDS = 0x85
 OP_PUSH = 0x90
 OP_POP = 0x91
 OP_POPA = 0x92
@@ -444,7 +445,8 @@ for i in range(len(code)):
                 oi = v[1]
                 found = True
         if not found:
-            code[i] = s_remove(code[i], 0, 3)
+            code[i] = s_remove(code[i], 0, 4)
+            code[i] = "call" + code[i];
         else:
             code[i] = "leap " + str(oi) + " " + str(si)
     elif code[i].startswith("extmovl"):
@@ -546,8 +548,6 @@ for s in executedCode:
     op = arg[0].lower()
     if op == "nop":
         instr_simple(OP_NOP)
-    elif op == "delelem":
-        instr_simple(OP_DELELEM)
     elif op == "and":
         instr_var_var(OP_AND, arg[1], arg[2])
     elif op == "or":
@@ -771,6 +771,8 @@ for s in executedCode:
     elif op == "bits":
         instr_simple(OP_BITS)
         pcode.append(to_byte(int_lit(arg[1], 0)))
+    elif op == "adds":
+        instr_simple(OP_ADDS)
     elif op == "break":
         instr_simple(OP_BREAK)
     elif op == "push":
@@ -814,7 +816,7 @@ for s in executedCode:
     elif op == "halt" or op == "leave":
         instr_simple(OP_HALT)
     elif not op.startswith(":") and not op.startswith(";"):
-        rage_quit(12, "invalid term " + op)
+        rage_quit(12, "invalid term " + op + " (instruction " + str(pc) + ", line '" + s + "')")
     pc += 1
 
 if "-silent" not in flags:
