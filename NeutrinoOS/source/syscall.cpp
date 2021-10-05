@@ -449,7 +449,8 @@ Array<byte> syscall::systemCall(byte* indata, int datasize, nvm* v)
 	case interrupts::COMPONENT_CALL:
 		msg = Array<byte>(data);
 		msg.removeAt(0);
-		interfaces[data[0]]->message(msg, v);
+		contents = interfaces[data[0]]->message(msg, v);
+		if (contents.size > 0) return Array<byte>(contents);
 		break;
 	default:
 		break;

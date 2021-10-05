@@ -7,7 +7,7 @@
 #
 
 include neutrino
-include ClockView
+import clockview
 
 !('link neutrino.lnx')
 !('link userlib.lnx')
@@ -15,11 +15,9 @@ include ClockView
 def suspend_if_running():
 	NtrSuspendProcess()
 	!('lj suspend_if_running')
-	ret
 
 def clock_main():
-	__ClockView_hwnd = 0
-	ClockView_CreateView()
+	hwnd = clockview_create_view()
 	hours = NtrGetTime($TIMESEL_HOUR)
 	minutes = NtrGetTime($TIMESEL_MINUTE)
 	show_time()
@@ -34,8 +32,8 @@ def clock_main():
 		minuteString = str(minutes)
 		if minutes < 10:
 			minuteString = "0" @ minuteString
-		WMSetUserElementProperty(__ClockView_hwnd, 1, "Text:" @ hourString @ "\:" @ minuteString)
-		WMUpdateView(__ClockView_hwnd)
+		WMSetUserElementProperty(hwnd, 1, "Text:" @ hourString @ "\:" @ minuteString)
+		WMUpdateView(hwnd)
 	NtrAttachEventHandler($EVENT_TIME_CHANGE_MINUTES, time_callback)
 	NtrEnableEvents()
 	suspend_if_running()
