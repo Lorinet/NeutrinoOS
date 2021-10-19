@@ -5,85 +5,39 @@
 #include "event.h"
 #include "dynamiclinker.h"
 #include "memorystats.h"
+
+#define INT(b) bitconverter::toint32(b)
+#define INTE(b, o) bitconverter::toint32(b, o)
+#define STRING(b) bitconverter::tostring(b)
+#define BYTEI(i) bitconverter::toArray(i)
+#define BYTES(s) bitconverter::toArray(s)
+#define PARAMI(o) bitconverter::toint32(i.parameters, 0)
+#define PARAMS(o, s) bitconverter::tostring(i.parameters, o, s)
+#define STACKI() bitconverter::toint32(astack.getTop())
+#define PUSHNEW(o) astack.push(newobj(o))
+#define PUSHVAL(v) astack.push(newobj(vmobject(v)))
+#define STACKTOP() memory->get(astack.getTop())
+
 nvm::nvm()
 {
-	fileName = "??";
-	bytecode = new Array<instruction>();
-	astack = BufferedStack(10);
-	eventHandlers = map<byte, int>();
-	timers = map<int, timerevt>();
-	eventQueue = Array<ntrevent>();
-	timerQueue = Array<ntrevent>();
-	pc = 0;
-	running = false;
-	equal = false;
-	less = false;
-	greater = false;
-	zero = false;
-	awaitmsg = false;
-	eventsenabled = true;
-	eventsuspended = false;
-	processid = 0;
-	inhandler = -1;
-	extcalls = map<int, int>();
-	modules = map<string, pair<int, int>>();
-	lnkndx = 0;
-	bits = 32;
-	awaitin = false;
-	waitForProcInput = -1;
-	millis = 0;
-	arrays = map<int, arrayobj>();
-	memory = new IntMap<vmobject>();
-	interm = new vt(processid, -1, vtype::StandardInput);
-	outterm = new vt(processid, -1, vtype::StandardOutput);
-	globalPages = new Array<vmobject>();
-	globalPages->add(vmobject());
+	initialize();
 }
+
 nvm::nvm(Array<instruction>* code)
 {
-	fileName = "??";
+	initialize();
 	bytecode = code;
-	eventHandlers = map<byte, int>();
-	eventQueue = Array<ntrevent>();
-	timerQueue = Array<ntrevent>();
-	astack.top = -1;
-	pc = 0;
-	running = false;
-	equal = false;
-	less = false;
-	greater = false;
-	zero = false;
-	awaitmsg = false;
-	processid = 0;
-	inhandler = -1;
-	processPriority = 1;
-	suspended = true;
-	eventsenabled = false;
-	eventsuspended = false;
-	extcalls = map<int, int>();
-	modules = map<string, pair<int, int>>();
-	lnkndx = 0;
-	bits = 32;
-	waitForProcInput = -1;
-	awaitin = false;
-	millis = 0;
-	arrays = map<int, arrayobj>();
-	interm = new vt(processid, -1, vtype::StandardInput);
-	outterm = new vt(processid, -1, vtype::StandardOutput);
-	memory = new IntMap<vmobject>();
-	globalPages = new Array<vmobject>();
-	globalPages->add(vmobject());
 }
 
 nvm::~nvm()
 {
-	modules.clear();
-	extcalls.clear();
 	for(int i = 0; i < bytecode->size; i++) delete[] (*bytecode)[i].parameters;
 	bytecode->clear();
 	delete bytecode;
 	delete memory;
 	globalPages->clear();
+	pageAddresses->clear();
+	localScopes->clear();
 	delete globalPages;
 	arrays.clear();
 	pages.clear();
@@ -102,18 +56,55 @@ nvm::~nvm()
 	po.clear();
 	arr1.clear();
 	arr2.clear();
-	sectionMap.clear();
 	emc.clear();
+}
+
+void nvm::initialize()
+{
+	fileName = "??";
+	eventHandlers = map<byte, int>();
+	eventQueue = Array<ntrevent>();
+	timerQueue = Array<ntrevent>();
+	astack.top = -1;
+	pc = 0;
+	running = false;
+	equal = false;
+	less = false;
+	greater = false;
+	zero = false;
+	awaitmsg = false;
+	processid = 0;
+	inhandler = -1;
+	processPriority = 1;
+	suspended = true;
+	eventsenabled = false;
+	eventsuspended = false;
+	lnkndx = 0;
+	waitForProcInput = -1;
+	awaitin = false;
+	millis = 0;
+	arrays = map<int, arrayobj>();
+	interm = new vt(processid, -1, vtype::StandardInput);
+	outterm = new vt(processid, -1, vtype::StandardOutput);
+	memory = new IntMap<vmobject>();
+	globalPages = new Array<vmobject>();
+	globalPages->add(vmobject());
+	pageAddresses = new Array<int>();
+	localScopes = new Array<Array<vmobject>>();
+	localScopes->add(Array<vmobject>());
+	localScopes->get(0).add(vmobject());
+	currentScopes.add(0);
+	curPage = 0;
 }
 
 void nvm::start()
 {
 	dynamiclinker::dynamicLink(this);
 	globals = &(globalPages->get(0));
+	locals = &(localScopes->get(0).get(0));
 	running = true;
 	suspended = false;
 	eventsenabled = true;
-	bits = 32;
 	millis = ntime::getMillis();
 }
 void nvm::start(int procid, string file)
@@ -139,141 +130,54 @@ void nvm::cycle()
 		case opcode::NOP:
 			break;
 		case opcode::DELFLD:
-			k = bitconverter::toint32(astack.getTop());
+			k = STACKI();
 			astack.pop();
-			memory->get(k).remove(bitconverter::toint32(astack.getTop()));
+			memory->get(k).remove(STACKI());
 			astack.pop();
 			break;
-		case opcode::AND:
-			k1 = bitconverter::toint32(i.parameters, 0);
-			k2 = bitconverter::toint32(i.parameters, 4);
-			globals->set(k2, bitconverter::toArray(bitconverter::toint32(globals->get(k1), 0) & bitconverter::toint32(globals->get(k2), 0)));
+		case opcode::LDLOC:
+			astack.push(locals->get(PARAMI(0)));
 			break;
-		case opcode::OR:
-			k1 = bitconverter::toint32(i.parameters, 0);
-			k2 = bitconverter::toint32(i.parameters, 4);
-			globals->set(k2, bitconverter::toArray(bitconverter::toint32(globals->get(k1), 0) | bitconverter::toint32(globals->get(k2), 0)));
+		case opcode::STLOC:
+			if (astack.size != 0)
+			{
+				locals->set(PARAMI(0), astack.getTop());
+				astack.pop();
+			}
 			break;
-		case opcode::XOR:
-			k1 = bitconverter::toint32(i.parameters, 0);
-			k2 = bitconverter::toint32(i.parameters, 4);
-			globals->set(k2, bitconverter::toArray(bitconverter::toint32(globals->get(k1), 0) ^ bitconverter::toint32(globals->get(k2), 0)));
-			break;
-		case opcode::SHL:
-			k1 = bitconverter::toint32(i.parameters, 0);
-			k2 = bitconverter::toint32(i.parameters, 4);
-			globals->set(k2, bitconverter::toArray(bitconverter::toint32(globals->get(k1), 0) << bitconverter::toint32(globals->get(k2), 0)));
-			break;
-		case opcode::SHR:
-			k1 = bitconverter::toint32(i.parameters, 0);
-			k2 = bitconverter::toint32(i.parameters, 4);
-			globals->set(k2, bitconverter::toArray(bitconverter::toint32(globals->get(k1), 0) >> bitconverter::toint32(globals->get(k2), 0)));
+		case opcode::SWSCOP:
+			currentScopes[curPage] = PARAMI(0);
 			break;
 		case opcode::NOT:
-			k1 = bitconverter::toint32(globals->get(bitconverter::toint32(i.parameters, 0)), 0);
-			globals->set(bitconverter::toint32(i.parameters, 0), bitconverter::toArray(~k1));
-			break;
-		case opcode::ST:
-			k = bitconverter::toint32(i.parameters, 0);
-			v = Array<byte>(i.parameters, i.psize);
-			v.erase(0, 4);
-			globals->set(k, v);
+			k = PARAMI(0);
+			memory->get(k).setValue(~memory->get(k).getValue());
 			break;
 		case opcode::TOSTR:
-			v = astack.getTop();
+			PUSHVAL(to_string(INT(STACKTOP().getValue())));
 			astack.pop();
-			astack.push(bitconverter::toArray(to_string(bitconverter::toint32(v))));
 			break;
 		case opcode::PARSEINT:
-			v = astack.getTop();
+			PUSHVAL(stoi(STRING(STACKTOP().getValue())));
 			astack.pop();
-			astack.push(bitconverter::toArray(stoi(bitconverter::tostring(v))));
 			break;
 		case opcode::CLR:
-			globals->set(bitconverter::toint32(i.parameters, 0), Array<byte>());
-			break;
-		case opcode::CONCAT:
-			k1 = bitconverter::toint32(i.parameters, 0);
-			k2 = bitconverter::toint32(i.parameters, 4);
-			globals->concat(k2, globals->get(k1));
-			break;
-		case opcode::MOV:
-			globals->set(bitconverter::toint32(i.parameters, 4), globals->get(bitconverter::toint32(i.parameters, 0)));
-			break;
-		case opcode::SPLIT:
-			k1 = bitconverter::toint32(i.parameters, 0);
-			k2 = bitconverter::toint32(i.parameters, 4);
-			k = bitconverter::toint32(i.parameters, 8);
-			po = globals->get(k1);
-			t = Array<byte>();
-			pu = Array<byte>();
-			for (n = 0; n < po.size; n++)
+			if (memory->find(astack.getTop()))
 			{
-				if (n < (unsigned int)k) t.push(po[n]);
-				else pu.push(po[n]);
+				memory->remove(astack.getTop());
+				astack.pop();
 			}
-			globals->set(k1, t);
-			globals->set(k2, pu);
 			break;
 		case opcode::INDEX:
-			k1 = bitconverter::toint32(globals->get(bitconverter::toint32(i.parameters, 4)), 0);
-			k2 = bitconverter::toint32(i.parameters, 8);
-			if (bits == 32)
-				globals->set(k2, bitconverter::toArray((int)globals->get(bitconverter::toint32(i.parameters, 0))[k1]));
-			else if (bits == 8)
-			{
-				po = Array<byte>();
-				po.add(globals->get(bitconverter::toint32(i.parameters, 0))[k1]);
-				globals->set(k2, Array<byte>(po));
-				po.clear();
-			}
-			break;
-		case opcode::INSERT:
-			k1 = bitconverter::toint32(globals->get(bitconverter::toint32(i.parameters, 4)), 0);
-			k2 = bitconverter::toint32(i.parameters, 8);
-			v = globals->get(bitconverter::toint32(i.parameters, 0));
-			v[k1] = globals->get(k2)[0];
-			globals->set(bitconverter::toint32(i.parameters, 0), v);
-			break;
-		case opcode::SIZ:
-			v = globals->get(bitconverter::toint32(i.parameters, 0));
-			k1 = bitconverter::toint32(i.parameters, 4);
-			globals->set(k1, bitconverter::toArray(v.size));
-			break;
-		case opcode::APPEND:
-			k1 = bitconverter::toint32(i.parameters, 0);
-			k2 = bitconverter::toint32(i.parameters, 4);
-			globals->append(k2, globals->get(k1)[0]);
+			k = STACKTOP().getValue();  // index
+			astack.pop();
+			bp = STACKTOP().boundValue; // source
+			astack.pop();
+			k2 = astack.getTop();       // destination
+			astack.pop();
+			memory->set(k2, vmobject((int)v1[k]));
 			break;
 		case opcode::NEWOBJ:
-			ii = 0;
-			while (memory->find(ii))
-			{
-				ii++;
-			}
-			memory->add(ii, vmobject());
-			astack.push(bitconverter::toArray(ii));
-			break;
-		case opcode::STB:
-			k = bitconverter::toint32(i.parameters, 0);
-			if(bits == 32) globals->set(k, Array<byte>(bitconverter::toArray((int)i.parameters[4])));
-			else if(bits == 8) 
-			{
-				globals->set(k, Array<byte>());
-				globals->append(k, i.parameters[4]);
-			}
-			break;
-		case opcode::PUSHB:
-			astack.push(bitconverter::toArray((int)i.parameters[0]));
-			break;
-		case opcode::CONCATB:
-			globals->concat(i.parameters[1], globals->get(i.parameters[0]));
-			break;
-		case opcode::APPENDB:
-			globals->append(i.parameters[1], globals->get(i.parameters[0])[0]);
-			break;
-		case opcode::CLRB:
-			globals->set(i.parameters[0], Array<byte>());
+			astack.push(newobj(vmobject()));
 			break;
 		case opcode::VAC:
 			ii = 0;
@@ -282,151 +186,89 @@ void nvm::cycle()
 				ii++;
 			}
 			arrays.emplace(ii, arrayobj());
-			astack.push(bitconverter::toArray(ii));
+			astack.push(newobj(vmobject(ii, DefaultType::ArrayPointer)));
 			break;
 		case opcode::VAD:
-			k1 = bitconverter::toint32(astack.getTop());
+			k1 = STACKI();
 			astack.pop();
 			arrays[k1].data.push(astack.getTop());
 			astack.pop();
 			break;
 		case opcode::DELELEM:
-			k1 = bitconverter::toint32(astack.getTop()); // index
+			k1 = STACKTOP().getValue(); // index
 			astack.pop();
-			k2 = bitconverter::toint32(astack.getTop()); // array
+			k2 = STACKI(); // array
 			astack.pop();
 			arrays[k2].data.removeAt(k1);
 			break;
 		case opcode::LDELEM:
-			k1 = bitconverter::toint32(astack.getTop()); // index
+			k1 = STACKTOP().getValue(); // index
 			astack.pop();
-			k2 = bitconverter::toint32(astack.getTop()); // array
+			k2 = STACKTOP().getValue(); // array
 			astack.pop();
-			astack.push(arrays[k2].data[k1]);
+			astack.push(newobj(vmobject(arrays[k2].data[k1])));
 			break;
 		case opcode::VADE:
-			k = bitconverter::toint32(astack.getTop());
+			k = STACKTOP().getValue();
 			astack.pop();
 			arrays.erase(k);
 			break;
 		case opcode::LDFLD:
-			k1 = bitconverter::toint32(astack.getTop()); // index
+			k1 = STACKTOP().getValue(); // index
 			astack.pop();
-			k2 = bitconverter::toint32(astack.getTop()); // object
+			k2 = STACKI(); // object
 			astack.pop();
 			astack.push(memory->get(k2).get(k1));
 			break;
 		case opcode::STFLD:
-			k1 = bitconverter::toint32(astack.getTop()); // index
+			k1 = STACKTOP().getValue(); // index
 			astack.pop();
-			k2 = bitconverter::toint32(astack.getTop()); // object
+			k2 = STACKI(); // object
 			astack.pop();
 			memory->get(k2).set(k1, astack.getTop());
 			astack.pop();
 			break;
 		case opcode::SWAP:
-			v = astack.getTop();
+			k = astack.getTop();
 			astack.pop();
-			v1 = astack.getTop();
+			k1 = astack.getTop();
 			astack.pop();
-			astack.push(v);
-			astack.push(v1);
+			astack.push(k);
+			astack.push(k1);
 			break;
 		case opcode::LDLEN:
-			k = bitconverter::toint32(astack.getTop());
+			k = astack.getTop();
 			astack.pop();
-			astack.push(bitconverter::toArray(arrays[k].data.size));
+			k1 = memory->get(k).type;
+			if (k1 == DefaultType::Int) PUSHVAL(4);
+			else if (k1 == DefaultType::String) PUSHVAL(memory->get(k).bsize);
+			else if (k1 == DefaultType::ArrayPointer) PUSHVAL(arrays[memory->get(k).getValue()].data.size);
+			astack.pop();
+			PUSHVAL(arrays[k].data.size);
 			break;
 		case opcode::STELEM:
-			k1 = bitconverter::toint32(astack.getTop()); // index
+			k1 = STACKTOP().getValue(); // index
 			astack.pop();
-			k2 = bitconverter::toint32(astack.getTop()); // index
+			k2 = STACKTOP().getValue(); // array
 			astack.pop();
 			arrays[k2].data[k1] = astack.getTop();
 			astack.pop();
 			break;
 		case opcode::PUSHL:
-			astack.push(Array<byte>(i.parameters, 4));
+			PUSHVAL(Array<byte>(i.parameters, 4));
 			break;
 		case opcode::ADD:
-			if (astack.size > 1)
-			{
-				k1 = bitconverter::toint32(astack.getTop(), 0);
-				astack.pop();
-				k2 = bitconverter::toint32(astack.getTop(), 0);
-				astack.pop();
-				astack.push(bitconverter::toArray(k2 + k1));
-			}
-			else vmmgr::vmmerror("Stack underflow at " + pc, processid);
-			break;
-		case opcode::SUB:
-			if (astack.size > 1)
-			{
-				k1 = bitconverter::toint32(astack.getTop(), 0);
-				astack.pop();
-				k2 = bitconverter::toint32(astack.getTop(), 0);
-				astack.pop();
-				astack.push(bitconverter::toArray(k2 - k1));
-			}
-			else vmmgr::vmmerror("Stack underflow at " + pc, processid);
-			break;
-		case opcode::MUL:
-			if (astack.size > 1)
-			{
-				k1 = bitconverter::toint32(astack.getTop(), 0);
-				astack.pop();
-				k2 = bitconverter::toint32(astack.getTop(), 0);
-				astack.pop();
-				astack.push(bitconverter::toArray(k2 * k1));
-			}
-			else vmmgr::vmmerror("Stack underflow at " + pc, processid);
-			break;
-		case opcode::DIV:
-			if (astack.size > 1)
-			{
-				k1 = bitconverter::toint32(astack.getTop(), 0);
-				astack.pop();
-				k2 = bitconverter::toint32(astack.getTop(), 0);
-				astack.pop();
-				astack.push(bitconverter::toArray(k2 / k1));
-			}
-			else vmmgr::vmmerror("Stack underflow at " + pc, processid);
-			break;
-		case opcode::INC:
-			k = bitconverter::toint32(i.parameters, 0);
-			globals->set(k, bitconverter::toArray(bitconverter::toint32(globals->get(k), 0) + bitconverter::toint32(i.parameters, 4)));
-			break;
-		case opcode::DEC:
-			k = bitconverter::toint32(i.parameters, 0);
-			globals->set(k, bitconverter::toArray(bitconverter::toint32(globals->get(k), 0) - bitconverter::toint32(i.parameters, 4)));
-			break;
-		case opcode::IMUL:
-			k = bitconverter::toint32(i.parameters, 0);
-			globals->set(k, bitconverter::toArray(bitconverter::toint32(globals->get(k), 0) * bitconverter::toint32(i.parameters, 4)));
-			break;
-		case opcode::IDIV:
-			k = bitconverter::toint32(i.parameters, 0);
-			globals->set(k, bitconverter::toArray(bitconverter::toint32(globals->get(k), 0) / bitconverter::toint32(i.parameters, 4)));
-			break;
-		case opcode::SCMP:
-			if (astack.size < 2) vmmgr::vmmerror("Stack underflow at " + pc, processid);
-			cv1 = bitconverter::toint32(astack.getTop(), 0);
+			k1 = STACKI();
 			astack.pop();
-			cv2 = bitconverter::toint32(astack.getTop(), 0);
+			k2 = STACKI();
 			astack.pop();
-			less = false;
-			greater = false;
-			equal = false;
-			zero = false;
-			if (cv1 < cv2) less = true;
-			if (cv1 > cv2) greater = true;
-			if (cv1 == cv2) equal = true;
+			PUSHNEW(vmobject::binaryop(memory->get(k1), memory->get(k2), 0));
 			break;
 		case opcode::CMP:
-			k1 = bitconverter::toint32(i.parameters, 0);
-			k2 = bitconverter::toint32(i.parameters, 4);
-			cv1 = bitconverter::toint32(globals->get(k1), 0);
-			cv2 = bitconverter::toint32(globals->get(k2), 0);
+			cv1 = STACKTOP().getValue();
+			astack.pop();
+			cv2 = STACKTOP().getValue();
+			astack.pop();
 			less = false;
 			greater = false;
 			equal = false;
@@ -434,341 +276,80 @@ void nvm::cycle()
 			if (cv1 < cv2) less = true;
 			if (cv1 > cv2) greater = true;
 			if (cv1 == cv2) equal = true;
-			break;
-		case opcode::CMPB:
-			k1 = i.parameters[0];
-			k2 = i.parameters[1];
-			cv1 = bitconverter::toint32(globals->get(k1), 0);
-			cv2 = bitconverter::toint32(globals->get(k2), 0);
-			less = false;
-			greater = false;
-			equal = false;
-			zero = false;
-			if (cv1 < cv2) less = true;
-			if (cv1 > cv2) greater = true;
-			if (cv1 == cv2) equal = true;
-			break;
-		case opcode::CZ:
-			k1 = bitconverter::toint32(i.parameters, 0);
-			k2 = bitconverter::toint32(globals->get(k1), 0);
-			zero = false;
-			if (k2 == 0) zero = true;
-			break;
-		case opcode::CZB:
-			k1 = i.parameters[0];
-			k2 = bitconverter::toint32(globals->get(k1), 0);
-			zero = false;
-			if (k2 == 0) zero = true;
-			break;
-		case opcode::CMPS:
-			less = false;
-			greater = false;
-			equal = true;
-			zero = false;
-			v1 = globals->get(bitconverter::toint32(i.parameters, 0));
-			if (v1.size == i.psize - 4)
-			{
-				for (n = 4; n < i.psize; n++)
-				{
-					if (v1[n - 4] != i.parameters[n]) equal = false;
-				}
-			}
-			else equal = false;
-			break;
-		case opcode::CMPI:
-			less = false;
-			greater = false;
-			equal = false;
-			zero = false;
-			cmpi = bitconverter::toint32(globals->get(bitconverter::toint32(i.parameters, 0)), 0);
-			cmpid = bitconverter::toint32(i.parameters, 4);
-			if (cmpi == cmpid) equal = true;
-			if (cmpi < cmpid) less = true;
-			if (cmpi > cmpid) greater = true;
-			break;
-		case opcode::CMPIB:
-			less = false;
-			greater = false;
-			equal = false;
-			zero = false;
-			cmpi = bitconverter::toint32(globals->get(i.parameters[0]), 0);
-			cmpid = i.parameters[1];
-			if (cmpi == cmpid) equal = true;
-			if (cmpi < cmpid) less = true;
-			if (cmpi > cmpid) greater = true;
-			break;
-		case opcode::JMP:
-			branch(bitconverter::toint32(i.parameters, 0));
-			break;
-		case opcode::LEAP:
-			leap(bitconverter::toint32(i.parameters, 0), i.parameters[4]);
-			break;
-		case opcode::JEQ:
-			addr = bitconverter::toint32(i.parameters, 0);
-			if (equal)
-			{
-				branch(addr);
-			}
-			break;
-		case opcode::JNE:
-			addr = bitconverter::toint32(i.parameters, 0);
-			if (!equal)
-			{
-				branch(addr);
-			}
-			break;
-		case opcode::JLE:
-			addr = bitconverter::toint32(i.parameters, 0);
-			if (equal || less)
-			{
-				branch(addr);
-			}
-			break;
-		case opcode::JGE:
-			addr = bitconverter::toint32(i.parameters, 0);
-			if (equal || greater)
-			{
-				branch(addr);
-			}
-			break;
-		case opcode::JLT:
-			addr = bitconverter::toint32(i.parameters, 0);
-			if (less)
-			{
-				branch(addr);
-			}
-			break;
-		case opcode::JGT:
-			addr = bitconverter::toint32(i.parameters, 0);
-			if (greater)
-			{
-				branch(addr);
-			}
-			break;
-		case opcode::JZ:
-			addr = bitconverter::toint32(i.parameters, 0);
-			if (zero)
-			{
-				branch(addr);
-			}
-			break;
-		case opcode::JNZ:
-			addr = bitconverter::toint32(i.parameters, 0);
-			if (!zero)
-			{
-				branch(addr);
-			}
-			break;
-		case opcode::SJE:
-			addr = i.parameters[0];
-			if (equal)
-			{
-				branch(addr);
-			}
-			break;
-		case opcode::SJNE:
-			addr = i.parameters[0];
-			if (!equal)
-			{
-				branch(addr);
-			}
-			break;
-		case opcode::SJLE:
-			addr = i.parameters[0];
-			if (equal || less)
-			{
-				branch(addr);
-			}
-			break;
-		case opcode::SJGE:
-			addr = i.parameters[0];
-			if (equal || greater)
-			{
-				branch(addr);
-			}
-			break;
-		case opcode::SJL:
-			addr = i.parameters[0];
-			if (less)
-			{
-				branch(addr);
-			}
-			break;
-		case opcode::SJG:
-			addr = i.parameters[0];
-			if (greater)
-			{
-				branch(addr);
-			}
-			break;
-		case opcode::SJZ:
-			addr = i.parameters[0];
-			if (zero)
-			{
-				branch(addr);
-			}
-			break;
-		case opcode::SJNZ:
-			addr = i.parameters[0];
-			if (!zero)
-			{
-				branch(addr);
-			}
 			break;
 		case opcode::RET:
 			ret();
 			break;
 		case opcode::EMIT:
-			k = bitconverter::toint32(i.parameters, 0);
+			k = PARAMI(0);
 			v = globals->get(k);
 			emc = *disassembler::disassembleCode(v.holder, v.size);
 			addr = bytecode->size;
 			for (n = 0; n < emc.size; n++) bytecode->push(emc[n]);
 			branch(addr);
 			break;
-		case opcode::MOVPC:
-			globals->set(bitconverter::toint32(i.parameters, 0), bitconverter::toArray(pc));
-			break;
-		case opcode::LJ:
-			pc = bitconverter::toint32(i.parameters, 0);
-			break;
-		case opcode::LJE:
-			if (equal) pc = bitconverter::toint32(i.parameters, 0);
-			break;
-		case opcode::LJNE:
-			if (!equal) pc = bitconverter::toint32(i.parameters, 0);
-			break;
-		case opcode::LJG:
-			if (greater) pc = bitconverter::toint32(i.parameters, 0);
-			break;
-		case opcode::LJL:
-			if (less) pc = bitconverter::toint32(i.parameters, 0);
-			break;
-		case opcode::LJGE:
-			if (equal || greater) pc = bitconverter::toint32(i.parameters, 0);
-			break;
-		case opcode::LJLE:
-			if (equal || less) pc = bitconverter::toint32(i.parameters, 0);
-			break;
-		case opcode::JSP:
-			branch(bitconverter::toint32(astack.getTop()));
+		case opcode::LEAP:
+			leap(memory->get(STACKTOP().getValue()).getValue());
 			astack.pop();
 			break;
-		case opcode::SJ:
-			branch((int)i.parameters[0]);
+		case opcode::BR:
+			branch(memory->get(STACKTOP().getValue()).getValue());
+			astack.pop();
+		case opcode::JMP:
+			pc = memory->get(STACKTOP().getValue()).getValue();
+			astack.pop();
 			break;
-		case opcode::INTS:
-			vmmgr::enterCriticalSection();
-			v = syscall::systemCall(i.parameters, i.psize, this);
-			vmmgr::leaveCriticalSection();
-			if (v.size != 0) astack.push(v);
+		case opcode::IFEQ:
+			if (!equal) pc += 1;
 			break;
-		case opcode::INTR:
-			inter = i.parameters[0];
-			k = bitconverter::toint32(i.parameters, 1);
-			v = globals->get(k);
-			v.insert(0, inter);
-			bp = bitconverter::toarray_p(v);
-			vmmgr::enterCriticalSection();
-			v = syscall::systemCall(bp, v.size, this);
-			vmmgr::leaveCriticalSection();
-			if (v.size != 0) astack.push(v);
-			delete[] bp;
+		case opcode::IFNE:
+			if (equal) pc += 1;
+			break;
+		case opcode::IFLE:
+			if (!equal && greater) pc += 1;
+			break;
+		case opcode::IFGE:
+			if (!equal && less) pc += 1;
+			break;
+		case opcode::IFLT:
+			if (greater || equal) pc += 1;
+			break;
+		case opcode::IFGT:
+			if (less || equal) pc += 1;
 			break;
 		case opcode::BREAK:
 			// TODO: inform debugger?
 			break;
-		case opcode::INTB:
+		case opcode::INTR:
 			inter = i.parameters[0];
-			k = i.parameters[1];
-			v = globals->get(k);
+			v = Array<byte>(STACKTOP().boundValue, STACKTOP().bsize);
+			astack.pop();
 			v.insert(0, inter);
 			bp = bitconverter::toarray_p(v);
 			vmmgr::enterCriticalSection();
 			v = syscall::systemCall(bp, v.size, this);
 			vmmgr::leaveCriticalSection();
-			if (v.size != 0) astack.push(v);
+			if (v.size != 0) astack.push(newobj(vmobject(v)));
 			delete[] bp;
 			break;
-		case opcode::BITS:
-			bits = i.parameters[0];
+		case opcode::LDGL:
+			astack.push(globals->get(PARAMI(0)));
 			break;
-		case opcode::ADDS:
-			v = Array<byte>(astack.getTop());
+		case opcode::STGL:
+			globals->set(PARAMI(0), astack.getTop());
 			astack.pop();
-			v1 = Array<byte>(astack.getTop());
-			astack.pop();
-			v1.addRange(v);
-			astack.push(v1);
 			break;
-		case opcode::PUSH:
-			if (bits == 32)
-				astack.push(globals->get(bitconverter::toint32(i.parameters, 0)));
-			else if (bits == 8)
-			{
-				v = Array<byte>();
-				v.push(globals->get(bitconverter::toint32(i.parameters, 0))[0]);
-				astack.push(v);
-			}
+		case opcode::LDSTR:
+			PUSHVAL(vmobject(Array<byte>(i.parameters, i.psize)));
 			break;
-		case opcode::POP:
-			if (astack.size != 0)
-			{
-				globals->set(bitconverter::toint32(i.parameters, 0), astack.getTop());
-				if (bits == 8)
-				{
-					v = Array<byte>();
-					v.push(0); v.push(0); v.push(0);
-					k = bitconverter::toint32(i.parameters, 0);
-					v.add(globals->get(k)[0]);
-					globals->set(k, v);
-				}
-				astack.pop();
-			}
+		case opcode::LDI:
+			PUSHVAL(INTE(i.parameters, 0));
 			break;
-		case opcode::SPUSH:
-			if (bits == 32)
-			{
-				v = Array<byte>(i.parameters, i.psize);
-				astack.push(v);
-			}
-			else if (bits == 8)
-			{
-				v = Array<byte>();
-				v.push(i.parameters[0]);
-				astack.push(v);
-			}
-			break;
-		case opcode::POPA:
-			astack.clear();
+		case opcode::LDB:
+			PUSHVAL(Array<byte>(i.parameters, 1));
 			break;
 		case opcode::SPOP:
 			astack.pop();
-			break;
-		case opcode::POPB:
-			if (astack.top != -1)
-			{
-				globals->set(i.parameters[0], astack.getTop());
-				if (bits == 8)
-				{
-					v = Array<byte>();
-					v.push(0); v.push(0); v.push(0);
-					k = (int)i.parameters[0];
-					v.add(globals->get(k)[0]);
-					globals->set(k, v);
-				}
-				astack.pop();
-			}
-			break;
-		case opcode::VPUSHB:
-			if (bits == 32)
-				astack.push(globals->get(i.parameters[0]));
-			else if (bits == 8)
-			{
-				v = Array<byte>();
-				v.push(globals->get(i.parameters[0])[0]);
-				astack.push(v);
-			}
 			break;
 		case opcode::HALT:
 			halt();
@@ -784,7 +365,7 @@ void nvm::cycle()
 			if (interm->input[interm->input.size - 1] == '\n')
 			{
 				interm->input.removeAt(interm->input.size - 1);
-				astack.push(interm->input);
+				astack.push(newobj(vmobject(interm->input)));
 				interm->input = Array<byte>();
 				awaitin = false;
 			}
@@ -799,16 +380,24 @@ void nvm::cycle()
 	}
 }
 
+int nvm::newobj(vmobject& o)
+{
+	ii = 0;
+	while (memory->find(ii))
+	{
+		ii++;
+	}
+	memory->add(ii, o);
+	return ii;
+}
+
 void nvm::processEvents()
 {
 	if (eventQueue.size > 0)
 	{
 		int eix = eventQueue.size - 1;
 		for (int i = 0; i < eventQueue[eix].parameters.size; i++)
-		{
-			Array<byte> pars = eventQueue[eix].parameters[i];
-			astack.push(pars);
-		}
+			astack.push(newobj(vmobject(eventQueue[eix].parameters[i])));
 		inhandler = pc;
 		branch(eventHandlers[eventQueue[eix].id]);
 		eventQueue.removeAt(eix);
@@ -819,10 +408,7 @@ void nvm::processEvents()
 	{
 		int eix = timerQueue.size - 1;
 		for (int i = 0; i < timerQueue[eix].parameters.size; i++)
-		{
-			Array<byte> pars = timerQueue[eix].parameters[i];
-			astack.push(pars);
-		}
+			astack.push(newobj(vmobject(timerQueue[eix].parameters[i])));
 		inhandler = pc;
 		branch(timers[timerQueue[eix].id].handler);
 		timerQueue.removeAt(eix);
@@ -851,7 +437,9 @@ void nvm::ret()
 		{
 			if (p.second.first <= pc && p.second.second >= pc)
 			{
-				globals = &(globalPages->get(p.first));
+				curPage = p.first;
+				globals = &(globalPages->get(curPage));
+				locals = &(localScopes->get(curPage)[0]);
 			}
 		}
 		if (pc == inhandler)
@@ -862,7 +450,7 @@ void nvm::ret()
 	}
 }
 
-void nvm::leap(int addr, byte page)
+void nvm::leap(int addr)
 {
 	callstack.push(pc);
 	pc = addr;
@@ -870,7 +458,9 @@ void nvm::leap(int addr, byte page)
 	{
 		if (p.second.first <= pc && p.second.second >= pc)
 		{
-			globals = &(globalPages->get(p.first));
+			curPage = p.first;
+			globals = &(globalPages->get(curPage));
+			locals = &(localScopes->get(curPage))[0];
 			return;
 		}
 	}

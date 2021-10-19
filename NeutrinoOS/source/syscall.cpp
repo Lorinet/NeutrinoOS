@@ -139,7 +139,8 @@ Array<byte> syscall::systemCall(byte* indata, int datasize, nvm* v)
 		filename = lvmgr::formatPath(bitconverter::tostring(data));
 		if(file::directoryExists(filename))
 		{
-			for (string s : file::getFiles(filename))
+			vector<string> fls = file::getFiles(filename);
+			for (string s : fls)
 				v->arrays[id].data.push(bitconverter::toArray(s));
 			return bitconverter::toArray(id);
 		}

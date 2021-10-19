@@ -15,12 +15,15 @@ class nvm
 {
 public:
 	int lnkndx;
-	map<string, pair<int, int>> modules;
-	map<int, int> extcalls;
 	Array<instruction>* bytecode;
 	IntMap<vmobject>* memory;
 	Array<vmobject>* globalPages;
+	Array<int>* pageAddresses;
 	vmobject* globals;
+	vmobject* locals;
+	Array<Array<vmobject>>* localScopes;
+	Array<int> currentScopes;
+	int curPage = 0;
 	map<int, arrayobj> arrays;
 	map<int, pair<int, int>> pages;
 	map<byte, int> eventHandlers;
@@ -48,12 +51,10 @@ public:
 	bool greater;
 	bool zero;
 	bool awaitin;
-	byte bits;
 	int waitForProcInput;
 	int k, k1, k2, cv1, cv2, addr, cmpi, cmpid, ii, sn;
 	unsigned int n;
 	Array<byte> v, v1, bl, t, pu, po, arr1, arr2;
-	map<int, int> sectionMap;
 	string rep, lnkf;
 	Array<instruction> emc;
 	byte inter;
@@ -64,12 +65,14 @@ public:
 	nvm();
 	nvm(Array<instruction>* code);
 	~nvm();
+	void initialize();
 	void start();
 	void start(int procid, string file);
 	void cycle();
+	int newobj(vmobject& o);
 	void branch(int addr);
 	void ret();
-	void leap(int addr, byte page);
+	void leap(int addr);
 	void halt();
 	void halt(string err);
 	void setTerminals(vt in, vt out);

@@ -41,12 +41,12 @@ Array<instruction>* disassembler::disassembleCode(byte* bc, int size)
 		op = bc[cntr];
 		cntr += 1;
 		int length;
-		if (op == opcode::ST || op == opcode::INTS || op == opcode::SPUSH || op == opcode::CMPS)
+		if (op == opcode::ST || op == opcode::INTS || op == opcode::LDSTR || op == opcode::CMPS)
 		{
 			length = bitconverter::toint32(bc, cntr);
 			cntr += 4;
 		}
-		else if (op == opcode::TOSTR || op == opcode::PARSEINT || op == opcode::NEWOBJ || op == opcode::JSP || op == opcode::ADD || op == opcode::SUB || op == opcode::MUL || op == opcode::DIV || op == opcode::VAC || op == opcode::VAD || op == opcode::VADE || op == opcode::LDELEM || op == opcode::DELELEM || op == opcode::LDLEN || op == opcode::SWAP || op == opcode::LDFLD || op == opcode::STELEM || op == opcode::STFLD || op == opcode::NOP || op == opcode::RET || op == opcode::HALT || op == opcode::BREAK || op == opcode::SPOP || op == opcode::SCMP || op == opcode::ADDS)
+		else if (op == opcode::TOSTR || op == opcode::PARSEINT || op == opcode::NEWOBJ || op == opcode::ADD || op == opcode::SUB || op == opcode::MUL || op == opcode::DIV || op == opcode::VAC || op == opcode::VAD || op == opcode::VADE || op == opcode::LDELEM || op == opcode::DELELEM || op == opcode::LDLEN || op == opcode::SWAP || op == opcode::LDFLD || op == opcode::STELEM || op == opcode::STFLD || op == opcode::NOP || op == opcode::RET || op == opcode::HALT || op == opcode::BREAK || op == opcode::SPOP || op == opcode::SCMP || op == opcode::ADDS)
 		{
 			length = 0;
 		}
@@ -54,15 +54,15 @@ Array<instruction>* disassembler::disassembleCode(byte* bc, int size)
 		{
 			length = 8;
 		}
-		else if (op == opcode::PUSHL || op == opcode::CLR || op == opcode::CZ || op == opcode::JMP || op == opcode::JEQ || op == opcode::JNE || op == opcode::JLE || op == opcode::JGE || op == opcode::JLT || op == opcode::JGT || op == opcode::JZ || op == opcode::JNZ || op == opcode::EMIT || op == opcode::PUSH || op == opcode::POP || op == opcode::TOP || op == opcode::MOVPC || op == opcode::LJ || op == opcode::LJE || op == opcode::LJNE || op == opcode::LJG || op == opcode::LJL || op == opcode::LJGE || op == opcode::LJLE || op == opcode::NOT /*|| op == opcode::VAC || op == opcode::VADE*/)
+		else if (op == opcode::PUSHL || op == opcode::JSP || op == opcode::LDLOC || op == opcode::STLOC || op == opcode::SWSCOP || op == opcode::CLR || op == opcode::CZ || op == opcode::JMP || op == opcode::JEQ || op == opcode::JNE || op == opcode::JLE || op == opcode::JGE || op == opcode::JLT || op == opcode::JGT || op == opcode::JZ || op == opcode::JNZ || op == opcode::EMIT || op == opcode::LDGL || op == opcode::STGL || op == opcode::TOP || op == opcode::MOVPC || op == opcode::LJ || op == opcode::LJE || op == opcode::LJNE || op == opcode::LJG || op == opcode::LJL || op == opcode::LJGE || op == opcode::LJLE || op == opcode::NOT /*|| op == opcode::VAC || op == opcode::VADE*/)
 		{
 			length = 4;
 		}
-		else if (op == opcode::SPLIT || op == opcode::INDEX || op == opcode::INSERT || op == opcode::EXTMOVL)
+		else if (op == opcode::SPLIT || op == opcode::INDEX || op == opcode::INSERT || op == opcode::PUSHLX)
 		{
 			length = 12;
 		}
-		else if (op == opcode::PUSHB || op == opcode::SJ || op == opcode::POPB || op == opcode::VPUSHB || op == opcode::CLRB || op == opcode::SJE || op == opcode::SJNE || op == opcode::SJLE || op == opcode::SJGE || op == opcode::SJL || op == opcode::SJG || op == opcode::SJZ || op == opcode::SJNZ || op == opcode::CZB || op == opcode::BITS)
+		else if (op == opcode::LDGLB || op == opcode::SJ || op == opcode::STGLB || op == opcode::VPUSHB || op == opcode::CLRB || op == opcode::SJE || op == opcode::SJNE || op == opcode::SJLE || op == opcode::SJGE || op == opcode::SJL || op == opcode::SJG || op == opcode::SJZ || op == opcode::SJNZ || op == opcode::CZB || op == opcode::BITS)
 		{
 			length = 1;
 		}

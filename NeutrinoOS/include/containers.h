@@ -427,7 +427,7 @@ public:
 class BufferedStack
 {
 public:
-	Array<byte>* holder;
+	int* holder;
 	bool alive = false;
 	int top;
 	int size;
@@ -435,21 +435,21 @@ public:
 	{
 		size = 10;
 		top = -1;
-		holder = new Array<byte>[size];
+		holder = new int[size];
 		alive = true;
 	}
 	BufferedStack(int initialSize)
 	{
 		size = initialSize;
 		top = -1;
-		holder = new Array<byte>[size];
+		holder = new int[size];
 		alive = true;
 	}
 	BufferedStack(const BufferedStack& c)
 	{
 		size = c.size;
 		top = c.top;
-		holder = new Array<byte>[size];
+		holder = new int[size];
 		for (int i = 0; i < size; i++) holder[i] = c.holder[i];
 	}
 	~BufferedStack()
@@ -464,14 +464,14 @@ public:
 	{
 		size = c.size;
 		top = c.top;
-		holder = new Array<byte>[size];
+		holder = new int[size];
 		for (int i = 0; i < size; i++) holder[i] = c.holder[i];
 	}
 	void reserve(int bytes)
 	{
 		if (bytes > size)
 		{
-			Array<byte>* behold = new Array<byte>[bytes];
+			int* behold = new int[bytes];
 			for (int i = 0; i < size; i++) behold[i] = holder[i];
 			size = bytes;
 			delete[] holder;
@@ -479,14 +479,14 @@ public:
 		}
 		else if (top < bytes)
 		{
-			Array<byte>* behold = new Array<byte>[bytes];
+			int* behold = new int[bytes];
 			for (int i = 0; i < bytes; i++) behold[i] = holder[i];
 			size = bytes;
 			delete[] holder;
 			holder = behold;
 		}
 	}
-	void push(Array<byte> a)
+	void push(int a)
 	{
 		if (top >= size - 1)
 		{
@@ -495,12 +495,12 @@ public:
 		top++;
 		holder[top] = a;
 	}
-	Array<byte>& getTop()
+	int& getTop()
 	{
 		if (top >= 0) return holder[top];
 		else
 		{
-			push(Array<byte>());
+			push(-1);
 			return holder[0];
 		}
 	}
@@ -516,6 +516,6 @@ public:
 	{
 		delete[] holder;
 		size = 10;
-		holder = new Array<byte>[size];
+		holder = new int[size];
 	}
 };

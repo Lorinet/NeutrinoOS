@@ -425,6 +425,115 @@ void WindowManager::RenderWindow(Window& w, int wid, bool active)
 					Graphics::DrawRectangle(e.IGetProperty("Position X") + wi.X, e.IGetProperty("Position Y") + wi.Y + wi.DrawableBase, 12, 12);
 					Graphics::DrawString(e.IGetProperty("Position X") + wi.X + 18, e.IGetProperty("Position Y") + wi.Y + wi.DrawableBase, e.GetProperty("Text"), e.GetProperty("Font"));
 				}
+				else if (type == "TextField")
+				{
+					int wid = e.IGetProperty("Width");
+					int hei = e.IGetProperty("Height");
+					if (wid == 0)
+					{
+						wid = Graphics::resX;
+					}
+					if (hei == 0)
+					{
+						hei = Graphics::resX;
+					}
+					//Graphics::DrawStringWordWrap(e.IGetProperty("Position X"), e.IGetProperty("Position Y"), wid, hei, e.GetProperty("Text"), e.GetProperty("Font"));
+					if (e.IGetProperty("Border") == 1)
+					{
+						Graphics::DrawRectangle(e.IGetProperty("Position X"), e.IGetProperty("Position Y"), wid, hei);
+					}
+				}
+				else if (type == "TextBuffer")
+				{
+					/*Graphics::SetPos(e->GetPropertyInt("Cursor X"), e->GetPropertyInt("Cursor Y"));
+					int curx = 0;
+					int cury = 0;
+					Graphics::DrawStringWordWrapEx(e->GetProperty("Text"), Graphics::fonts[e->GetProperty("Font")], curx, cury);
+					e->SetPropertyInt("Cursor X", curx);
+					e->SetPropertyInt("Cursor Y", cury);*/
+				}
+				else if (type == "ListView")
+				{
+					Array<string> keys = Array<string>();
+					string ck = "";
+					string el = e.GetProperty("Items");
+					bool truly;
+					for (int i = 0; i < el.size(); i++)
+					{
+						truly = true;
+						if (el[i] == ',')
+						{
+							if (i == 1)
+							{
+								if (el[0] == '\\')
+									truly = false;
+							}
+							else if (i > 1)
+							{
+								if (el[i - 1] == '\\' && el[i - 2] != '\\')
+									truly = false;
+							}
+							if (truly)
+							{
+								keys.add(ck);
+								ck = "";
+							}
+						}
+						else
+						{
+							truly = false;
+						}
+						if (!truly)
+						{
+							ck += el[i];
+						}
+					}
+					e.SetProperty("Length", keys.size);
+					int ww = e.IGetProperty("Width");
+					int wh = e.IGetProperty("Height");
+					if (ww <= 0)
+					{
+						ww = wi.Width;
+					}
+					if (wh <= 0)
+					{
+						wh = wi.Height;
+					}
+					if (e.IGetProperty("FrameStart") == -1) e.SetProperty("FrameStart", 0);
+					int yp = 0;
+					int eh = TTF_FontHeight(Graphics::fonts[e.GetProperty("Font")].font) + 2;
+					int meos = wh / eh;
+					int fs = e.IGetProperty("FrameStart");
+					if (keys.size > 0)
+					{
+						if (fs > 0)
+						{
+							Graphics::SetColor(Theming::TextColorLight);
+							Graphics::DrawString(e.IGetProperty("Position X") + wi.X + 2, e.IGetProperty("Position Y") + wi.Y + wi.DrawableBase + yp + 2, "...", e.GetProperty("Font"));
+							yp += TTF_FontHeight(Graphics::fonts[e.GetProperty("Font")].font) + 2;
+							if (keys.size > fs + meos) meos--;
+						}
+						for (int i = fs; i < fs + meos - 1; i++)
+						{
+							if (e.IGetProperty("SelectedIndex") == i)
+							{
+								Graphics::SetColor(Theming::AccentColor);
+								Graphics::DrawFilledRectangle(e.IGetProperty("Position X") + wi.X, e.IGetProperty("Position Y") + wi.Y + wi.DrawableBase + yp, ww, TTF_FontHeight(Graphics::fonts[e.GetProperty("Font")].font) + 4, Theming::AccentColor);
+								Graphics::SetColor(Theming::TextColorDark);
+							}
+							else Graphics::SetColor(Theming::TextColorLight);
+							Graphics::DrawStringBounds(e.IGetProperty("Position X") + wi.X + 2, e.IGetProperty("Position Y") + wi.Y + wi.DrawableBase + yp + 2, util::replaceAll(keys[i], "\\\\", "\\"), e.GetProperty("Font"), ww - 5);
+							yp += TTF_FontHeight(Graphics::fonts[e.GetProperty("Font")].font) + 2;
+							if (i == keys.size - 1) break;
+						}
+						if (keys.size > fs + meos)
+						{
+							Graphics::SetColor(Theming::TextColorLight);
+							Graphics::DrawString(e.IGetProperty("Position X") + wi.X + 2, e.IGetProperty("Position Y") + wi.Y + wi.DrawableBase + yp + 2, "...", e.GetProperty("Font"));
+						}
+						keys.clear();
+					}
+				}
 			}
 		}
 	}
@@ -432,12 +541,12 @@ void WindowManager::RenderWindow(Window& w, int wid, bool active)
 int WindowManager::GetWindowHandle(int x, int y)
 {
 	WindowInfo actWi = windows[activeWindow].GetWindowInfo();
-	if(actWi.X <= x && x <= actWi.X + actWi.Width && actWi.Y <= y && y <= actWi.Y + actWi.Height)
+	if(actWi.X <= x && x <= actWi.X + actWi.Width && actWi.Y <= y && y <= actWi.Y + actWi.Height + actWi.DrawableBase)
 		return activeWindow;
 	for (pair<int, Window> w : windows)
 	{
 		WindowInfo secWi = w.second.GetWindowInfo();
-		if (secWi.X <= x && x <= secWi.X + secWi.Width && secWi.Y <= y && y <= secWi.Y + secWi.Height)
+		if (secWi.X <= x && x <= secWi.X + secWi.Width && secWi.Y <= y && y <= secWi.Y + secWi.Height + secWi.DrawableBase)
 		{
 			return w.first;
 		}
@@ -763,48 +872,149 @@ void WindowManager::FireEvent(EffigyEvent evt, int x, int y)
 					int minbh = GetWindowMinimizeButtonHandle(x, y);
 					if (minbh != -1)
 					{
-						HideWindow(minbh);
+						HideWindow(minbh); 
 					}
 				}
 			}
 		}
-		for (pair<int, Window> w : windows)
+		int iw = GetWindowHandle(x, y);
+		activeWindow = iw;
+		Window& w = windows[iw];
+		WindowInfo secWi = w.GetWindowInfo();
+		for (Element& e : w.elements)
 		{
-			WindowInfo secWi = w.second.GetWindowInfo();
-			for (Element& e : w.second.elements)
+			if (e.GetProperty("Type") == "Button")
 			{
-				if (e.GetProperty("Hoverable") == "1" || e.GetProperty("Type") == "Button")
+				Element* ew = &(windows[iw].elements[windows[iw].GetElementIndexByID(e.IGetProperty("ID"))]);
+				if (e.Hover(x - secWi.X, y - secWi.Y - secWi.DrawableBase))
 				{
-					Element* ew = &(windows[w.first].elements[windows[w.first].GetElementIndexByID(e.IGetProperty("ID"))]);
-					if (e.Hover(x - secWi.X, y - secWi.Y - secWi.DrawableBase))
+					if (secWi.WakeOnInteraction)
 					{
-						if (secWi.WakeOnInteraction)
-						{
-							//vmmgr::processes[secWi.parentProcess]->suspended = false;
-						}
-						if (ew->eventHandler != -1)
-						{
-							//vmmgr::processes[secWi.parentProcess]->branch(ew->eventHandler);
-						}
+						//vmmgr::processes[secWi.parentProcess]->suspended = false;
+					}
+					if (ew->eventHandler != -1)
+					{
+						//vmmgr::processes[secWi.parentProcess]->branch(ew->eventHandler);
 					}
 				}
-				else if (e.GetProperty("Hoverable") == "1" || e.GetProperty("Type") == "CheckBox")
+			}
+			else if (e.GetProperty("Type") == "CheckBox")
+			{
+				Element* ew = &(windows[iw].elements[windows[iw].GetElementIndexByID(e.IGetProperty("ID"))]);
+				if (e.Hover(x - secWi.X, y - secWi.Y - secWi.DrawableBase))
 				{
-					Element* ew = &(windows[w.first].elements[windows[w.first].GetElementIndexByID(e.IGetProperty("ID"))]);
-					if (e.Hover(x - secWi.X, y - secWi.Y - secWi.DrawableBase))
+					if (ew->IGetProperty("Checked") == 0) ew->properties["Checked"] = "1";
+					else ew->properties["Checked"] = "0";
+					if (secWi.WakeOnInteraction)
 					{
-						if (ew->IGetProperty("Checked") == 0) ew->properties["Checked"] = "1";
-						else ew->properties["Checked"] = "0";
-						if (secWi.WakeOnInteraction)
-						{
-							//vmmgr::processes[secWi.parentProcess]->suspended = false;
-						}
-						if (ew->eventHandler != -1)
-						{
-							//vmmgr::processes[secWi.parentProcess]->branch(ew->eventHandler);
-						}
-						RenderWindows();
+						//vmmgr::processes[secWi.parentProcess]->suspended = false;
 					}
+					if (ew->eventHandler != -1)
+					{
+						//vmmgr::processes[secWi.parentProcess]->branch(ew->eventHandler);
+					}
+					RenderWindows();
+				}
+			}
+			else if (e.GetProperty("Type") == "ListView")
+			{
+				Element* ew = &(windows[iw].elements[windows[iw].GetElementIndexByID(e.IGetProperty("ID"))]);
+				if (e.HoverEx(x - secWi.X, y - secWi.Y - secWi.DrawableBase, w.GetWindowInfo().Width, w.GetWindowInfo().Height))
+				{
+					int pY = y - secWi.Y - secWi.DrawableBase;
+					int ecunt = 0;
+					string ck = "";
+					string el = e.GetProperty("Items");
+					bool truly;
+					for (int i = 0; i < el.size(); i++)
+					{
+						truly = true;
+						if (el[i] == ',')
+						{
+							if (i == 1)
+							{
+								if (el[0] == '\\')
+									truly = false;
+							}
+							else if (i > 1)
+							{
+								if (el[i - 1] == '\\' && el[i - 2] != '\\')
+									truly = false;
+							}
+							if (truly)
+							{
+								ecunt++;
+								ck = "";
+							}
+						}
+						else
+						{
+							truly = false;
+						}
+						if (!truly)
+						{
+							ck += el[i];
+						}
+					}
+					int fs = ew->IGetProperty("FrameStart");
+					int ih = TTF_FontHeight(Graphics::fonts[ew->GetProperty("Font")].font) + 2;
+					int ww = e.IGetProperty("Width");
+					int wh = e.IGetProperty("Height");
+					if (ww <= 0)
+					{
+						ww = wi.Width;
+					}
+					if (wh <= 0)
+					{
+						wh = wi.Height;
+					}
+					int meos = wh / ih;
+					int yp = 0;
+					if (fs > 0)
+					{
+						if (pY > 0 && pY < ih)
+						{
+							if (fs < meos)
+							{
+								ew->SetProperty("FrameStart", 0);
+							}
+							else
+							{
+								ew->SetProperty("FrameStart", fs - meos + 2);
+							}
+							RenderWindows();
+							break;
+						}
+						if(ecunt <= fs + meos) meos--;
+						yp++;
+					}
+					if (ecunt > fs + meos)
+					{
+						if (pY > (meos - 1) * ih && pY < (meos - 1) * ih + ih)
+						{
+							if (ecunt >= fs + meos + meos)
+							{
+								ew->SetProperty("FrameStart", fs + meos - 1);
+							}
+							else
+							{
+								ew->SetProperty("FrameStart", ecunt - meos + 1);
+							}
+							RenderWindows();
+							break;
+						}
+						meos--;
+					}
+					for (int i = fs; i < fs + meos; i++)
+					{
+						if (pY > yp * ih && pY < yp * ih + ih)
+						{
+							ew->SetProperty("SelectedIndex", i);
+							break;
+						}
+						yp++;
+					}
+					RenderWindows();
 				}
 			}
 		}

@@ -15,7 +15,12 @@ void dynamiclinker::dynamicLink(nvm* v)
 	v->pages.insert({ 0, pair<int, int>(0, v->bytecode->size - 1) });
 	int ndx = 1;
 	if (!link(v->bytecode, &offsets, &v->pages, &ndx, v->processid)) return;
-	for (int i = 0; i < v->pages.size(); i++) v->globalPages->add(vmobject());
+	for (int i = 0; i < v->pages.size(); i++)
+	{
+		v->globalPages->add(vmobject());
+		v->localScopes->add(Array<vmobject>());
+		v->currentScopes.add(0);
+	}
 	map<string, map<int, int>> sections;
 	int s;
 	byte* modcod;
@@ -23,6 +28,7 @@ void dynamiclinker::dynamicLink(nvm* v)
 	{
 		modcod = file::readAllBytes(lvmgr::formatPath("0:\\Neutrino\\sys\\" + p.first), &s);
 		sections.emplace(p.first, disassembler::extractExternalMethods(modcod, s));
+		v->pageAddresses->add(p.second);
 	}
 	int sec;
 	string key;
@@ -41,20 +47,14 @@ void dynamiclinker::dynamicLink(nvm* v)
 			(*v->bytecode)[i].psize = 5;
 			delete[] ab;
 		}
-		else if ((*v->bytecode)[i].opCode == opcode::EXTMOVL)
+		else if ((*v->bytecode)[i].opCode == opcode::PUSHLX)
 		{
 			sec = bitconverter::toint32((*v->bytecode)[i].parameters, 0);
 			var = bitconverter::toint32((*v->bytecode)[i].parameters, 4);
 			key = bitconverter::tostring((*v->bytecode)[i].parameters, 8, (*v->bytecode)[i].psize);
-			(*v->bytecode)[i].opCode = opcode::ST;
-			(*v->bytecode)[i].psize = 8;
-			(*v->bytecode)[i].parameters = new byte[8];
-			ab = bitconverter::toarray_p(var);
-			for(int j = 0; j < 4; j++)
-			{
-				(*v->bytecode)[i].parameters[j] = ab[j];
-			}
-			delete[] ab;
+			(*v->bytecode)[i].opCode = opcode::LDI;
+			(*v->bytecode)[i].psize = 4;
+			(*v->bytecode)[i].parameters = new byte[4];
 			ab = bitconverter::toarray_p(offsets[key] + sections[key][sec]);
 			for(int j = 0; j < 4; j++)
 			{
@@ -95,46 +95,7 @@ bool dynamiclinker::link(Array<instruction>* v, map<string, int>* off, map<int, 
 				replaceModulesByName(dasm);
 				for (int j = 0; j < dasm->size; j++)
 				{
-					if ((*dasm)[j].opCode == opcode::SJ || (*dasm)[j].opCode == opcode::SJE || (*dasm)[j].opCode == opcode::SJNE || (*dasm)[j].opCode == opcode::SJL || (*dasm)[j].opCode == opcode::SJG || (*dasm)[j].opCode == opcode::SJLE || (*dasm)[j].opCode == opcode::SJGE || (*dasm)[j].opCode == opcode::SJZ || (*dasm)[j].opCode == opcode::SJNZ)
-					{
-						switch((*dasm)[j].opCode)
-						{
-							case opcode::SJ:
-								(*dasm)[j].opCode = opcode::JMP;
-								break;
-							case opcode::SJE:
-								(*dasm)[j].opCode = opcode::JEQ;
-								break;
-							case opcode::SJNE:
-								(*dasm)[j].opCode = opcode::JNE;
-								break;
-							case opcode::SJL:
-								(*dasm)[j].opCode = opcode::JLT;
-								break;
-							case opcode::SJG:
-								(*dasm)[j].opCode = opcode::JGT;
-								break;
-							case opcode::SJLE:
-								(*dasm)[j].opCode = opcode::JLE;
-								break;
-							case opcode::SJGE:
-								(*dasm)[j].opCode = opcode::JGE;
-								break;
-							case opcode::SJZ:
-								(*dasm)[j].opCode = opcode::JZ;
-								break;
-							case opcode::SJNZ:
-								(*dasm)[j].opCode = opcode::JNZ;
-								break;
-							default:
-								break;
-						}
-						parm = bitconverter::toarray_p(((int)(*dasm)[j].parameters[0]) + v->size);
-						delete[] (*dasm)[j].parameters;
-						(*dasm)[j].parameters = parm;
-						(*dasm)[j].psize = 4;
-					}
-					else if ((*dasm)[j].opCode == opcode::PUSHL)
+					if ((*dasm)[j].opCode == opcode::PUSHL)
 					{
 						int a = bitconverter::toint32((*dasm)[j].parameters, 0);
 						a += v->size;
@@ -144,12 +105,6 @@ bool dynamiclinker::link(Array<instruction>* v, map<string, int>* off, map<int, 
 						(*dasm)[j].parameters[2] = parm[2];
 						(*dasm)[j].parameters[3] = parm[3];
 						delete[] parm;
-					}
-					else if((*dasm)[j].opCode == opcode::JMP || (*dasm)[j].opCode == opcode::JEQ || (*dasm)[j].opCode == opcode::JNE || (*dasm)[j].opCode == opcode::JLT || (*dasm)[j].opCode == opcode::JGT || (*dasm)[j].opCode == opcode::JLE || (*dasm)[j].opCode == opcode::JGE || (*dasm)[j].opCode == opcode::JZ || (*dasm)[j].opCode == opcode::JNZ || (*dasm)[j].opCode == opcode::LJ || (*dasm)[j].opCode == opcode::LJE || (*dasm)[j].opCode == opcode::LJNE || (*dasm)[j].opCode == opcode::LJL || (*dasm)[j].opCode == opcode::LJG || (*dasm)[j].opCode == opcode::LJLE || (*dasm)[j].opCode == opcode::LJGE)
-					{
-						parm = bitconverter::toarray_p(bitconverter::toint32((*dasm)[j].parameters, 0) + v->size);
-						delete[] (*dasm)[j].parameters;
-						(*dasm)[j].parameters = parm;
 					}
 				}
 				pages->insert({ *ndx, pair<int, int>(v->size, v->size + dasm->size - 1) });
@@ -185,14 +140,7 @@ void dynamiclinker::replaceModulesByName(Array<instruction>* dasm)
 	int modind = 0;
 	for (int j = 0; j < dasm->size; j++)
 	{
-		if ((*dasm)[j].opCode == opcode::LEAP)
-		{
-			modnm = bitconverter::toarray_p(imods[bitconverter::toint32((*dasm)[j].parameters, 0)] + '\0');
-			sec = bitconverter::toarray_p(bitconverter::toint32((*dasm)[j].parameters, 4));
-			(*dasm)[j].psize = imods[bitconverter::toint32((*dasm)[j].parameters, 0)].size() + 4;
-			(*dasm)[j].parameters = bitconverter::append(sec, 4, modnm, imods[bitconverter::toint32((*dasm)[j].parameters, 0)].size());
-		}
-		else if ((*dasm)[j].opCode == opcode::EXTMOVL)
+		if ((*dasm)[j].opCode == opcode::PUSHLX)
 		{
 			modind = bitconverter::toint32((*dasm)[j].parameters, 0);
 			modnm = bitconverter::toarray_p(imods[modind] + '\0');

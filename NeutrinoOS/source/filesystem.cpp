@@ -148,7 +148,11 @@ vector<string> file::getFiles(string path)
 			#ifndef __ESP32
 			struct stat path_stat;
 			stat(ent->d_name, &path_stat);
+#ifdef __WIN32
+			if(ent->d_type == 32768)
+#else
 			if (S_ISREG(path_stat.st_mode))
+#endif
 			{
 				fls.push_back(ent->d_name);
 			}
@@ -179,7 +183,11 @@ vector<string> file::getDirectories(string path)
 		{
 			struct stat path_stat;
 			stat(ent->d_name, &path_stat);
+#ifdef __WIN32
+			if (ent->d_type == 16384)
+#else
 			if (S_ISDIR(path_stat.st_mode))
+#endif
 			{
 				fls.push_back(ent->d_name);
 			}

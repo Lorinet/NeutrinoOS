@@ -96,6 +96,29 @@ void Graphics::DrawString(int x, int y, string text, string font)
 	SDL_BlitSurface(ts, NULL, window, &sr);
 	SDL_FreeSurface(ts);
 }
+void Graphics::DrawStringBounds(int x, int y, string text, string font, int bound)
+{
+	string sn = text;
+	int w = 0;
+	int h = 0;
+	bool removed = false;
+	for (int i = sn.size() - 1; i >= 0; i--)
+	{
+		TTF_SizeText(fonts[font].font, sn.c_str(), &w, &h);
+		if (w < bound)
+		{
+			if(sn.size() > 4 && removed)
+				sn = sn.substr(0, i - 3) + "...";
+			DrawString(x, y, sn, font);
+			break;
+		}
+		else
+		{
+			sn = sn.substr(0, i);
+			removed = true;
+		}
+	}
+}
 void Graphics::LoadImageE(string path, string id)
 {
 	SDL_Surface* ts = IMG_Load(path.c_str());

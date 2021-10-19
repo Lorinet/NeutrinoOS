@@ -37,6 +37,17 @@ bool Element::Hover(int x, int y)
 	if (x >= px && x <= px + pw && y >= py && y <= py + ph) return true;
 	return false;
 }
+bool Element::HoverEx(int x, int y, int ww, int wh)
+{
+	int pw = IGetProperty("Width");
+	int ph = IGetProperty("Height");
+	int px = IGetProperty("Position X");
+	int py = IGetProperty("Position Y");
+	if (pw <= 0) pw = ww;
+	if (ph <= 0) ph = wh;
+	if (x >= px && x <= px + pw && y >= py && y <= py + ph) return true;
+	return false;
+}
 Element Element::Label(int x, int y, string font, string text)
 {
 	return Element({ {"Type", "Label"}, {"Position X", to_string(x)}, {"Position Y", to_string(y)}, {"Font", font }, {"Text", text} });

@@ -55,6 +55,7 @@ public:
 	static void DrawRectangle(int x, int y, int w, int h);
 	static void DrawFilledRectangle(int x, int y, int w, int h, Color fill);
 	static void DrawString(int x, int y, string text, string font);
+	static void DrawStringBounds(int x, int y, string text, string font, int bound);
 	static void LoadImageE(string path, string id);
 	static void LoadFont(string path, string id, int size);
 	static void DrawImage(int x, int y, string id);
