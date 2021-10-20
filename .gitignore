@@ -5,3 +5,6 @@ Neutrino/buildroot/
 *.cmake
 CMakeFiles
 NeutrinoOS/CMakeFiles
+CMakeCache.txt
+Makefile
+NeutrinoOS/Makefile
