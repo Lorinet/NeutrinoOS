@@ -46,5 +46,5 @@ public:
 	void setValue(string v);
 	void setValue(Array<byte> v);
 	int getValue();
-	static vmobject& binaryop(vmobject& a, vmobject& b, byte op);
+	static vmobject binaryop(vmobject& a, vmobject& b, byte op);
 };

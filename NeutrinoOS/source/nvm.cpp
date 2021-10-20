@@ -172,9 +172,7 @@ void nvm::cycle()
 			astack.pop();
 			bp = STACKTOP().boundValue; // source
 			astack.pop();
-			k2 = astack.getTop();       // destination
-			astack.pop();
-			memory->set(k2, vmobject((int)v1[k]));
+			PUSHVAL((int)v1[k]);
 			break;
 		case opcode::NEWOBJ:
 			astack.push(newobj(vmobject()));
@@ -380,7 +378,7 @@ void nvm::cycle()
 	}
 }
 
-int nvm::newobj(vmobject& o)
+int nvm::newobj(vmobject o)
 {
 	ii = 0;
 	while (memory->find(ii))

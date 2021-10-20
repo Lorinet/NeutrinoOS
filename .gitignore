@@ -2,3 +2,6 @@ NeutrinoOS/out/
 .vs/
 NeutrinoOS/.vs/
 Neutrino/buildroot/
+*.cmake
+CMakeFiles
+NeutrinoOS/CMakeFiles

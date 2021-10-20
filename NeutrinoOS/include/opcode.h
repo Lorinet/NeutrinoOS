@@ -6,6 +6,8 @@ enum opcode
 	LDLOC = 0x03,  // store local
 	STLOC = 0x04,  // load local
 	SWSCOP = 0x05,
+  LDLOCB = 0x06,
+  STLOCB = 0x07,
 	AND = 0x11,
 	OR = 0x12,
 	XOR = 0x13,
@@ -24,8 +26,6 @@ enum opcode
 	SUB = 0x41,
 	MUL = 0x42,
 	DIV = 0x43,
-	IMUL = 0x46,
-	IDIV = 0x47,
 	CMP = 0x50,
 	VAC = 0x58,   // array create
 	LDELEM = 0x59,// array index get
@@ -48,7 +48,7 @@ enum opcode
 	JMP = 0x6C,
 	LDLEN = 0x76,  // array length
 	STELEM = 0x77, // array set index
-    PUSHLX = 0x78,
+  PUSHLX = 0x78,
 	INTS = 0x80,
 	INTR = 0x81,
 	BREAK = 0x82,

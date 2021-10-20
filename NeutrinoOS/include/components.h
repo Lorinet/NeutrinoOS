@@ -6,7 +6,7 @@
 //#define COMPONENT_GPIO
 //#define COMPONENT_SERIAL
 //#define COMPONENT_TIWAZ
-#define COMPONENT_EFFIGY
+//#define COMPONENT_EFFIGY
 
 // Include files for components
 

@@ -186,7 +186,7 @@ int vmobject::getValue()
 	return bitconverter::toint32(boundValue, 0);
 }
 
-vmobject& vmobject::binaryop(vmobject& a, vmobject& b, byte op)
+vmobject vmobject::binaryop(vmobject& a, vmobject& b, byte op)
 {
 	if (a.type == DefaultType::Int)
 	{

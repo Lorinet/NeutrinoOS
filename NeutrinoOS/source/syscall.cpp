@@ -10,6 +10,7 @@
 #include "timer.h"
 #include "components.h"
 #include "kernlog.h"
+#include "filesystem.h"
 string syscall::filename, syscall::files, syscall::folders, syscall::txt, syscall::txt1, syscall::txt2;
 Array<byte> syscall::contents, syscall::msg;
 unsigned int syscall::n;
@@ -185,7 +186,7 @@ Array<byte> syscall::systemCall(byte* indata, int datasize, nvm* v)
 				WindowManager::Stop();
 #endif
 #if defined(__UNIX)
-				system("shutdown now")
+				system("shutdown now");
 #endif
 				exit(0);
 				break;

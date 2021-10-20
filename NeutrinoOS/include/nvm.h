@@ -69,7 +69,7 @@ public:
 	void start();
 	void start(int procid, string file);
 	void cycle();
-	int newobj(vmobject& o);
+	int newobj(vmobject o);
 	void branch(int addr);
 	void ret();
 	void leap(int addr);
