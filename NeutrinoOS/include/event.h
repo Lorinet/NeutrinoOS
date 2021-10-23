@@ -12,9 +12,9 @@ class ntrevent
 {
 public:
 	byte id;
-	Array<Array<byte>> parameters;
+	//Array<Array<byte>> parameters;
 	ntrevent();
-	ntrevent(byte i, Array<Array<byte>> p);
+	ntrevent(byte i/*, Array<Array<byte>> p*/);
 };
 
 enum eventid

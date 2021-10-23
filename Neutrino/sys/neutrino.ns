@@ -1,7 +1,7 @@
 ; -----------------------------------------------
 ;  Neutrino Operating System Project
 ;  Neutrino OS System Library
-;  by Kovacs Lorand -- 2020.06.13.
+;  by Kovacs Lorand -- 2021.10.21.
 ; -----------------------------------------------
 
 #define COLOR_BLACK 0
@@ -118,7 +118,6 @@
 #define SYSTEM_CREATE_PROCESS 0x25
 #define SYSTEM_KILL_PROCESS 0x26
 #define SYSTEM_GET_PROCESSID 0x27
-#define SYSTEM_CREATE_BACKGROUND_PROCESS 0x28
 #define SYSTEM_SHUTDOWN_PROCESS 0x29
 #define SYSTEM_FORK_PROCESS 0x2A
 #define SYSTEM_RESTORE_SCREEN 0x2B
@@ -168,17 +167,10 @@
 #exlink NtrFileExists
 #exlink NtrDirectoryExists
 #exlink NtrSystemPower
-#exlink NtrSystemReboot
-#exlink NtrSystemShutdown
-#exlink NtrSystemWarmReboot
-#exlink NtrSystemRebootRecovery
 #exlink NtrCreateProcess
 #exlink NtrTerminateProcess
 #exlink NtrGetProcessId
-#exlink NtrCreateBackgroundProcess
 #exlink NtrForkProcess
-#exlink NtrRestoreScreen
-#exlink NtrConsolePrintEditable
 #exlink NtrProcWaitForInputRequest
 #exlink NtrCreateProcessEx
 #exlink NtrSendMessage
@@ -186,7 +178,6 @@
 #exlink NtrAwaitMessage
 #exlink NtrGetInformationString
 #exlink NtrGetFirstMessage
-#exlink NtrGraphicsInterrupt
 #exlink NtrAttachEventHandler
 #exlink NtrDetachEventHandler
 #exlink NtrEnableEvents
@@ -194,314 +185,186 @@
 #exlink NtrSuspendProcess
 #exlink NtrWakeProcess
 #exlink NtrGetTime
-#exlink NtrSetTimeZone
 #exlink NtrTimerInterrupt
 #exlink NtrKernelExec
 #exlink NtrSuspendProcessEx
 
 :main
-
 ret
 
 :NtrConsolePrint
-pop ___1
-int SYSTEM_PRINT ___1
-clr ___1
+intr SYSTEM_PRINT
 ret
 
 :NtrConsolePrintLine
-jmp NtrConsolePrint
-jmp NtrConsoleNewLine
+br NtrConsolePrint
+br NtrConsoleNewLine
 ret
 
 :NtrConsoleNewLine
-int SYSTEM_NEWLINE
+intr SYSTEM_NEWLINE
 ret
 
 :NtrGetMessageCount
-pop ___1
-int SYSTEM_GET_MESSAGE_COUNT ___1
-clr ___1
+intr SYSTEM_GET_MESSAGE_COUNT
 ret
 
 :NtrGetPathIsFolder
-pop ___1
-int SYSTEM_PATHISFOLDER ___1
-clr ___1
+intr SYSTEM_PATHISFOLDER
 ret
 
 :NtrShutdownProcess
-int SYSTEM_SHUTDOWN_PROCESS
+intr SYSTEM_SHUTDOWN_PROCESS
 ret
 
 :NtrReadFile
-pop ___1
-int SYSTEM_FGETS ___1
-clr ___1
+intr SYSTEM_FGETS
 ret
 
 :NtrWriteFile
-pop ___1
-pop ___2
-str ___3 0
-concat ___3 ___1
-concat ___2 ___1
-int SYSTEM_FPUTS ___1
-clr ___1
-clr ___2
-clr ___3
+add
+intr SYSTEM_FPUTS
 ret
 
 :NtrDeleteFile
-pop ___1
-int SYSTEM_FDELETE ___1
-clr ___1
+intr SYSTEM_FDELETE
 ret
 
 :NtrCreateFile
-pop ___1
-int SYSTEM_FCREATE ___1
-clr ___1
+intr SYSTEM_FCREATE
 ret
 
 :NtrDeleteDirectory
-pop ___1
-int SYSTEM_DDELETE ___1
-clr ___1
+intr SYSTEM_DDELETE
 ret
 
 :NtrCreateDirectory
-pop ___1
-int SYSTEM_DCREATE ___1
-clr ___1
+intr SYSTEM_DCREATE
 ret
 
 :NtrConsoleGetString
-int SYSTEM_CGETS
+intr SYSTEM_CGETS
 ret
 
 :NtrConsoleScanString
-int SYSTEM_CSCAN
+intr SYSTEM_CSCAN
 ret
 
 :NtrConsoleGetCharacter
-int SYSTEM_CGETK
+intr SYSTEM_CGETK
 ret
 
 :NtrStartProcess
-pop ___1
-int SYSTEM_START_PROCESS ___1
-clr ___1
+intr SYSTEM_START_PROCESS
 ret
 
 :NtrGetFiles
-pop ___1
-int SYSTEM_GETFILES ___1
-clr ___1
+intr SYSTEM_GETFILES
 ret
 
 :NtrGetDirectories
-pop ___1
-int SYSTEM_GETDIRECTORIES ___1
-clr ___1
+intr SYSTEM_GETDIRECTORIES
 ret
 
 :NtrFileExists
-pop ___1
-int SYSTEM_FILE_EXISTS ___1
-clr ___1
+intr SYSTEM_FILE_EXISTS
 ret
 
 :NtrDirectoryExists
-pop ___1
-int SYSTEM_FOLDER_EXISTS ___1
-clr ___1
+intr SYSTEM_FOLDER_EXISTS
 ret
 
 :NtrSystemPower
-pop ___1
-int SYSTEM_POWER ___1
-clr ___1
-ret
-
-:NtrSystemReboot
-pushb POWER_REBOOT
-call NtrSystemPower
-ret
-
-:NtrSystemShutdown
-pushb POWER_SHUTDOWN
-call NtrSystemPower
-ret
-
-:NtrSystemWarmReboot
-pushb POWER_WARM_REBOOT
-call NtrSystemPower
-ret
-
-:NtrSystemRebootRecovery
-pushb POWER_RECOVERY
-call NtrSystemPower
+intr SYSTEM_POWER
 ret
 
 :NtrCreateProcess
-pop ___1
-int SYSTEM_CREATE_PROCESS ___1
-clr ___1
+intr SYSTEM_CREATE_PROCESS
 ret
 
 :NtrCreateProcessEx
-pop ___1
-pop ___2
-clr ___3
-append ___1 ___3
-concat ___2 ___3
-int SYSTEM_CREATE_PROCESS_EX ___3
-clr ___1
-clr ___2
-clr ___3
+add
+intr SYSTEM_CREATE_PROCESS_EX
 ret
 
 :NtrSendInput
-pop ___1 ; pid
-pop ___2 ; data
-clr ___3
-concat ___1 ___3
-concat ___2 ___3
-int SYSTEM_SEND_INPUT_PROC ___3
-clr ___1
-clr ___2
-clr ___3
+add
+intr SYSTEM_SEND_INPUT_PROC
 ret
 
 :NtrTerminateProcess
-pop ___1
-int SYSTEM_KILL_PROCESS ___1
-clr ___1
+intr SYSTEM_KILL_PROCESS
 ret
 
 :NtrGetProcessId
-int SYSTEM_GET_PROCESSID
-ret
-
-:NtrCreateBackgroundProcess
-pop ___1
-int SYSTEM_CREATE_BACKGROUND_PROCESS ___1
-clr ___1
+intr SYSTEM_GET_PROCESSID
 ret
 
 :NtrForkProcess
-int SYSTEM_FORK_PROCESS
-ret
-
-:NtrRestoreScreen
-int SYSTEM_RESTORE_SCREEN
-ret
-
-:NtrConsolePrintEditable
-pop ___1
-int SYSTEM_CONSOLE_PRINT_EDITABLE ___1
-clr ___1
+intr SYSTEM_FORK_PROCESS
 ret
 
 :NtrProcWaitForInputRequest
-pop ___1
-int SYSTEM_PROC_WAIT_FOR_INPUT_REQUEST ___1
-clr ___1
+intr SYSTEM_PROC_WAIT_FOR_INPUT_REQUEST
 ret
 
 :NtrSendMessage
-pop ___1
-int SYSTEM_PROC_SEND_MESSAGE ___1
-clr ___1
+intr SYSTEM_PROC_SEND_MESSAGE
 ret
 
 :NtrReceiveMessage
-int SYSTEM_PROC_GET_MESSAGE
+intr SYSTEM_PROC_GET_MESSAGE
 ret
 
 :NtrAwaitMessage
-int SYSTEM_PROC_AWAIT_MESSAGE
+intr SYSTEM_PROC_AWAIT_MESSAGE
 ret
 
 :NtrGetInformationString
-pop ___1
-int SYSTEM_GET_INFO_STRING ___1
-clr ___1
+intr SYSTEM_GET_INFO_STRING
 ret
 
 :NtrGetFirstMessage
-pop ___1
-int SYSTEM_GET_FIRST_MESSAGE ___1
-clr ___1
-ret
-
-:NtrGraphicsInterrupt
-pop ___1
-int SYSTEM_GRAPHICS_INTERRUPT ___1
-clr ___1
+intr SYSTEM_GET_FIRST_MESSAGE
 ret
 
 :NtrAttachEventHandler
-pop ___1
-pop ___2
-clr ___3
-append ___2 ___3
-concat ___1 ___3
-int SYSTEM_ATTACH_EVENT_HANDLER ___3
-clr ___1
-clr ___2
-clr ___3
+add
+intr SYSTEM_ATTACH_EVENT_HANDLER
 ret
 
 :NtrDetachEventHandler
-pop ___1
-int SYSTEM_DETACH_EVENT_HANDLER ___1
-clr ___1
+intr SYSTEM_DETACH_EVENT_HANDLER
 ret
 
 :NtrEnableEvents
-int SYSTEM_ENABLE_EVENTS
+intr SYSTEM_ENABLE_EVENTS
 ret
 
 :NtrDisableEvents
-int SYSTEM_DISABLE_EVENTS
+intr SYSTEM_DISABLE_EVENTS
 ret
 
 :NtrSuspendProcess
-int SYSTEM_SUSPEND_PROCESS
+intr SYSTEM_SUSPEND_PROCESS
 ret
 
 :NtrSuspendProcessEx
-pop ___1
-int SYSTEM_SUSPEND_PROCESS_EX ___1
-clr ___1
+intr SYSTEM_SUSPEND_PROCESS_EX
 ret
 
 :NtrWakeProcess
-int SYSTEM_WAKE_PROCESS
+intr SYSTEM_WAKE_PROCESS
 ret
 
 :NtrGetTime
-pop ___1
-int SYSTEM_GET_TIME ___1
-clr ___1
-ret
-
-:NtrSetTimeZone
-pop ___1
-int SYSTEM_SET_TIME_ZONE ___1
-clr ___1
+intr SYSTEM_GET_TIME
 ret
 
 :NtrTimerInterrupt
-pop ___1
-int SYSTEM_TIMER_INTERRUPT ___1
-clr ___1
+intr SYSTEM_TIMER_INTERRUPT
 ret
 
 :NtrKernelExec
-pop ___1
-int SYSTEM_KERNEL_EXEC ___1
-clr ___1
+intr SYSTEM_KERNEL_EXEC
 ret

@@ -36,29 +36,17 @@ void dynamiclinker::dynamicLink(nvm* v)
 	byte* ab;
 	for (int i = 0; i < v->bytecode->size; i++)
 	{
-		if ((*v->bytecode)[i].opCode == opcode::LEAP)
+		if ((*v->bytecode)[i].opCode == opcode::PUSHLX)
 		{
 			sec = bitconverter::toint32((*v->bytecode)[i].parameters, 0);
 			key = bitconverter::tostring((*v->bytecode)[i].parameters, 4, (*v->bytecode)[i].psize);
-			ab = bitconverter::toarray_p(offsets[key] + sections[key][sec]);
-			(*v->bytecode)[i].parameters = new byte[5];
-			for (int j = 0; j < 4; j++) (*v->bytecode)[i].parameters[j] = ab[j];
-			(*v->bytecode)[i].parameters[4] = sec;
-			(*v->bytecode)[i].psize = 5;
-			delete[] ab;
-		}
-		else if ((*v->bytecode)[i].opCode == opcode::PUSHLX)
-		{
-			sec = bitconverter::toint32((*v->bytecode)[i].parameters, 0);
-			var = bitconverter::toint32((*v->bytecode)[i].parameters, 4);
-			key = bitconverter::tostring((*v->bytecode)[i].parameters, 8, (*v->bytecode)[i].psize);
 			(*v->bytecode)[i].opCode = opcode::LDI;
 			(*v->bytecode)[i].psize = 4;
 			(*v->bytecode)[i].parameters = new byte[4];
 			ab = bitconverter::toarray_p(offsets[key] + sections[key][sec]);
 			for(int j = 0; j < 4; j++)
 			{
-				(*v->bytecode)[i].parameters[j + 4] = ab[j];
+				(*v->bytecode)[i].parameters[j] = ab[j];
 			}
 			delete[] ab;
 		}
@@ -145,10 +133,8 @@ void dynamiclinker::replaceModulesByName(Array<instruction>* dasm)
 			modind = bitconverter::toint32((*dasm)[j].parameters, 0);
 			modnm = bitconverter::toarray_p(imods[modind] + '\0');
 			sec = bitconverter::toarray_p(bitconverter::toint32((*dasm)[j].parameters, 4));
-			var = bitconverter::toarray_p(bitconverter::toint32((*dasm)[j].parameters, 8));
-			(*dasm)[j].psize = imods[bitconverter::toint32((*dasm)[j].parameters, 0)].size() + 8;
-			(*dasm)[j].parameters = bitconverter::append(sec, 4, var, 4);
-			(*dasm)[j].parameters = bitconverter::append((*dasm)[j].parameters, 8, modnm, imods[modind].size());
+			(*dasm)[j].psize = imods[bitconverter::toint32((*dasm)[j].parameters, 0)].size() + 4;
+			(*dasm)[j].parameters = bitconverter::append(sec, 4, modnm, imods[modind].size());
 		}
 	}
 	if(modnm != NULL) delete modnm;

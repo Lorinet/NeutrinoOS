@@ -22,10 +22,10 @@ libs = [
     "whiprt.ns"
 ]
 
-print("Neutrino RootFS Build Script")
+print("NeutrinoOS Userspace Build Script")
 baseDir = os.path.dirname(os.path.realpath(__file__))
 outDir = os.path.join(baseDir, "buildroot")
-toolsDir = baseDir
+toolsDir = "/neutrino/Neutrino/ndk"
 install = False
 
 if len(sys.argv) >= 2:
@@ -47,13 +47,13 @@ try:
     os.system("mkdir " + os.path.join(outDir, "ndk", "lib"))
     for f in libs:
         print(f)
-        os.system("python " + os.path.join(toolsDir, "ntrasm.py") + " " + os.path.join(baseDir, "sys", f) + " " + os.path.join(outDir, "sys", f).replace(".ns", ".lnx") + " -silent -genRelocTable -genModuleFile -includeDirectory=" + os.path.join(baseDir, "include") + " -libraryDirectory=" + os.path.join(outDir, "ndk", "lib"))
+        os.system("python3 " + os.path.join(toolsDir, "ntrasm.py") + " " + os.path.join(baseDir, "sys", f) + " " + os.path.join(outDir, "sys", f).replace(".ns", ".lnx") + " -silent -genRelocTable -genModuleFile -includeDirectory=" + os.path.join(baseDir, "include") + " -libraryDirectory=" + os.path.join(outDir, "ndk", "lib"))
         shutil.move(os.path.join(outDir, "sys", f).replace(".ns", ".lmd"), os.path.join(outDir, "ndk", "lib", f.replace(".ns", ".lmd")))
     print("Building application binaries...")
     os.system("mkdir " + os.path.join(outDir, "bin"))
     for f in os.listdir(os.path.join(baseDir, "bin")):
         print(f)
-        os.system("python " + os.path.join(toolsDir, "ntrasm.py") + " " + os.path.join(baseDir, "bin", f, f + ".ns") + " " + os.path.join(outDir, "bin", f) + ".lex -silent -includeDirectory=" + os.path.join(baseDir, "include") + " -libraryDirectory=" + os.path.join(outDir, "ndk", "lib"))
+        os.system("python3 " + os.path.join(toolsDir, "ntrasm.py") + " " + os.path.join(baseDir, "bin", f, f + ".ns") + " " + os.path.join(outDir, "bin", f) + ".lex -silent -includeDirectory=" + os.path.join(baseDir, "include") + " -libraryDirectory=" + os.path.join(outDir, "ndk", "lib"))
     print("Building system configuration...")
     os.system("mkdir " + os.path.join(outDir, "cfg"))
     copytree(os.path.join(baseDir, "cfg"), os.path.join(outDir, "cfg"))

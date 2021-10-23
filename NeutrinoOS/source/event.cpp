@@ -4,12 +4,12 @@
 ntrevent::ntrevent()
 {
 	id = eventid::NoEvent;
-	parameters = Array<Array<byte>>();
+	//parameters = Array<Array<byte>>();
 }
-ntrevent::ntrevent(byte i, Array<Array<byte>> p)
+ntrevent::ntrevent(byte i/*, Array<Array<byte>> p*/)
 {
 	id = i;
-	parameters = p;
+	//parameters = p;
 }
 
 events::events(scheduler* s)
@@ -29,25 +29,25 @@ void events::eventLoop()
 	int newHour = ntime::getHour();
 	if (newMin != minutes)
 	{
-		ntrevent ne = ntrevent(eventid::TimeChangeMinutes, Array<Array<byte>>());
+		ntrevent ne = ntrevent(eventid::TimeChangeMinutes);
 		pending.push(ne);
 		minutes = newMin;
 	}
 	if (newSec != seconds)
 	{
-		ntrevent ne = ntrevent(eventid::TimeChangeSeconds, Array<Array<byte>>());
+		ntrevent ne = ntrevent(eventid::TimeChangeSeconds);
 		pending.push(ne);
 		seconds = newSec;
 	}
 	if (newHour != hours)
 	{
-		ntrevent ne = ntrevent(eventid::TimeChangeHours, Array<Array<byte>>());
+		ntrevent ne = ntrevent(eventid::TimeChangeHours);
 		pending.push(ne);
 		hours = newHour;
 	}
 	if (timeSet)
 	{
-		ntrevent ne = ntrevent(eventid::TimeSet, Array<Array<byte>>());
+		ntrevent ne = ntrevent(eventid::TimeSet);
 		pending.push(ne);
 		timeSet = false;
 	}
@@ -59,7 +59,7 @@ void events::eventLoop()
 			eid = pending[j].id;
 			if (sched->processes[i]->eventHandlers.count(eid) && (sched->processes[i]->eventsenabled || sched->processes[i]->inhandler != -1))
 			{
-				sched->processes[i]->eventQueue.add(ntrevent(pending[j].id, pending[j].parameters));
+				sched->processes[i]->eventQueue.add(ntrevent(pending[j].id));
 			}
 		}
 		long long lillis = ntime::getMillis();
@@ -67,7 +67,7 @@ void events::eventLoop()
 		{
 			if (lillis >= p.second.startTime + p.second.interval && p.second.running && sched->processes[i]->eventsenabled)
 			{
-				sched->processes[i]->timerQueue.add(ntrevent(p.first, NULL));
+				sched->processes[i]->timerQueue.add(ntrevent(p.first));
 				sched->processes[i]->timers[p.first].startTime = lillis;
 				if (!p.second.loop)
 				{

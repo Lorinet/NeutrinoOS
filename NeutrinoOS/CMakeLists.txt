@@ -1,5 +1,4 @@
 ﻿cmake_minimum_required (VERSION 3.8)
-project(NeutrinoOS)
 
 set (CMAKE_CXX_STANDARD 11)
 
@@ -47,5 +46,4 @@ elseif(BuildEffigyLin)
 	target_compile_options(NeutrinoOS PRIVATE -g)
 endif()
 
-install(TARGETS NeutrinoOS DESTINATION "./NeutrinoOS")
 

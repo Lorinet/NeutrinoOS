@@ -73,6 +73,10 @@ vmobject& vmobject::operator=(const vmobject& other)
 	keys = new int[count];
 	for (int i = 0; i < hsize; i++) holder[i] = other.holder[i];
 	for (int i = 0; i < count; i++) keys[i] = other.keys[i];
+	bsize = other.bsize;
+	boundValue = new byte[bsize];
+	for(int i = 0; i < bsize; i++) boundValue[i] = other.boundValue[i];
+	type = other.type;
 	return *this;
 }
 
@@ -80,6 +84,7 @@ vmobject::~vmobject()
 {
 	delete[] holder;
 	delete[] keys;
+	delete[] boundValue;
 }
 
 void vmobject::add(int key, int value)
@@ -157,6 +162,7 @@ void vmobject::setValue(int v)
 	boundValue[1] = b[1];
 	boundValue[2] = b[2];
 	boundValue[3] = b[3];
+	type = DefaultType::Int;
 }
 
 void vmobject::setValue(string v)
@@ -186,37 +192,223 @@ int vmobject::getValue()
 	return bitconverter::toint32(boundValue, 0);
 }
 
-vmobject vmobject::binaryop(vmobject& a, vmobject& b, byte op)
+vmobject vmobject::binaryop(vmobject* a, vmobject* b, byte op)
 {
-	if (a.type == DefaultType::Int)
+	if (a->type == DefaultType::Int)
 	{
 		switch(op)
 		{
 		case 0: // add
-			return vmobject(bitconverter::toint32(a.boundValue, 0) + bitconverter::toint32(b.boundValue, 0));
+			return vmobject(bitconverter::toint32(a->boundValue, 0) + bitconverter::toint32(b->boundValue, 0));
 		case 1: // sub
-			return vmobject(bitconverter::toint32(a.boundValue, 0) - bitconverter::toint32(b.boundValue, 0));
+			return vmobject(bitconverter::toint32(a->boundValue, 0) - bitconverter::toint32(b->boundValue, 0));
 		case 2: // mul
-			return vmobject(bitconverter::toint32(a.boundValue, 0) * bitconverter::toint32(b.boundValue, 0));
+			return vmobject(bitconverter::toint32(a->boundValue, 0) * bitconverter::toint32(b->boundValue, 0));
 		case 3: // div
-			return vmobject(bitconverter::toint32(a.boundValue, 0) / bitconverter::toint32(b.boundValue, 0));
+			return vmobject(bitconverter::toint32(a->boundValue, 0) / bitconverter::toint32(b->boundValue, 0));
 		case 4: // and
-			return vmobject(bitconverter::toint32(a.boundValue, 0) & bitconverter::toint32(b.boundValue, 0));
+			return vmobject(bitconverter::toint32(a->boundValue, 0) & bitconverter::toint32(b->boundValue, 0));
 		case 5: // or
-			return vmobject(bitconverter::toint32(a.boundValue, 0) | bitconverter::toint32(b.boundValue, 0));
+			return vmobject(bitconverter::toint32(a->boundValue, 0) | bitconverter::toint32(b->boundValue, 0));
 		case 6: // xor
-			return vmobject(bitconverter::toint32(a.boundValue, 0) ^ bitconverter::toint32(b.boundValue, 0));
+			return vmobject(bitconverter::toint32(a->boundValue, 0) ^ bitconverter::toint32(b->boundValue, 0));
 		case 7: // shl
-			return vmobject(bitconverter::toint32(a.boundValue, 0) << bitconverter::toint32(b.boundValue, 0));
+			return vmobject(bitconverter::toint32(a->boundValue, 0) << bitconverter::toint32(b->boundValue, 0));
 		case 8: // shr
-			return vmobject(bitconverter::toint32(a.boundValue, 0) >> bitconverter::toint32(b.boundValue, 0));
+			return vmobject(bitconverter::toint32(a->boundValue, 0) >> bitconverter::toint32(b->boundValue, 0));
 		}
 	}
-	else if (a.type == DefaultType::String)
+	else if (a->type == DefaultType::String)
 	{
-		return vmobject(bitconverter::tostring(a.boundValue, a.bsize) + bitconverter::tostring(b.boundValue, b.bsize));
+		return vmobject(bitconverter::tostring(a->boundValue, a->bsize) + bitconverter::tostring(b->boundValue, b->bsize));
 	}
-	return vmobject();
+	return NULL;
+}
+
+ObjectMap::ObjectMap()
+{
+    keys = new int[0];
+    holder = new vmobject*[0];
+    size = 0;
+    hsize = 0;
+}
+
+ObjectMap::~ObjectMap()
+{
+	//for (int i = 0; i < hsize; i++) delete holder[i];
+	delete[] holder;
+	delete[] keys;
+}
+
+void ObjectMap::add(int key, vmobject value)
+{
+	int i;
+	if (size <= key)
+	{
+		int* nk = new int[key + 1];
+		for (int j = 0; j < size; j++) nk[j] = keys[j];
+		nk[key] = -1;
+		int oc = size;
+		size = key + 1;
+		delete[] keys;
+		keys = nk;
+	}
+	if (keys[key] != -1)
+	{
+		i = keys[key];
+		delete holder[i];
+		holder[i] = NULL;
+	}
+	i = 0;
+	while (i < hsize && holder[i] != NULL)
+		i++;
+	if (i == hsize)
+	{
+		vmobject** nh = new vmobject * [hsize + 1];
+		for (int j = 0; j < hsize; j++) nh[j] = holder[j];
+		delete[] holder;
+		holder = nh;
+		hsize++;
+	}
+	keys[key] = i;
+	holder[i] = new vmobject(value);
+}
+
+void ObjectMap::remove(int key)
+{
+	int i = keys[key];
+	delete[] holder[i];
+	holder[i] = NULL;
+	keys[key] = -1;
+}
+
+vmobject* ObjectMap::get(int key)
+{
+	return holder[keys[key]];
+}
+
+vmobject* ObjectMap::operator[](int key)
+{
+	return holder[keys[key]];
+}
+
+void ObjectMap::set(int key, vmobject value)
+{
+	if (keys[key] == -1) add(key, value);
+	else holder[keys[key]] = new vmobject(value);
+}
+
+int ObjectMap::find(int key)
+{
+    if (key >= size) return false;
+    return keys[key] != -1;
+}
+
+BufferedStack::BufferedStack()
+{
+	size = 10;
+	top = -1;
+	holder = new int[size];
+	alive = true;
+}
+
+BufferedStack::BufferedStack(int initialSize)
+{
+	size = initialSize;
+	top = -1;
+	holder = new int[size];
+	alive = true;
+}
+
+BufferedStack::BufferedStack(const BufferedStack& c)
+{
+	size = c.size;
+	top = c.top;
+	holder = new int[size];
+	for (int i = 0; i < size; i++) holder[i] = c.holder[i];
+}
+
+BufferedStack::~BufferedStack()
+{
+	if (alive)
+	{
+		delete[] holder;
+		alive = false;
+	}
+}
+
+void BufferedStack::operator=(const BufferedStack& c)
+{
+	size = c.size;
+	top = c.top;
+	holder = new int[size];
+	for (int i = 0; i < size; i++) holder[i] = c.holder[i];
+}
+
+void BufferedStack::reserve(int bytes)
+{
+	if (bytes > size)
+	{
+		int* behold = new int[bytes];
+		for (int i = 0; i < size; i++) behold[i] = holder[i];
+		size = bytes;
+		delete[] holder;
+		holder = behold;
+	}
+	else if (top < bytes)
+	{
+		int* behold = new int[bytes];
+		for (int i = 0; i < bytes; i++) behold[i] = holder[i];
+		size = bytes;
+		delete[] holder;
+		holder = behold;
+	}
+}
+
+void BufferedStack::push(int a)
+{
+	if (top >= size - 1)
+	{
+		reserve(size + 100);
+	}
+	top++;
+	holder[top] = a;
+}
+
+int& BufferedStack::getTop()
+{
+	if (top >= 0) return holder[top];
+	else
+	{
+		push(-1);
+		return holder[0];
+	}
+}
+
+void BufferedStack::pop()
+{
+	top--;
+	if (top < size - 150)
+	{
+		reserve(size - 100);
+	}
+}
+
+void BufferedStack::clear()
+{
+	delete[] holder;
+	size = 10;
+	holder = new int[size];
+}
+
+void BufferedStack::moveTop(int dep)
+{
+	int v = holder[top - dep];
+	for(int i = top - dep; i < top; i++)
+	{
+		holder[i] = holder[i + 1];
+	}
+	holder[top] = v;
 }
 
 //vmobject::vmobject()

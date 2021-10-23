@@ -16,7 +16,7 @@ class nvm
 public:
 	int lnkndx;
 	Array<instruction>* bytecode;
-	IntMap<vmobject>* memory;
+	ObjectMap memory;
 	Array<vmobject>* globalPages;
 	Array<int>* pageAddresses;
 	vmobject* globals;

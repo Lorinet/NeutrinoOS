@@ -46,5 +46,41 @@ public:
 	void setValue(string v);
 	void setValue(Array<byte> v);
 	int getValue();
-	static vmobject binaryop(vmobject& a, vmobject& b, byte op);
+	static vmobject binaryop(vmobject* a, vmobject* b, byte op);
+};
+
+class ObjectMap
+{
+public:
+	  int* keys;
+	  vmobject** holder;
+	  int size;
+	  int hsize;
+	  ObjectMap();
+	  ~ObjectMap();
+	  void add(int key, vmobject value);
+	  void remove(int key);
+	  vmobject* get(int key);
+	  vmobject* operator[](int key);
+	  void set(int key, vmobject value);
+	  int find(int key);
+};
+class BufferedStack
+{
+public:
+	  int* holder;
+	  bool alive = false;
+	  int top;
+	  int size;
+	  BufferedStack();
+	  BufferedStack(int initialSize);
+	  BufferedStack(const BufferedStack& c);
+	  ~BufferedStack();
+	  void operator=(const BufferedStack& c);
+	  void reserve(int bytes);
+	  void push(int a);
+	  int& getTop();
+	  void pop();
+	  void clear();
+	  void moveTop(int dep);
 };

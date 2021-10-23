@@ -46,13 +46,28 @@ Array<instruction>* disassembler::disassembleCode(byte* bc, int size)
 			length = bitconverter::toint32(bc, cntr);
 			cntr += 4;
 		}
-		else if (op == opcode::PUSHL || opcode::LDI || op == opcode::LDLOC || op == opcode::STLOC || op == opcode::SWSCOP || op == opcode::EMIT || op == opcode::LDGL || op == opcode::STGL || op == opcode::TOP)
+		else if(op == opcode::LDSTRB)
+		{
+			op = opcode::LDSTR;
+			length = bc[cntr];
+			cntr += 1;
+		}
+		else if (op == opcode::PUSHL || op == opcode::LDI || op == opcode::LDLOC || op == opcode::STLOC || op == opcode::SWSCOP || op == opcode::EMIT || op == opcode::LDGL || op == opcode::STGL || op == opcode::TOP)
 		{
 			length = 4;
 		}
-		else if (op == opcode::LDGLB || op == opcode::STGLB || op == opcode::LDLOCB || op == opcode::STLOCB || op == opcode::INTR || op == opcode::LDB)
+		else if (op == opcode::LDGLB || op == opcode::STGLB || op == opcode::LDLOCB || op == opcode::STLOCB || op == opcode::INTR || op == opcode::LDB || op == opcode::LDIB || op == opcode::TOPB || op == opcode::SWSCOPB)
 		{
 			length = 1;
+		}
+		else if(op == opcode::PUSHLX)
+		{
+		    length = 8;
+		}
+		else if(op == opcode::LINK)
+		{
+		    length = bc[cntr];
+		    cntr += 1;
 		}
 		else
 		{
@@ -68,6 +83,42 @@ Array<instruction>* disassembler::disassembleCode(byte* bc, int size)
 		delete[] parameters;
 	}
 	delete[] bc;
+	byte* np;
+	for(int i = 0; i < instr->size; i++)
+	{
+		op = instr->get(i).opCode;
+		if (op == opcode::LDGLB || op == opcode::STGLB || op == opcode::LDLOCB || op == opcode::STLOCB || op == opcode::LDIB || op == opcode::TOPB || op == opcode::SWSCOPB)
+		{
+			np = new byte[4];
+			np[0] = instr->get(i).parameters[0];
+			for(int j = 1; j < 4; j++) np[j] = 0;
+			switch(op)
+			{
+			case opcode::LDGLB:
+				instr->get(i) = instruction(opcode::LDGL, np, 4);
+				break;
+			case opcode::STGLB:
+				instr->get(i) = instruction(opcode::STGL, np, 4);
+				break;
+			case opcode::LDLOCB:
+				instr->get(i) = instruction(opcode::LDLOC, np, 4);
+				break;
+			case opcode::STLOCB:
+				instr->get(i) = instruction(opcode::STLOC, np, 4);
+				break;
+			case opcode::LDIB:
+				instr->get(i) = instruction(opcode::LDI, np, 4);
+				break;
+			case opcode::TOPB:
+				instr->get(i) = instruction(opcode::TOP, np, 4);
+				break;
+			case opcode::SWSCOPB:
+				instr->get(i) = instruction(opcode::SWSCOP, np, 4);
+				break;
+			}
+			delete[] np;
+		}
+	}
 	return instr;
 }
 map<int, int> disassembler::extractExternalMethods(byte* program, int size)

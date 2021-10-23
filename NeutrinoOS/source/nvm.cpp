@@ -13,10 +13,9 @@
 #define BYTES(s) bitconverter::toArray(s)
 #define PARAMI(o) bitconverter::toint32(i.parameters, 0)
 #define PARAMS(o, s) bitconverter::tostring(i.parameters, o, s)
-#define STACKI() bitconverter::toint32(astack.getTop())
 #define PUSHNEW(o) astack.push(newobj(o))
 #define PUSHVAL(v) astack.push(newobj(vmobject(v)))
-#define STACKTOP() memory->get(astack.getTop())
+#define STACKTOP() memory.get(astack.getTop())
 
 nvm::nvm()
 {
@@ -34,7 +33,6 @@ nvm::~nvm()
 	for(int i = 0; i < bytecode->size; i++) delete[] (*bytecode)[i].parameters;
 	bytecode->clear();
 	delete bytecode;
-	delete memory;
 	globalPages->clear();
 	pageAddresses->clear();
 	localScopes->clear();
@@ -57,10 +55,13 @@ nvm::~nvm()
 	arr1.clear();
 	arr2.clear();
 	emc.clear();
+	eventQueue.clear();
+	timerQueue.clear();
 }
 
 void nvm::initialize()
 {
+    memory = ObjectMap();
 	fileName = "??";
 	eventHandlers = map<byte, int>();
 	eventQueue = Array<ntrevent>();
@@ -86,7 +87,6 @@ void nvm::initialize()
 	arrays = map<int, arrayobj>();
 	interm = new vt(processid, -1, vtype::StandardInput);
 	outterm = new vt(processid, -1, vtype::StandardOutput);
-	memory = new IntMap<vmobject>();
 	globalPages = new Array<vmobject>();
 	globalPages->add(vmobject());
 	pageAddresses = new Array<int>();
@@ -125,14 +125,17 @@ void nvm::cycle()
 		}
 		i = bytecode->get(pc);
 		pc += 1;
+		int ival;
+		vmobject* vo;
+		int vadr;
 		switch (i.opCode)
 		{
 		case opcode::NOP:
 			break;
 		case opcode::DELFLD:
-			k = STACKI();
+			k = astack.getTop();
 			astack.pop();
-			memory->get(k).remove(STACKI());
+			memory.get(k)->remove(astack.getTop());
 			astack.pop();
 			break;
 		case opcode::LDLOC:
@@ -150,27 +153,27 @@ void nvm::cycle()
 			break;
 		case opcode::NOT:
 			k = PARAMI(0);
-			memory->get(k).setValue(~memory->get(k).getValue());
+			memory.get(k)->setValue(~(memory.get(k)->getValue()));
 			break;
 		case opcode::TOSTR:
-			PUSHVAL(to_string(INT(STACKTOP().getValue())));
+			PUSHVAL(to_string(STACKTOP()->getValue()));
 			astack.pop();
 			break;
 		case opcode::PARSEINT:
-			PUSHVAL(stoi(STRING(STACKTOP().getValue())));
+			PUSHVAL(stoi(STRING(STACKTOP()->getValue())));
 			astack.pop();
 			break;
 		case opcode::CLR:
-			if (memory->find(astack.getTop()))
+			if (memory.find(astack.getTop()))
 			{
-				memory->remove(astack.getTop());
+				memory.remove(astack.getTop());
 				astack.pop();
 			}
 			break;
 		case opcode::INDEX:
-			k = STACKTOP().getValue();  // index
+			k = STACKTOP()->getValue();  // index
 			astack.pop();
-			bp = STACKTOP().boundValue; // source
+			bp = STACKTOP()->boundValue; // source
 			astack.pop();
 			PUSHVAL((int)v1[k]);
 			break;
@@ -187,43 +190,43 @@ void nvm::cycle()
 			astack.push(newobj(vmobject(ii, DefaultType::ArrayPointer)));
 			break;
 		case opcode::VAD:
-			k1 = STACKI();
+			k1 = astack.getTop();
 			astack.pop();
 			arrays[k1].data.push(astack.getTop());
 			astack.pop();
 			break;
 		case opcode::DELELEM:
-			k1 = STACKTOP().getValue(); // index
+			k1 = STACKTOP()->getValue(); // index
 			astack.pop();
-			k2 = STACKI(); // array
+			k2 = astack.getTop(); // array
 			astack.pop();
 			arrays[k2].data.removeAt(k1);
 			break;
 		case opcode::LDELEM:
-			k1 = STACKTOP().getValue(); // index
+			k1 = STACKTOP()->getValue(); // index
 			astack.pop();
-			k2 = STACKTOP().getValue(); // array
+			k2 = STACKTOP()->getValue(); // array
 			astack.pop();
 			astack.push(newobj(vmobject(arrays[k2].data[k1])));
 			break;
 		case opcode::VADE:
-			k = STACKTOP().getValue();
+			k = STACKTOP()->getValue();
 			astack.pop();
 			arrays.erase(k);
 			break;
 		case opcode::LDFLD:
-			k1 = STACKTOP().getValue(); // index
+			k1 = STACKTOP()->getValue(); // index
 			astack.pop();
-			k2 = STACKI(); // object
+			k2 = astack.getTop(); // object
 			astack.pop();
-			astack.push(memory->get(k2).get(k1));
+			astack.push(memory.get(k2)->get(k1));
 			break;
 		case opcode::STFLD:
-			k1 = STACKTOP().getValue(); // index
+			k1 = STACKTOP()->getValue(); // index
 			astack.pop();
-			k2 = STACKI(); // object
+			k2 = astack.getTop(); // object
 			astack.pop();
-			memory->get(k2).set(k1, astack.getTop());
+			memory.get(k2)->set(k1, astack.getTop());
 			astack.pop();
 			break;
 		case opcode::SWAP:
@@ -237,35 +240,35 @@ void nvm::cycle()
 		case opcode::LDLEN:
 			k = astack.getTop();
 			astack.pop();
-			k1 = memory->get(k).type;
+			k1 = memory.get(k)->type;
 			if (k1 == DefaultType::Int) PUSHVAL(4);
-			else if (k1 == DefaultType::String) PUSHVAL(memory->get(k).bsize);
-			else if (k1 == DefaultType::ArrayPointer) PUSHVAL(arrays[memory->get(k).getValue()].data.size);
+			else if (k1 == DefaultType::String) PUSHVAL(memory.get(k)->bsize);
+			else if (k1 == DefaultType::ArrayPointer) PUSHVAL(arrays[memory.get(k)->getValue()].data.size);
 			astack.pop();
 			PUSHVAL(arrays[k].data.size);
 			break;
 		case opcode::STELEM:
-			k1 = STACKTOP().getValue(); // index
+			k1 = STACKTOP()->getValue(); // index
 			astack.pop();
-			k2 = STACKTOP().getValue(); // array
+			k2 = STACKTOP()->getValue(); // array
 			astack.pop();
 			arrays[k2].data[k1] = astack.getTop();
 			astack.pop();
 			break;
 		case opcode::PUSHL:
-			PUSHVAL(Array<byte>(i.parameters, 4));
+			PUSHVAL(PARAMI(0));
 			break;
 		case opcode::ADD:
-			k1 = STACKI();
+			k1 = astack.getTop();
 			astack.pop();
-			k2 = STACKI();
+			k2 = astack.getTop();
 			astack.pop();
-			PUSHNEW(vmobject::binaryop(memory->get(k1), memory->get(k2), 0));
+			PUSHNEW(vmobject::binaryop(memory.get(k2), memory.get(k1), 0));
 			break;
 		case opcode::CMP:
-			cv1 = STACKTOP().getValue();
+			cv1 = STACKTOP()->getValue();
 			astack.pop();
-			cv2 = STACKTOP().getValue();
+			cv2 = STACKTOP()->getValue();
 			astack.pop();
 			less = false;
 			greater = false;
@@ -287,14 +290,14 @@ void nvm::cycle()
 			branch(addr);
 			break;
 		case opcode::LEAP:
-			leap(memory->get(STACKTOP().getValue()).getValue());
+			leap(STACKTOP()->getValue());
 			astack.pop();
 			break;
 		case opcode::BR:
-			branch(memory->get(STACKTOP().getValue()).getValue());
+			branch(STACKTOP()->getValue());
 			astack.pop();
 		case opcode::JMP:
-			pc = memory->get(STACKTOP().getValue()).getValue();
+			pc = STACKTOP()->getValue();
 			astack.pop();
 			break;
 		case opcode::IFEQ:
@@ -320,7 +323,7 @@ void nvm::cycle()
 			break;
 		case opcode::INTR:
 			inter = i.parameters[0];
-			v = Array<byte>(STACKTOP().boundValue, STACKTOP().bsize);
+			v = Array<byte>(STACKTOP()->boundValue, STACKTOP()->bsize);
 			astack.pop();
 			v.insert(0, inter);
 			bp = bitconverter::toarray_p(v);
@@ -341,16 +344,16 @@ void nvm::cycle()
 			PUSHVAL(vmobject(Array<byte>(i.parameters, i.psize)));
 			break;
 		case opcode::LDI:
-			PUSHVAL(INTE(i.parameters, 0));
+			PUSHVAL(PARAMI(0));
 			break;
 		case opcode::LDB:
 			PUSHVAL(Array<byte>(i.parameters, 1));
 			break;
+	    case opcode::TOP:
+	        astack.moveTop(PARAMI(0));
+			break;
 		case opcode::SPOP:
 			astack.pop();
-			break;
-		case opcode::HALT:
-			halt();
 			break;
 		default:
 			break;
@@ -381,11 +384,11 @@ void nvm::cycle()
 int nvm::newobj(vmobject o)
 {
 	ii = 0;
-	while (memory->find(ii))
+	while (memory.find(ii))
 	{
 		ii++;
 	}
-	memory->add(ii, o);
+	memory.add(ii, o);
 	return ii;
 }
 
@@ -394,8 +397,6 @@ void nvm::processEvents()
 	if (eventQueue.size > 0)
 	{
 		int eix = eventQueue.size - 1;
-		for (int i = 0; i < eventQueue[eix].parameters.size; i++)
-			astack.push(newobj(vmobject(eventQueue[eix].parameters[i])));
 		inhandler = pc;
 		branch(eventHandlers[eventQueue[eix].id]);
 		eventQueue.removeAt(eix);
@@ -405,8 +406,6 @@ void nvm::processEvents()
 	if (timerQueue.size > 0)
 	{
 		int eix = timerQueue.size - 1;
-		for (int i = 0; i < timerQueue[eix].parameters.size; i++)
-			astack.push(newobj(vmobject(timerQueue[eix].parameters[i])));
 		inhandler = pc;
 		branch(timers[timerQueue[eix].id].handler);
 		timerQueue.removeAt(eix);

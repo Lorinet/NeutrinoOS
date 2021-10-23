@@ -20,7 +20,7 @@ static void NeutrinoStartup()
 	//if (config::keyExists("neutrino\\init"))
 	//{
 		//string init = lvmgr::formatPath(config::getValue("neutrino\\InitExecutable"));
-		string init = lvmgr::formatPath("0:\\Neutrino\\bin\\out.lex");
+		string init = lvmgr::formatPath("0:\\Neutrino\\bin\\test.lex");
 		//string init1 = lvmgr::formatPath("0:\\Neutrino\\bin\\out.lex");
 		if (file::fileExists(init))
 		{
