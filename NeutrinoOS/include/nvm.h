@@ -77,5 +77,6 @@ public:
 	void halt(string err);
 	void setTerminals(vt in, vt out);
 	void processEvents();
+	void trashRef(int object);
 };
 

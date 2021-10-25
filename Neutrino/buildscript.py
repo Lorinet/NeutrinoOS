@@ -19,7 +19,7 @@ libs = [
     "io.ns",
     "timer.ns",
     "userlib.ns",
-    "whiprt.ns"
+    "whiprtl.ns"
 ]
 
 print("NeutrinoOS Userspace Build Script")

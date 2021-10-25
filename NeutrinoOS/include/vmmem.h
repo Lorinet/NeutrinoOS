@@ -23,6 +23,7 @@ public:
 	DefaultType type; // 0 - generic, 1 - int, 2 - string
 	byte* boundValue;
 	int bsize;
+	int refcount;
 	vmobject();
 	vmobject(string val);
 	vmobject(int val);

@@ -10,6 +10,7 @@ vmobject::vmobject()
 	boundValue = NULL;
 	bsize = 0;
 	type = DefaultType::Null;
+	refcount = 0;
 }
 
 vmobject::vmobject(int val)
@@ -21,6 +22,7 @@ vmobject::vmobject(int val)
 	boundValue = bitconverter::toarray_p(val);
 	bsize = 4;
 	type = DefaultType::Int;
+	refcount = 0;
 }
 
 vmobject::vmobject(int val, DefaultType ty)
@@ -32,6 +34,7 @@ vmobject::vmobject(int val, DefaultType ty)
 	boundValue = bitconverter::toarray_p(val);
 	bsize = 4;
 	type = ty;
+	refcount = 0;
 }
 
 vmobject::vmobject(string val)
@@ -43,6 +46,7 @@ vmobject::vmobject(string val)
 	boundValue = bitconverter::toarray_p(val);
 	bsize = val.size();
 	type = DefaultType::String;
+	refcount = 0;
 }
 
 vmobject::vmobject(Array<byte> val)
@@ -58,6 +62,7 @@ vmobject::vmobject(Array<byte> val)
 		boundValue[i] = val.holder[i];
 	}
 	type = DefaultType::String;
+	refcount = 0;
 }
 
 vmobject::vmobject(const vmobject& other)
@@ -77,6 +82,7 @@ vmobject& vmobject::operator=(const vmobject& other)
 	boundValue = new byte[bsize];
 	for(int i = 0; i < bsize; i++) boundValue[i] = other.boundValue[i];
 	type = other.type;
+	refcount = 0;
 	return *this;
 }
 

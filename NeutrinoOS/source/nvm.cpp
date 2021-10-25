@@ -142,11 +142,10 @@ void nvm::cycle()
 			astack.push(locals->get(PARAMI(0)));
 			break;
 		case opcode::STLOC:
-			if (astack.size != 0)
-			{
-				locals->set(PARAMI(0), astack.getTop());
-				astack.pop();
-			}
+			k = astack.getTop();
+			memory.get(k)->refcount += 1;
+			locals->set(PARAMI(0), k);
+			astack.pop();
 			break;
 		case opcode::SWSCOP:
 			currentScopes[curPage] = PARAMI(0);
@@ -477,4 +476,12 @@ void nvm::setTerminals(vt in, vt out)
 {
 	*interm = in;
 	*outterm = out;
+}
+
+void nvm::trashRef(int object)
+{
+	if(memory.get(object)->refCount <= 0)
+	{
+
+	}
 }

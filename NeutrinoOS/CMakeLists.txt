@@ -1,6 +1,6 @@
 ﻿cmake_minimum_required (VERSION 3.8)
 
-set (CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 11)
 
 set(CoreSources "main.cpp" "source/arrayobj.cpp" "source/bitconverter.cpp" "source/components.cpp" "source/disassembler.cpp" "source/dynamiclinker.cpp" "source/event.cpp" "source/filesystem.cpp" "source/input.cpp" "source/instruction.cpp" "source/kernlog.cpp" "source/lvmgr.cpp" "source/ntime.cpp" "source/nvm.cpp" "source/scheduler.cpp" "source/syscall.cpp" "source/timer.cpp" "source/util.cpp" "source/vmmem.cpp" "source/vmmgr.cpp" "source/vt.cpp" "source/config.cpp")
 set(TiwazSources "components/TiwazUI/elements.cpp" "components/TiwazUI/gpio.cpp" "components/TiwazUI/graphics.cpp" "components/TiwazUI/inputmgr.cpp" "components/TiwazUI/uiserialization.cpp" "components/TiwazUI/view.cpp" "components/TiwazUI/viewmgr.cpp")
@@ -25,6 +25,8 @@ add_executable (NeutrinoOS ${CoreSources} )
 
 target_include_directories(NeutrinoOS PRIVATE "include")
 target_include_directories(NeutrinoOS PRIVATE "components")
+
+target_link_libraries(NeutrinoOS PRIVATE "-lpthread")
 
 if(BuildTiwaz)
 	target_link_libraries(NeutrinoOS PRIVATE "u8g2")
