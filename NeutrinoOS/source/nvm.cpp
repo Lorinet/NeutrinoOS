@@ -441,7 +441,6 @@ void nvm::ret()
 	else
 	{
 		if(astack.top >= 0) memory.get(astack.getTop())->refcount += 1;
-		//trash();
 		pc = callstack.getTop();
 		callstack.pop();
 		currentScopes[curPage].pop();
