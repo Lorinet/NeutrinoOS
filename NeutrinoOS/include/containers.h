@@ -204,6 +204,21 @@ public:
 		//else throw;
 		return holder[0];
 	}
+	T& getSafe(int index)
+	{
+		if (index < size && index >= 0)
+		{
+			return holder[index];
+		}
+		else
+		{
+			for(int i = 0; i < index - size + 1; i++)
+			{
+				add(T());
+			}
+			return holder[index];
+		}
+	}
 	void operator=(const Array<T>& other)
 	{
 		if (!alive)
@@ -280,55 +295,6 @@ public:
 		}
 	}
 };
-
-//template<class V>
-//class IntMap
-//{
-//public:
-//	map<int, V> inmap;
-//	IntMap()
-//	{
-//		inmap = map<int, V>();
-//	}
-//	IntMap(const IntMap<V>& other)
-//	{
-//		operator=(other);
-//	}
-//	IntMap& operator=(IntMap<V>& other)
-//	{
-//		inmap = other.inmap;
-//		return *this;
-//	}
-//	~IntMap()
-//	{
-//		inmap.clear();
-//	}
-//	void add(int key, const V& value)
-//	{
-//		inmap.emplace(key, value);
-//	}
-//	void remove(int key)
-//	{
-//		if (find(key)) inmap.erase(inmap.find(key));
-//	}
-//	V& get(int key)
-//	{
-//		return inmap[key];
-//	}
-//	V& operator[](int key)
-//	{
-//		return inmap[key];
-//	}
-//	void set(int key, const V& value)
-//	{
-//		if (!find(key)) add(key, value);
-//		else inmap[key] = value;
-//	}
-//	int find(int key)
-//	{
-//		return inmap.find(key) != inmap.end();
-//	}
-//};
 
 template<class V>
 class IntMap

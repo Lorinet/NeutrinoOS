@@ -16,6 +16,7 @@
 #define PUSHNEW(o) astack.push(newobj(o))
 #define PUSHVAL(v) astack.push(newobj(vmobject(v)))
 #define STACKTOP() memory.get(astack.getTop())
+#define DECREF(o) { memory.get(o)->refcount -= 1; if(memory.get(o)->refcount <= 0) memory.remove(o); }
 
 nvm::nvm()
 {
@@ -93,7 +94,8 @@ void nvm::initialize()
 	localScopes = new Array<Array<vmobject>>();
 	localScopes->add(Array<vmobject>());
 	localScopes->get(0).add(vmobject());
-	currentScopes.add(0);
+	localScopes->get(0).get(0).refcount = 1;
+	currentScopes = Array<Array<int>>();
 	curPage = 0;
 }
 
@@ -143,12 +145,16 @@ void nvm::cycle()
 			break;
 		case opcode::STLOC:
 			k = astack.getTop();
-			memory.get(k)->refcount += 1;
-			locals->set(PARAMI(0), k);
 			astack.pop();
+			k1 = PARAMI(0);
+			memory.get(k)->refcount += 1;
+			if(locals->find(k1)) DECREF(locals->get(k1));
+			locals->set(k1, k);
 			break;
 		case opcode::SWSCOP:
-			currentScopes[curPage] = PARAMI(0);
+			currentScopes[curPage].push(PARAMI(0));
+			locals = &(localScopes->get(curPage).getSafe(currentScopes[curPage].getTop()));
+			locals->refcount = 1;
 			break;
 		case opcode::NOT:
 			k = PARAMI(0);
@@ -320,6 +326,9 @@ void nvm::cycle()
 		case opcode::BREAK:
 			// TODO: inform debugger?
 			break;
+		case opcode::GC:
+			trash();
+			break;
 		case opcode::INTR:
 			inter = i.parameters[0];
 			v = Array<byte>(STACKTOP()->boundValue, STACKTOP()->bsize);
@@ -336,8 +345,12 @@ void nvm::cycle()
 			astack.push(globals->get(PARAMI(0)));
 			break;
 		case opcode::STGL:
-			globals->set(PARAMI(0), astack.getTop());
+			k = astack.getTop();
 			astack.pop();
+			k1 = PARAMI(0);
+			memory.get(k)->refcount += 1;
+			if(globals->find(k1)) DECREF(globals->get(k1));
+			globals->set(k1, k);
 			break;
 		case opcode::LDSTR:
 			PUSHVAL(vmobject(Array<byte>(i.parameters, i.psize)));
@@ -427,15 +440,18 @@ void nvm::ret()
 	}
 	else
 	{
+		if(astack.top >= 0) memory.get(astack.getTop())->refcount += 1;
+		//trash();
 		pc = callstack.getTop();
 		callstack.pop();
+		currentScopes[curPage].pop();
 		for (pair<int, pair<int, int>> p : pages)
 		{
 			if (p.second.first <= pc && p.second.second >= pc)
 			{
 				curPage = p.first;
 				globals = &(globalPages->get(curPage));
-				locals = &(localScopes->get(curPage)[0]);
+				locals = &(localScopes->get(curPage)[currentScopes.get(curPage).getTop()]);
 			}
 		}
 		if (pc == inhandler)
@@ -456,7 +472,6 @@ void nvm::leap(int addr)
 		{
 			curPage = p.first;
 			globals = &(globalPages->get(curPage));
-			locals = &(localScopes->get(curPage))[0];
 			return;
 		}
 	}
@@ -478,10 +493,16 @@ void nvm::setTerminals(vt in, vt out)
 	*outterm = out;
 }
 
-void nvm::trashRef(int object)
+void nvm::trash()
 {
-	if(memory.get(object)->refCount <= 0)
+	int rc = 0;
+	for(int i = 0; i < locals->count; i++)
 	{
-
+		if(locals->keys[i] != -1)
+		{
+			rc = memory.get(locals->get(i))->refcount;
+			if(memory.get(locals->get(i))->refcount <= 1) 
+				memory.remove(locals->get(i));
+		}
 	}
 }

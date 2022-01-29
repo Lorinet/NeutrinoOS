@@ -155,6 +155,7 @@ void vmobject::set(int key, int val)
 
 int vmobject::find(int key)
 {
+	if(key >= count) return false;
 	return keys[key] != -1;
 }
 
@@ -283,7 +284,7 @@ void ObjectMap::add(int key, vmobject value)
 void ObjectMap::remove(int key)
 {
 	int i = keys[key];
-	delete[] holder[i];
+	delete holder[i];
 	holder[i] = NULL;
 	keys[key] = -1;
 }

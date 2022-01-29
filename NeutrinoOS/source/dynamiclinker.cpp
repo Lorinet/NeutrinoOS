@@ -18,8 +18,9 @@ void dynamiclinker::dynamicLink(nvm* v)
 	for (int i = 0; i < v->pages.size(); i++)
 	{
 		v->globalPages->add(vmobject());
+		v->globalPages->get(v->globalPages->size - 1).refcount = 1;
 		v->localScopes->add(Array<vmobject>());
-		v->currentScopes.add(0);
+		v->currentScopes.add(Array<int>());
 	}
 	map<string, map<int, int>> sections;
 	int s;

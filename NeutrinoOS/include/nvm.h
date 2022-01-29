@@ -22,7 +22,7 @@ public:
 	vmobject* globals;
 	vmobject* locals;
 	Array<Array<vmobject>>* localScopes;
-	Array<int> currentScopes;
+	Array<Array<int>> currentScopes;
 	int curPage = 0;
 	map<int, arrayobj> arrays;
 	map<int, pair<int, int>> pages;
@@ -77,6 +77,6 @@ public:
 	void halt(string err);
 	void setTerminals(vt in, vt out);
 	void processEvents();
-	void trashRef(int object);
+	void trash();
 };
 

@@ -49,6 +49,7 @@ enum opcode
 	LDLEN = 0x76,  // array length
 	STELEM = 0x77, // array set index
 	PUSHLX = 0x78,
+	GC = 0x79,
 	INTR = 0x81,
 	BREAK = 0x82,
 	LDGL = 0x90,
