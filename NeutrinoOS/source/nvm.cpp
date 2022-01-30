@@ -17,8 +17,6 @@
 #define PUSHNEW(o) astack.push(newobj(o))
 #define PUSHVAL(v) astack.push(newobj(vmobject(v)))
 #define STACKTOP() memory.get(astack.getTop())
-#define DECREFLOC(o) { if(locals->keys[o] != -1) { DECREF(locals->get(o)); } }
-#define DECREFGLB(o) { if(globals->keys[o] != -1) { DECREF(globals->get(o)); } }
 #define DECREF(o) { memory.get(o)->refcount -= 1; if(memory.get(o)->refcount <= 0) memory.remove(o); }
 
 nvm::nvm()
