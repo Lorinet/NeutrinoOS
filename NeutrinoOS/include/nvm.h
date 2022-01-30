@@ -17,11 +17,10 @@ public:
 	int lnkndx;
 	Array<instruction>* bytecode;
 	ObjectMap memory;
-	Array<vmobject>* globalPages;
-	Array<int>* pageAddresses;
+	Array<vmobject> globalPages;
 	vmobject* globals;
 	vmobject* locals;
-	Array<Array<vmobject>>* localScopes;
+	Array<Array<vmobject>> localScopes;
 	Array<Array<int>> currentScopes;
 	int curPage = 0;
 	map<int, arrayobj> arrays;

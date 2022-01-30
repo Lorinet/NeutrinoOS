@@ -5,6 +5,7 @@
 #include "event.h"
 #include "dynamiclinker.h"
 #include "memorystats.h"
+#include "kernlog.h"
 
 #define INT(b) bitconverter::toint32(b)
 #define INTE(b, o) bitconverter::toint32(b, o)
@@ -16,6 +17,8 @@
 #define PUSHNEW(o) astack.push(newobj(o))
 #define PUSHVAL(v) astack.push(newobj(vmobject(v)))
 #define STACKTOP() memory.get(astack.getTop())
+#define DECREFLOC(o) { if(locals->keys[o] != -1) { DECREF(locals->get(o)); } }
+#define DECREFGLB(o) { if(globals->keys[o] != -1) { DECREF(globals->get(o)); } }
 #define DECREF(o) { memory.get(o)->refcount -= 1; if(memory.get(o)->refcount <= 0) memory.remove(o); }
 
 nvm::nvm()
@@ -34,10 +37,8 @@ nvm::~nvm()
 	for(int i = 0; i < bytecode->size; i++) delete[] (*bytecode)[i].parameters;
 	bytecode->clear();
 	delete bytecode;
-	globalPages->clear();
-	pageAddresses->clear();
-	localScopes->clear();
-	delete globalPages;
+	globalPages.clear();
+	localScopes.clear();
 	arrays.clear();
 	pages.clear();
 	eventHandlers.clear();
@@ -88,13 +89,12 @@ void nvm::initialize()
 	arrays = map<int, arrayobj>();
 	interm = new vt(processid, -1, vtype::StandardInput);
 	outterm = new vt(processid, -1, vtype::StandardOutput);
-	globalPages = new Array<vmobject>();
-	globalPages->add(vmobject());
-	pageAddresses = new Array<int>();
-	localScopes = new Array<Array<vmobject>>();
-	localScopes->add(Array<vmobject>());
-	localScopes->get(0).add(vmobject());
-	localScopes->get(0).get(0).refcount = 1;
+	globalPages = Array<vmobject>();
+	globalPages.add(vmobject());
+	localScopes = Array<Array<vmobject>>();
+	localScopes.add(Array<vmobject>());
+	localScopes.get(0).add(vmobject());
+	localScopes.get(0).get(0).refcount = 1;
 	currentScopes = Array<Array<int>>();
 	curPage = 0;
 }
@@ -102,8 +102,8 @@ void nvm::initialize()
 void nvm::start()
 {
 	dynamiclinker::dynamicLink(this);
-	globals = &(globalPages->get(0));
-	locals = &(localScopes->get(0).get(0));
+	globals = &(globalPages.get(0));
+	locals = &(localScopes.get(0).get(0));
 	running = true;
 	suspended = false;
 	eventsenabled = true;
@@ -153,7 +153,7 @@ void nvm::cycle()
 			break;
 		case opcode::SWSCOP:
 			currentScopes[curPage].push(PARAMI(0));
-			locals = &(localScopes->get(curPage).getSafe(currentScopes[curPage].getTop()));
+			locals = &(localScopes.get(curPage).getSafe(currentScopes[curPage].getTop()));
 			locals->refcount = 1;
 			break;
 		case opcode::NOT:
@@ -161,11 +161,14 @@ void nvm::cycle()
 			memory.get(k)->setValue(~(memory.get(k)->getValue()));
 			break;
 		case opcode::TOSTR:
-			PUSHVAL(to_string(STACKTOP()->getValue()));
+			k = astack.getTop();
 			astack.pop();
+			PUSHVAL(to_string(memory.get(k)->getValue()));
 			break;
 		case opcode::PARSEINT:
-			PUSHVAL(stoi(STRING(STACKTOP()->getValue())));
+			k = astack.getTop();
+			astack.pop();
+			PUSHVAL(stoi(STRING(memory.get(k)->getValue())));
 			astack.pop();
 			break;
 		case opcode::CLR:
@@ -231,7 +234,9 @@ void nvm::cycle()
 			astack.pop();
 			k2 = astack.getTop(); // object
 			astack.pop();
+			if(memory.get(k2)->find(k1)) DECREF(memory.get(k2)->get(k1));
 			memory.get(k2)->set(k1, astack.getTop());
+			memory.get(astack.getTop())->refcount += 1;
 			astack.pop();
 			break;
 		case opcode::SWAP:
@@ -294,6 +299,9 @@ void nvm::cycle()
 			for (n = 0; n < emc.size; n++) bytecode->push(emc[n]);
 			branch(addr);
 			break;
+		case opcode::DUP:
+			astack.push(astack.getTop());
+			break;
 		case opcode::LEAP:
 			leap(STACKTOP()->getValue());
 			astack.pop();
@@ -325,8 +333,10 @@ void nvm::cycle()
 			break;
 		case opcode::BREAK:
 			// TODO: inform debugger?
+			klog("NVM", "Breakpoint");
 			break;
 		case opcode::GC:
+			//if(astack.top > -1) memory.get(astack.getTop())->refcount++;
 			trash();
 			break;
 		case opcode::INTR:
@@ -440,7 +450,6 @@ void nvm::ret()
 	}
 	else
 	{
-		if(astack.top >= 0) memory.get(astack.getTop())->refcount += 1;
 		pc = callstack.getTop();
 		callstack.pop();
 		currentScopes[curPage].pop();
@@ -449,8 +458,8 @@ void nvm::ret()
 			if (p.second.first <= pc && p.second.second >= pc)
 			{
 				curPage = p.first;
-				globals = &(globalPages->get(curPage));
-				locals = &(localScopes->get(curPage)[currentScopes.get(curPage).getTop()]);
+				globals = &(globalPages.get(curPage));
+				locals = &(localScopes.get(curPage)[currentScopes.get(curPage).getTop()]);
 			}
 		}
 		if (pc == inhandler)
@@ -470,7 +479,7 @@ void nvm::leap(int addr)
 		if (p.second.first <= pc && p.second.second >= pc)
 		{
 			curPage = p.first;
-			globals = &(globalPages->get(curPage));
+			globals = &(globalPages.get(curPage));
 			return;
 		}
 	}
@@ -494,14 +503,21 @@ void nvm::setTerminals(vt in, vt out)
 
 void nvm::trash()
 {
+	int ign = -1;
+	if(astack.top > -1)
+		ign = astack.getTop();
 	int rc = 0;
 	for(int i = 0; i < locals->count; i++)
 	{
 		if(locals->keys[i] != -1)
 		{
 			rc = memory.get(locals->get(i))->refcount;
-			if(memory.get(locals->get(i))->refcount <= 1) 
-				memory.remove(locals->get(i));
+			if(memory.get(locals->get(i))->refcount <= 1)
+			{
+				if(locals->get(i) == ign) memory.get(ign)->refcount = 0;
+				else memory.remove(locals->get(i));
+			}
+			locals->remove(i);
 		}
 	}
 }

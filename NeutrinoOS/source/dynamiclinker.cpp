@@ -17,9 +17,9 @@ void dynamiclinker::dynamicLink(nvm* v)
 	if (!link(v->bytecode, &offsets, &v->pages, &ndx, v->processid)) return;
 	for (int i = 0; i < v->pages.size(); i++)
 	{
-		v->globalPages->add(vmobject());
-		v->globalPages->get(v->globalPages->size - 1).refcount = 1;
-		v->localScopes->add(Array<vmobject>());
+		v->globalPages.add(vmobject());
+		v->globalPages.get(v->globalPages.size - 1).refcount = 1;
+		v->localScopes.add(Array<vmobject>());
 		v->currentScopes.add(Array<int>());
 	}
 	map<string, map<int, int>> sections;
@@ -29,7 +29,6 @@ void dynamiclinker::dynamicLink(nvm* v)
 	{
 		modcod = file::readAllBytes(lvmgr::formatPath("0:\\Neutrino\\sys\\" + p.first), &s);
 		sections.emplace(p.first, disassembler::extractExternalMethods(modcod, s));
-		v->pageAddresses->add(p.second);
 	}
 	int sec;
 	string key;

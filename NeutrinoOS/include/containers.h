@@ -212,7 +212,7 @@ public:
 		}
 		else
 		{
-			for(int i = 0; i < index - size + 1; i++)
+			for(int i = 0; i < index - size + 2; i++)
 			{
 				add(T());
 			}
