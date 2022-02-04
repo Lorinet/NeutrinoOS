@@ -69,10 +69,6 @@ void nvm::initialize()
 	astack.top = -1;
 	pc = 0;
 	running = false;
-	equal = false;
-	less = false;
-	greater = false;
-	zero = false;
 	awaitmsg = false;
 	processid = 0;
 	inhandler = -1;
@@ -94,6 +90,7 @@ void nvm::initialize()
 	localScopes.get(0).add(vmobject());
 	localScopes.get(0).get(0).refcount = 1;
 	currentScopes = Array<Array<int>>();
+	flagstack.push({ false, false, false });
 	curPage = 0;
 }
 
@@ -278,13 +275,9 @@ void nvm::cycle()
 			astack.pop();
 			cv2 = STACKTOP()->getValue();
 			astack.pop();
-			less = false;
-			greater = false;
-			equal = false;
-			zero = false;
-			if (cv1 < cv2) less = true;
-			if (cv1 > cv2) greater = true;
-			if (cv1 == cv2) equal = true;
+			//                      less       greater    equal
+			//                  TOS-1 < TOS TOS-1 > TOS  TOS-1 == TOS
+			flagstack.getTop() = { cv1 > cv2, cv1 < cv2, cv1 == cv2 };
 			break;
 		case opcode::RET:
 			ret();
@@ -307,27 +300,31 @@ void nvm::cycle()
 		case opcode::BR:
 			branch(STACKTOP()->getValue());
 			astack.pop();
+			break;
 		case opcode::JMP:
 			pc = STACKTOP()->getValue();
 			astack.pop();
 			break;
+		case opcode::BRP:
+			branch(PARAMI(0));
+			break;
 		case opcode::IFEQ:
-			if (!equal) pc += 1;
+			if (!flagstack.getTop().equal) pc += 1;
 			break;
 		case opcode::IFNE:
-			if (equal) pc += 1;
+			if (flagstack.getTop().equal) pc += 1;
 			break;
 		case opcode::IFLE:
-			if (!equal && greater) pc += 1;
+			if (!flagstack.getTop().equal && flagstack.getTop().greater) pc += 1;
 			break;
 		case opcode::IFGE:
-			if (!equal && less) pc += 1;
+			if (!flagstack.getTop().equal && flagstack.getTop().less) pc += 1;
 			break;
 		case opcode::IFLT:
-			if (greater || equal) pc += 1;
+			if (flagstack.getTop().greater || flagstack.getTop().equal) pc += 1;
 			break;
 		case opcode::IFGT:
-			if (less || equal) pc += 1;
+			if (flagstack.getTop().less || flagstack.getTop().equal) pc += 1;
 			break;
 		case opcode::BREAK:
 			// TODO: inform debugger?
@@ -362,12 +359,16 @@ void nvm::cycle()
 			break;
 		case opcode::LDSTR:
 			PUSHVAL(vmobject(Array<byte>(i.parameters, i.psize)));
+			// memory.get(astack.getTop())->type = DefaultType::String;
+			// not needed because it is String by default.
 			break;
 		case opcode::LDI:
 			PUSHVAL(PARAMI(0));
+			memory.get(astack.getTop())->type = DefaultType::Int;
 			break;
 		case opcode::LDB:
 			PUSHVAL(Array<byte>(i.parameters, 1));
+			memory.get(astack.getTop())->type = DefaultType::Byte;
 			break;
 	    case opcode::TOP:
 	        astack.moveTop(PARAMI(0));
@@ -438,6 +439,7 @@ void nvm::branch(int addr)
 {
 	callstack.push(pc);
 	pc = addr;
+	flagstack.push({ false, false, false });
 }
 
 void nvm::ret()
@@ -450,6 +452,7 @@ void nvm::ret()
 	{
 		pc = callstack.getTop();
 		callstack.pop();
+		flagstack.pop();
 		currentScopes[curPage].pop();
 		for (pair<int, pair<int, int>> p : pages)
 		{
@@ -472,6 +475,7 @@ void nvm::leap(int addr)
 {
 	callstack.push(pc);
 	pc = addr;
+	flagstack.push({ false, false, false });
 	for (pair<int, pair<int, int>> p : pages)
 	{
 		if (p.second.first <= pc && p.second.second >= pc)

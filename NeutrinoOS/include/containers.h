@@ -182,10 +182,9 @@ public:
 			holder = behold;
 		}
 	}
-	T getTop()
+	T& getTop()
 	{
-		if (size > 0) return holder[size - 1];
-		else return 0;
+		return holder[size - 1];
 	}
 	bool contains(T val)
 	{

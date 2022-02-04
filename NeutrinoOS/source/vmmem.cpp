@@ -196,33 +196,33 @@ void vmobject::setValue(Array<byte> v)
 
 int vmobject::getValue()
 {
-	return bitconverter::toint32(boundValue, 0);
+	return (type == DefaultType::Int ? bitconverter::toint32(boundValue, 0) : (int)boundValue[0]);
 }
 
 vmobject vmobject::binaryop(vmobject* a, vmobject* b, byte op)
 {
-	if (a->type == DefaultType::Int)
+	if (a->type == DefaultType::Int || a->type == DefaultType::Byte)
 	{
 		switch(op)
 		{
 		case 0: // add
-			return vmobject(bitconverter::toint32(a->boundValue, 0) + bitconverter::toint32(b->boundValue, 0));
+			return vmobject(a->getValue() + b->getValue());
 		case 1: // sub
-			return vmobject(bitconverter::toint32(a->boundValue, 0) - bitconverter::toint32(b->boundValue, 0));
+			return vmobject(a->getValue() - b->getValue());
 		case 2: // mul
-			return vmobject(bitconverter::toint32(a->boundValue, 0) * bitconverter::toint32(b->boundValue, 0));
+			return vmobject(a->getValue() * b->getValue());
 		case 3: // div
-			return vmobject(bitconverter::toint32(a->boundValue, 0) / bitconverter::toint32(b->boundValue, 0));
+			return vmobject(a->getValue() / b->getValue());
 		case 4: // and
-			return vmobject(bitconverter::toint32(a->boundValue, 0) & bitconverter::toint32(b->boundValue, 0));
+			return vmobject(a->getValue() & b->getValue());
 		case 5: // or
-			return vmobject(bitconverter::toint32(a->boundValue, 0) | bitconverter::toint32(b->boundValue, 0));
+			return vmobject(a->getValue() | b->getValue());
 		case 6: // xor
-			return vmobject(bitconverter::toint32(a->boundValue, 0) ^ bitconverter::toint32(b->boundValue, 0));
+			return vmobject(a->getValue() ^ b->getValue());
 		case 7: // shl
-			return vmobject(bitconverter::toint32(a->boundValue, 0) << bitconverter::toint32(b->boundValue, 0));
+			return vmobject(a->getValue() << b->getValue());
 		case 8: // shr
-			return vmobject(bitconverter::toint32(a->boundValue, 0) >> bitconverter::toint32(b->boundValue, 0));
+			return vmobject(a->getValue() >> b->getValue());
 		}
 	}
 	else if (a->type == DefaultType::String)

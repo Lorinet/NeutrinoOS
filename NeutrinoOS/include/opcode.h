@@ -46,6 +46,7 @@ enum opcode
 	EMIT = 0x6A,
 	BR = 0x6B,
 	JMP = 0x6C,
+	BRP = 0x6D,
 	LDLEN = 0x76,  // array length
 	STELEM = 0x77, // array set index
 	PUSHLX = 0x78,

@@ -10,6 +10,14 @@
 #include "vmmem.h"
 #include "timer.h"
 using namespace std;
+
+struct cflags
+{
+	bool less;
+	bool greater;
+	bool equal;
+};
+
 class vt;
 class nvm
 {
@@ -31,6 +39,7 @@ public:
 	map<int, timerevt> timers;
 	BufferedStack astack;
 	Array<int> callstack;
+	Array<cflags> flagstack;
 	Array<Array<byte>> messages;
 	string fileName;
 	vt* interm;
@@ -45,10 +54,6 @@ public:
 	uint16_t curThrd;
 	uint32_t pc;
 	bool running;
-	bool equal;
-	bool less;
-	bool greater;
-	bool zero;
 	bool awaitin;
 	int waitForProcInput;
 	int k, k1, k2, cv1, cv2, addr, cmpi, cmpid, ii, sn;

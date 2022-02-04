@@ -8,7 +8,8 @@ enum DefaultType
 	Null = 0,
 	Int = 1,
 	String = 2,
-	ArrayPointer = 3
+	ArrayPointer = 3,
+	Byte = 4
 };
 
 class vmobject
