@@ -211,7 +211,8 @@ public:
 		}
 		else
 		{
-			for(int i = 0; i < index - size + 2; i++)
+			int oldsize = size;
+			for(int i = 0; i < index - oldsize + 1; i++)
 			{
 				add(T());
 			}
