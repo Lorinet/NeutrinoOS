@@ -9,13 +9,12 @@ ret
 :print
 pushlx NtrConsolePrint
 leap
-ret
+iret
 
 :str
 tostr
-ret
+iret
 
 :int
 parseint
-ret
-
+iret

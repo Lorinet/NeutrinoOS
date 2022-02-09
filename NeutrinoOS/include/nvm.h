@@ -75,6 +75,7 @@ public:
 	void cycle();
 	int newobj(vmobject o);
 	void branch(int addr);
+	void iret();
 	void ret();
 	void leap(int addr);
 	void halt();

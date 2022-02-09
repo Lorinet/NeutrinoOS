@@ -194,177 +194,177 @@ ret
 
 :NtrConsolePrint
 intr SYSTEM_PRINT
-ret
+iret
 
 :NtrConsolePrintLine
 br NtrConsolePrint
 br NtrConsoleNewLine
-ret
+iret
 
 :NtrConsoleNewLine
 intr SYSTEM_NEWLINE
-ret
+iret
 
 :NtrGetMessageCount
 intr SYSTEM_GET_MESSAGE_COUNT
-ret
+iret
 
 :NtrGetPathIsFolder
 intr SYSTEM_PATHISFOLDER
-ret
+iret
 
 :NtrShutdownProcess
 intr SYSTEM_SHUTDOWN_PROCESS
-ret
+iret
 
 :NtrReadFile
 intr SYSTEM_FGETS
-ret
+iret
 
 :NtrWriteFile
 add
 intr SYSTEM_FPUTS
-ret
+iret
 
 :NtrDeleteFile
 intr SYSTEM_FDELETE
-ret
+iret
 
 :NtrCreateFile
 intr SYSTEM_FCREATE
-ret
+iret
 
 :NtrDeleteDirectory
 intr SYSTEM_DDELETE
-ret
+iret
 
 :NtrCreateDirectory
 intr SYSTEM_DCREATE
-ret
+iret
 
 :NtrConsoleGetString
 intr SYSTEM_CGETS
-ret
+iret
 
 :NtrConsoleScanString
 intr SYSTEM_CSCAN
-ret
+iret
 
 :NtrConsoleGetCharacter
 intr SYSTEM_CGETK
-ret
+iret
 
 :NtrStartProcess
 intr SYSTEM_START_PROCESS
-ret
+iret
 
 :NtrGetFiles
 intr SYSTEM_GETFILES
-ret
+iret
 
 :NtrGetDirectories
 intr SYSTEM_GETDIRECTORIES
-ret
+iret
 
 :NtrFileExists
 intr SYSTEM_FILE_EXISTS
-ret
+iret
 
 :NtrDirectoryExists
 intr SYSTEM_FOLDER_EXISTS
-ret
+iret
 
 :NtrSystemPower
 intr SYSTEM_POWER
-ret
+iret
 
 :NtrCreateProcess
 intr SYSTEM_CREATE_PROCESS
-ret
+iret
 
 :NtrCreateProcessEx
 add
 intr SYSTEM_CREATE_PROCESS_EX
-ret
+iret
 
 :NtrSendInput
 add
 intr SYSTEM_SEND_INPUT_PROC
-ret
+iret
 
 :NtrTerminateProcess
 intr SYSTEM_KILL_PROCESS
-ret
+iret
 
 :NtrGetProcessId
 intr SYSTEM_GET_PROCESSID
-ret
+iret
 
 :NtrForkProcess
 intr SYSTEM_FORK_PROCESS
-ret
+iret
 
 :NtrProcWaitForInputRequest
 intr SYSTEM_PROC_WAIT_FOR_INPUT_REQUEST
-ret
+iret
 
 :NtrSendMessage
 intr SYSTEM_PROC_SEND_MESSAGE
-ret
+iret
 
 :NtrReceiveMessage
 intr SYSTEM_PROC_GET_MESSAGE
-ret
+iret
 
 :NtrAwaitMessage
 intr SYSTEM_PROC_AWAIT_MESSAGE
-ret
+iret
 
 :NtrGetInformationString
 intr SYSTEM_GET_INFO_STRING
-ret
+iret
 
 :NtrGetFirstMessage
 intr SYSTEM_GET_FIRST_MESSAGE
-ret
+iret
 
 :NtrAttachEventHandler
 add
 intr SYSTEM_ATTACH_EVENT_HANDLER
-ret
+iret
 
 :NtrDetachEventHandler
 intr SYSTEM_DETACH_EVENT_HANDLER
-ret
+iret
 
 :NtrEnableEvents
 intr SYSTEM_ENABLE_EVENTS
-ret
+iret
 
 :NtrDisableEvents
 intr SYSTEM_DISABLE_EVENTS
-ret
+iret
 
 :NtrSuspendProcess
 intr SYSTEM_SUSPEND_PROCESS
-ret
+iret
 
 :NtrSuspendProcessEx
 intr SYSTEM_SUSPEND_PROCESS_EX
-ret
+iret
 
 :NtrWakeProcess
 intr SYSTEM_WAKE_PROCESS
-ret
+iret
 
 :NtrGetTime
 intr SYSTEM_GET_TIME
-ret
+iret
 
 :NtrTimerInterrupt
 intr SYSTEM_TIMER_INTERRUPT
-ret
+iret
 
 :NtrKernelExec
 intr SYSTEM_KERNEL_EXEC
-ret
+iret

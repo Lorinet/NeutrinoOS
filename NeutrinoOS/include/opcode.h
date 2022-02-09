@@ -15,6 +15,8 @@ enum opcode
 	SHL = 0x14,
 	SHR = 0x15,
 	NOT = 0x16,
+	PWR = 0x17,
+	MOD = 0x18,
 	TOSTR = 0x21,
 	CLR = 0x22,
 	PARSEINT = 0x25,
@@ -47,6 +49,7 @@ enum opcode
 	BR = 0x6B,
 	JMP = 0x6C,
 	BRP = 0x6D,
+	IRET = 0x6E,
 	LDLEN = 0x76,  // array length
 	STELEM = 0x77, // array set index
 	PUSHLX = 0x78,

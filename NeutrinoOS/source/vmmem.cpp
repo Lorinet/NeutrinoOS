@@ -1,5 +1,6 @@
 #include "vmmem.h"
 #include "bitconverter.h"
+#include <cmath>
 
 vmobject::vmobject()
 {
@@ -223,6 +224,10 @@ vmobject vmobject::binaryop(vmobject* a, vmobject* b, byte op)
 			return vmobject(a->getValue() << b->getValue());
 		case 8: // shr
 			return vmobject(a->getValue() >> b->getValue());
+		case 9: // pow
+			return vmobject(pow(a->getValue(), b->getValue()));
+		case 10: // mod
+			return vmobject(a->getValue() % b->getValue());
 		}
 	}
 	else if (a->type == DefaultType::String)

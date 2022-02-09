@@ -130,10 +130,11 @@ void nvm::cycle()
 		case opcode::NOP:
 			break;
 		case opcode::DELFLD:
-			k = astack.getTop();
+			k1 = STACKTOP()->getValue(); // index
 			astack.pop();
-			memory.get(k)->remove(astack.getTop());
+			k2 = astack.getTop(); // object
 			astack.pop();
+			memory.get(k2)->remove(k1);
 			break;
 		case opcode::LDLOC:
 			astack.push(locals->get(PARAMI(0)));
@@ -270,6 +271,76 @@ void nvm::cycle()
 			astack.pop();
 			PUSHNEW(vmobject::binaryop(memory.get(k2), memory.get(k1), 0));
 			break;
+		case opcode::SUB:
+			k1 = astack.getTop();
+			astack.pop();
+			k2 = astack.getTop();
+			astack.pop();
+			PUSHNEW(vmobject::binaryop(memory.get(k2), memory.get(k1), 1));
+			break;
+		case opcode::MUL:
+			k1 = astack.getTop();
+			astack.pop();
+			k2 = astack.getTop();
+			astack.pop();
+			PUSHNEW(vmobject::binaryop(memory.get(k2), memory.get(k1), 2));
+			break;
+		case opcode::DIV:
+			k1 = astack.getTop();
+			astack.pop();
+			k2 = astack.getTop();
+			astack.pop();
+			PUSHNEW(vmobject::binaryop(memory.get(k2), memory.get(k1), 3));
+			break;
+		case opcode::AND:
+			k1 = astack.getTop();
+			astack.pop();
+			k2 = astack.getTop();
+			astack.pop();
+			PUSHNEW(vmobject::binaryop(memory.get(k2), memory.get(k1), 4));
+			break;
+		case opcode::OR:
+			k1 = astack.getTop();
+			astack.pop();
+			k2 = astack.getTop();
+			astack.pop();
+			PUSHNEW(vmobject::binaryop(memory.get(k2), memory.get(k1), 5));
+			break;
+		case opcode::XOR:
+			k1 = astack.getTop();
+			astack.pop();
+			k2 = astack.getTop();
+			astack.pop();
+			PUSHNEW(vmobject::binaryop(memory.get(k2), memory.get(k1), 6));
+			break;
+		case opcode::SHL:
+			k1 = astack.getTop();
+			astack.pop();
+			k2 = astack.getTop();
+			astack.pop();
+			PUSHNEW(vmobject::binaryop(memory.get(k2), memory.get(k1), 7));
+			break;
+		case opcode::SHR:
+			k1 = astack.getTop();
+			astack.pop();
+			k2 = astack.getTop();
+			astack.pop();
+			PUSHNEW(vmobject::binaryop(memory.get(k2), memory.get(k1), 8));
+			break;
+		case opcode::PWR:
+			k1 = astack.getTop();
+			astack.pop();
+			k2 = astack.getTop();
+			astack.pop();
+			PUSHNEW(vmobject::binaryop(memory.get(k2), memory.get(k1), 9));
+			break;
+		case opcode::MOD:
+			k1 = astack.getTop();
+			astack.pop();
+			k2 = astack.getTop();
+			astack.pop();
+			PUSHNEW(vmobject::binaryop(memory.get(k2), memory.get(k1), 10));
+			break;
 		case opcode::CMP:
 			cv1 = STACKTOP()->getValue();
 			astack.pop();
@@ -281,6 +352,9 @@ void nvm::cycle()
 			break;
 		case opcode::RET:
 			ret();
+			break;
+		case opcode::IRET:
+			iret();
 			break;
 		case opcode::EMIT:
 			k = PARAMI(0);
@@ -440,6 +514,13 @@ void nvm::branch(int addr)
 	callstack.push(pc);
 	pc = addr;
 	flagstack.push({ false, false, false });
+}
+
+void nvm::iret()
+{
+	pc = callstack.getTop();
+	callstack.pop();
+	flagstack.pop();
 }
 
 void nvm::ret()
