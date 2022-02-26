@@ -1,6 +1,4 @@
 #exlink print
-#exlink str
-#exlink int
 
 :main
 link neutrino.lnx
@@ -8,13 +6,5 @@ ret
 
 :print
 pushlx NtrConsolePrint
-leap
-iret
-
-:str
-tostr
-iret
-
-:int
-parseint
-iret
+bre
+ret

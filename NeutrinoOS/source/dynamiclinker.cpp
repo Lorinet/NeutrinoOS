@@ -83,7 +83,7 @@ bool dynamiclinker::link(Array<instruction>* v, map<string, int>* off, map<int, 
 				replaceModulesByName(dasm);
 				for (int j = 0; j < dasm->size; j++)
 				{
-					if ((*dasm)[j].opCode == opcode::PUSHL || (*dasm)[j].opCode == opcode::BRP)
+					if ((*dasm)[j].opCode == opcode::PUSHL || (*dasm)[j].opCode == opcode::BR || (*dasm)[j].opCode == opcode::JMP)
 					{
 						int a = bitconverter::toint32((*dasm)[j].parameters, 0);
 						a += v->size;

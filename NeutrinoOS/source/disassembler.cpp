@@ -52,7 +52,7 @@ Array<instruction>* disassembler::disassembleCode(byte* bc, int size)
 			length = bc[cntr];
 			cntr += 1;
 		}
-		else if (op == opcode::PUSHL || op == opcode::BRP || op == opcode::LDI || op == opcode::LDLOC || op == opcode::STLOC || op == opcode::SWSCOP || op == opcode::EMIT || op == opcode::LDGL || op == opcode::STGL || op == opcode::TOP)
+		else if (op == opcode::PUSHL || op == opcode::BR || op == opcode::JMP || op == opcode::LDI || op == opcode::LDLOC || op == opcode::STLOC || op == opcode::SWSCOP || op == opcode::EMIT || op == opcode::LDGL || op == opcode::STGL || op == opcode::TOP)
 		{
 			length = 4;
 		}

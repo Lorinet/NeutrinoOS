@@ -61,7 +61,9 @@ nvm::~nvm()
 
 void nvm::initialize()
 {
-    memory = ObjectMap();
+    //memory = ObjectMap();
+	flagstack = Array<cflags>();
+	flagstack.push({ false, false, false });
 	fileName = "??";
 	eventHandlers = map<byte, int>();
 	eventQueue = Array<ntrevent>();
@@ -90,7 +92,6 @@ void nvm::initialize()
 	localScopes.get(0).add(vmobject());
 	localScopes.get(0).get(0).refcount = 1;
 	currentScopes = Array<Array<int>>();
-	flagstack.push({ false, false, false });
 	curPage = 0;
 }
 
@@ -371,16 +372,15 @@ void nvm::cycle()
 			leap(STACKTOP()->getValue());
 			astack.pop();
 			break;
+		case opcode::JMP:
+			pc = PARAMI(0);
+			break;
 		case opcode::BR:
+			branch(PARAMI(0));
+			break;
+		case opcode::BRE:
 			branch(STACKTOP()->getValue());
 			astack.pop();
-			break;
-		case opcode::JMP:
-			pc = STACKTOP()->getValue();
-			astack.pop();
-			break;
-		case opcode::BRP:
-			branch(PARAMI(0));
 			break;
 		case opcode::IFEQ:
 			if (!flagstack.getTop().equal) pc += 1;
