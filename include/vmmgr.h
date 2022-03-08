@@ -25,12 +25,13 @@ public:
 	static bool dozing;
 	static int minCpuFreq;
 	static int maxCpuFreq;
-	static Array<scheduler*> schedulers;
+	static scheduler schedulers[MAX_THREADS_ALLOWED];
 	static IntMap<nvm*> processes;
 	static mutex kernelMutex;
 	static thread kernelLoopThread;
 	static unique_lock<mutex> kernelLock;
 	static void start();
+	static void shutdown();
 	static int createProcess(string file, bool start = true);
 	static int createProcessEx(string file, vt in, vt out);
 	static nvm* getProcess(int pid);

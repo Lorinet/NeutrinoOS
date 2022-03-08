@@ -8,7 +8,7 @@
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/NeutrinoOS/NeutrinoOS",
+            "program": "${workspaceFolder}/build/NeutrinoOS",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",

@@ -23,13 +23,15 @@ class nvm
 {
 public:
 	int lnkndx;
-	Array<instruction>* bytecode;
+	int scopecounter;
+	Array<instruction> bytecode;
 	ObjectMap memory;
 	Array<vmobject> globalPages;
 	vmobject* globals;
 	vmobject* locals;
 	Array<Array<vmobject>> localScopes;
 	Array<Array<int>> currentScopes;
+	Array<map<int, int>> addrScopes;
 	int curPage = 0;
 	map<int, arrayobj> arrays;
 	map<int, pair<int, int>> pages;
@@ -51,23 +53,20 @@ public:
 	int processid;
 	int inhandler;
 	byte processPriority;
-	uint16_t curThrd;
-	uint32_t pc;
+	int pc;
 	bool running;
 	bool awaitin;
 	int waitForProcInput;
-	int k, k1, k2, cv1, cv2, addr, cmpi, cmpid, ii, sn;
+	int k, k1, k2;
 	unsigned int n;
-	Array<byte> v, v1, bl, t, pu, po, arr1, arr2;
+	Array<byte> v;
 	string rep, lnkf;
 	Array<instruction> emc;
 	byte inter;
-	char c;
-	instruction i;
 	byte* bp;
 	long long millis;
 	nvm();
-	nvm(Array<instruction>* code);
+	nvm(Array<instruction> code);
 	~nvm();
 	void initialize();
 	void start();

@@ -1,5 +1,6 @@
 #pragma once
 #include <thread>
+#include <mutex>
 #include "containers.h"
 #define PRIORITY_MIN 1
 #define PRIORITY_LOW 8
@@ -16,6 +17,7 @@ public:
 	events* eventSystem;
 	bool running;
 	thread run;
+	mutex schedulerMutex;
 	scheduler();
 	scheduler(scheduler& other);
 	~scheduler();

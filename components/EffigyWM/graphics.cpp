@@ -124,8 +124,10 @@ void Graphics::LoadImageE(string path, string id)
 	SDL_Surface* ts = IMG_Load(path.c_str());
 	Texture tex;
 	tex.texture = ts;
-	tex.width = ts->w;
-	tex.height = ts->h;
+	//tex.width = ts->w;
+	//tex.height = ts->h;
+	tex.width = 10;
+	tex.height = 10;
 	textures.insert({ id, tex });
 }
 void Graphics::LoadFont(string path, string id, int size)

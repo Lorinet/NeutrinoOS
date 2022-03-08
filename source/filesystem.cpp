@@ -1,7 +1,6 @@
 #include "filesystem.h"
 Array<byte> file::readAllBytes(string path)
 {
-	unsigned char* fcontent = NULL;
 	size_t fsize = 0;
 	FILE* f = fopen(path.c_str(), "rb");
 	if (f == NULL)
@@ -11,14 +10,15 @@ Array<byte> file::readAllBytes(string path)
 	fseek(f, 0, SEEK_END);
 	fsize = ftell(f);
 	fseek(f, 0, SEEK_SET);
-	fcontent = (unsigned char*)malloc(fsize);
+	unsigned char* fcontent = new unsigned char[fsize];
 	fread(fcontent, 1, fsize, f);
 	fclose(f);
-	return Array<byte>(fcontent, fsize);
+	Array<byte> ab = Array<byte>(fcontent, fsize);
+	delete[] fcontent;
+	return ab;
 }
 byte* file::readAllBytes(string path, int* size)
 {
-	unsigned char* fcontent = NULL;
 	size_t fsize = 0;
 	FILE* f = fopen(path.c_str(), "rb");
 	if (f == NULL)
@@ -28,7 +28,7 @@ byte* file::readAllBytes(string path, int* size)
 	fseek(f, 0, SEEK_END);
 	fsize = ftell(f);
 	fseek(f, 0, SEEK_SET);
-	fcontent = (unsigned char*)malloc(fsize);
+	unsigned char* fcontent = new unsigned char[fsize];
 	fread(fcontent, 1, fsize, f);
 	fclose(f);
 	*size = fsize;

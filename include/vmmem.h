@@ -15,15 +15,16 @@ enum DefaultType
 class vmobject
 {
 public:
-	int* holder;
-	int* keys;
+	int* holder = NULL;
+	int* keys = NULL;
 	int count;
 	int hsize;
 	DefaultType type;
-	byte* boundValue;
+	byte* boundValue = NULL;
 	int bsize;
 	int refcount;
-	vmobject();
+	bool valid = false;
+	vmobject(); 
 	vmobject(string val);
 	vmobject(int val);
 	vmobject(Array<byte> val);
@@ -31,6 +32,8 @@ public:
 	vmobject(const vmobject& other);
 	~vmobject();
 	vmobject& operator=(const vmobject& other);
+	void reset();
+	void eviscerate();
 	void add(int key, int value);
 	void remove(int key);
 	int get(int key);
@@ -41,30 +44,29 @@ public:
 	void setValue(string v);
 	void setValue(Array<byte> v);
 	int getValue();
-	static vmobject binaryop(vmobject* a, vmobject* b, byte op);
+	static vmobject binaryop(vmobject& a, vmobject& b, byte op);
 };
 
 class ObjectMap
 {
 public:
-	  int* keys;
-	  vmobject** holder;
+	  int* keys = NULL;
+	  vmobject** holder = NULL;
 	  int size;
 	  int hsize;
 	  ObjectMap();
 	  ~ObjectMap();
 	  void add(int key, vmobject value);
 	  void remove(int key);
-	  vmobject* get(int key);
-	  vmobject* operator[](int key);
+	  vmobject& get(int key);
+	  vmobject& operator[](int key);
 	  void set(int key, vmobject value);
 	  int find(int key);
 };
 class BufferedStack
 {
 public:
-	  int* holder;
-	  bool alive = false;
+	  int* holder = NULL;
 	  int top;
 	  int size;
 	  BufferedStack();

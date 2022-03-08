@@ -17,14 +17,14 @@
 #define PUSHNEW(o) astack.push(newobj(o))
 #define PUSHVAL(v) astack.push(newobj(vmobject(v)))
 #define STACKTOP() memory.get(astack.getTop())
-#define DECREF(o) { memory.get(o)->refcount -= 1; if(memory.get(o)->refcount <= 0) memory.remove(o); }
+#define DECREF(o) { memory.get(o).refcount -= 1; if(memory.get(o).refcount <= 0) memory.remove(o); }
 
 nvm::nvm()
 {
 	initialize();
 }
 
-nvm::nvm(Array<instruction>* code)
+nvm::nvm(Array<instruction> code)
 {
 	initialize();
 	bytecode = code;
@@ -32,9 +32,7 @@ nvm::nvm(Array<instruction>* code)
 
 nvm::~nvm()
 {
-	for(int i = 0; i < bytecode->size; i++) delete[] (*bytecode)[i].parameters;
-	bytecode->clear();
-	delete bytecode;
+	bytecode.clear();
 	globalPages.clear();
 	localScopes.clear();
 	arrays.clear();
@@ -47,13 +45,6 @@ nvm::~nvm()
 	delete interm;
 	delete outterm;
 	v.clear();
-	v1.clear();
-	bl.clear();
-	t.clear();
-	pu.clear();
-	po.clear();
-	arr1.clear();
-	arr2.clear();
 	emc.clear();
 	eventQueue.clear();
 	timerQueue.clear();
@@ -93,17 +84,20 @@ void nvm::initialize()
 	localScopes.get(0).get(0).refcount = 1;
 	currentScopes = Array<Array<int>>();
 	curPage = 0;
+	scopecounter = 0;
+	addrScopes = Array<map<int, int>>();
 }
 
 void nvm::start()
 {
+	running = true;
 	dynamiclinker::dynamicLink(this);
 	globals = &(globalPages.get(0));
 	locals = &(localScopes.get(0).get(0));
-	running = true;
 	suspended = false;
 	eventsenabled = true;
 	millis = ntime::getMillis();
+	leap(0);
 }
 void nvm::start(int procid, string file)
 {
@@ -114,129 +108,124 @@ void nvm::start(int procid, string file)
 void nvm::cycle()
 {
 	for(int pr = 0; pr < processPriority; pr++)
-	if (running && !awaitmsg && !awaitin && waitForProcInput == -1)
+	if (running && !suspended && !awaitmsg && !awaitin && waitForProcInput == -1)
 	{
-		if (pc >= bytecode->size)
-		{
-			running = false;
-			return;
-		}
-		i = bytecode->get(pc);
+		instruction& i = bytecode.get(pc);
 		pc += 1;
 		int ival;
 		vmobject* vo;
 		int vadr;
 		switch (i.opCode)
 		{
-		case opcode::NOP:
+		case opcode::OP_NOP:
 			break;
-		case opcode::DELFLD:
-			k1 = STACKTOP()->getValue(); // index
+		case opcode::OP_DELFLD:
+			k1 = STACKTOP().getValue(); // index
 			astack.pop();
 			k2 = astack.getTop(); // object
 			astack.pop();
-			memory.get(k2)->remove(k1);
+			memory.get(k2).remove(k1);
 			break;
-		case opcode::LDLOC:
+		case opcode::OP_LDLOC:
 			astack.push(locals->get(PARAMI(0)));
 			break;
-		case opcode::STLOC:
+		case opcode::OP_STLOC:
 			k = astack.getTop();
 			astack.pop();
 			k1 = PARAMI(0);
-			memory.get(k)->refcount += 1;
+			memory.get(k).refcount += 1;
 			if(locals->find(k1)) DECREF(locals->get(k1));
 			locals->set(k1, k);
 			break;
-		case opcode::SWSCOP:
-			currentScopes[curPage].push(PARAMI(0));
+		case opcode::OP_SWSCOP:
+			/*currentScopes[curPage].push(PARAMI(0));
 			locals = &(localScopes.get(curPage).getSafe(currentScopes[curPage].getTop()));
-			locals->refcount = 1;
+			locals->refcount = 1;*/
 			break;
-		case opcode::NOT:
+		case opcode::OP_NOT:
 			k = PARAMI(0);
-			memory.get(k)->setValue(~(memory.get(k)->getValue()));
+			memory.get(k).setValue(~(memory.get(k).getValue()));
 			break;
-		case opcode::TOSTR:
+		case opcode::OP_TOSTR:
 			k = astack.getTop();
 			astack.pop();
-			PUSHVAL(to_string(memory.get(k)->getValue()));
+			PUSHVAL(to_string(memory.get(k).getValue()));
 			break;
-		case opcode::PARSEINT:
+		case opcode::OP_PARSEINT:
 			k = astack.getTop();
 			astack.pop();
-			PUSHVAL(stoi(STRING(memory.get(k)->getValue())));
+			PUSHVAL(stoi(STRING(memory.get(k).getValue())));
 			astack.pop();
 			break;
-		case opcode::CLR:
+		case opcode::OP_CLR:
 			if (memory.find(astack.getTop()))
 			{
 				memory.remove(astack.getTop());
 				astack.pop();
 			}
 			break;
-		case opcode::INDEX:
-			k = STACKTOP()->getValue();  // index
+		case opcode::OP_INDEX:
+			k = STACKTOP().getValue();  // index
 			astack.pop();
-			bp = STACKTOP()->boundValue; // source
+			bp = STACKTOP().boundValue; // source
 			astack.pop();
-			PUSHVAL((int)v1[k]);
+			PUSHVAL((int)bp[k]);
 			break;
-		case opcode::NEWOBJ:
+		case opcode::OP_NEWOBJ:
 			astack.push(newobj(vmobject()));
 			break;
-		case opcode::VAC:
-			ii = 0;
-			while (arrays.find(ii) != arrays.end())
+		case opcode::OP_VAC:
+			k = 0;
+			while (arrays.find(k) != arrays.end())
 			{
-				ii++;
+				k++;
 			}
-			arrays.emplace(ii, arrayobj());
-			astack.push(newobj(vmobject(ii, DefaultType::ArrayPointer)));
+			arrays.emplace(k, arrayobj());
+			astack.push(newobj(vmobject(k, DefaultType::ArrayPointer)));
 			break;
-		case opcode::VAD:
+		case opcode::OP_VAD:
 			k1 = astack.getTop();
 			astack.pop();
 			arrays[k1].data.push(astack.getTop());
 			astack.pop();
 			break;
-		case opcode::DELELEM:
-			k1 = STACKTOP()->getValue(); // index
+		case opcode::OP_DELELEM:
+			k1 = STACKTOP().getValue(); // index
 			astack.pop();
 			k2 = astack.getTop(); // array
 			astack.pop();
 			arrays[k2].data.removeAt(k1);
 			break;
-		case opcode::LDELEM:
-			k1 = STACKTOP()->getValue(); // index
+		case opcode::OP_LDELEM:
+			k1 = STACKTOP().getValue(); // index
 			astack.pop();
-			k2 = STACKTOP()->getValue(); // array
+			k2 = STACKTOP().getValue(); // array
 			astack.pop();
 			astack.push(newobj(vmobject(arrays[k2].data[k1])));
 			break;
-		case opcode::VADE:
-			k = STACKTOP()->getValue();
+		case opcode::OP_VADE:
+			k = STACKTOP().getValue();
 			astack.pop();
 			arrays.erase(k);
 			break;
-		case opcode::LDFLD:
-			k1 = STACKTOP()->getValue(); // index
+		case opcode::OP_LDFLD:
+			k1 = STACKTOP().getValue(); // index
 			astack.pop();
 			k2 = astack.getTop(); // object
 			astack.pop();
-			astack.push(memory.get(k2)->get(k1));
+			astack.push(memory.get(k2).get(k1));
 			break;
-		case opcode::STFLD:
-			k1 = STACKTOP()->getValue(); // index
+		case opcode::OP_STFLD:
+			k1 = STACKTOP().getValue(); // index
 			astack.pop();
 			k2 = astack.getTop(); // object
 			astack.pop();
-			if(memory.get(k2)->find(k1)) DECREF(memory.get(k2)->get(k1));
-			memory.get(k2)->set(k1, astack.getTop());
-			memory.get(astack.getTop())->refcount += 1;
+			if(memory.get(k2).find(k1)) DECREF(memory.get(k2).get(k1));
+			memory.get(k2).set(k1, astack.getTop());
+			memory.get(astack.getTop()).refcount += 1;
 			astack.pop();
 			break;
-		case opcode::SWAP:
+		case opcode::OP_SWAP:
 			k = astack.getTop();
 			astack.pop();
 			k1 = astack.getTop();
@@ -244,213 +233,217 @@ void nvm::cycle()
 			astack.push(k);
 			astack.push(k1);
 			break;
-		case opcode::LDLEN:
+		case opcode::OP_LDLEN:
 			k = astack.getTop();
 			astack.pop();
-			k1 = memory.get(k)->type;
+			k1 = memory.get(k).type;
 			if (k1 == DefaultType::Int) PUSHVAL(4);
-			else if (k1 == DefaultType::String) PUSHVAL(memory.get(k)->bsize);
-			else if (k1 == DefaultType::ArrayPointer) PUSHVAL(arrays[memory.get(k)->getValue()].data.size);
+			else if (k1 == DefaultType::String) PUSHVAL(memory.get(k).bsize);
+			else if (k1 == DefaultType::ArrayPointer) PUSHVAL(arrays[memory.get(k).getValue()].data.size);
 			astack.pop();
 			PUSHVAL(arrays[k].data.size);
 			break;
-		case opcode::STELEM:
-			k1 = STACKTOP()->getValue(); // index
+		case opcode::OP_STELEM:
+			k1 = STACKTOP().getValue(); // index
 			astack.pop();
-			k2 = STACKTOP()->getValue(); // array
+			k2 = STACKTOP().getValue(); // array
 			astack.pop();
 			arrays[k2].data[k1] = astack.getTop();
 			astack.pop();
 			break;
-		case opcode::PUSHL:
+		case opcode::OP_PUSHL:
 			PUSHVAL(PARAMI(0));
 			break;
-		case opcode::CAST:
-			STACKTOP()->type = (DefaultType)i.parameters[0];
+		case opcode::OP_CAST:
+			STACKTOP().type = (DefaultType)i.parameters[0];
 			break;
-		case opcode::ADD:
+		case opcode::OP_ADD:
 			k1 = astack.getTop();
 			astack.pop();
 			k2 = astack.getTop();
 			astack.pop();
 			PUSHNEW(vmobject::binaryop(memory.get(k2), memory.get(k1), 0));
 			break;
-		case opcode::SUB:
+		case opcode::OP_SUB:
 			k1 = astack.getTop();
 			astack.pop();
 			k2 = astack.getTop();
 			astack.pop();
 			PUSHNEW(vmobject::binaryop(memory.get(k2), memory.get(k1), 1));
 			break;
-		case opcode::MUL:
+		case opcode::OP_MUL:
 			k1 = astack.getTop();
 			astack.pop();
 			k2 = astack.getTop();
 			astack.pop();
 			PUSHNEW(vmobject::binaryop(memory.get(k2), memory.get(k1), 2));
 			break;
-		case opcode::DIV:
+		case opcode::OP_DIV:
 			k1 = astack.getTop();
 			astack.pop();
 			k2 = astack.getTop();
 			astack.pop();
 			PUSHNEW(vmobject::binaryop(memory.get(k2), memory.get(k1), 3));
 			break;
-		case opcode::AND:
+		case opcode::OP_AND:
 			k1 = astack.getTop();
 			astack.pop();
 			k2 = astack.getTop();
 			astack.pop();
 			PUSHNEW(vmobject::binaryop(memory.get(k2), memory.get(k1), 4));
 			break;
-		case opcode::OR:
+		case opcode::OP_OR:
 			k1 = astack.getTop();
 			astack.pop();
 			k2 = astack.getTop();
 			astack.pop();
 			PUSHNEW(vmobject::binaryop(memory.get(k2), memory.get(k1), 5));
 			break;
-		case opcode::XOR:
+		case opcode::OP_XOR:
 			k1 = astack.getTop();
 			astack.pop();
 			k2 = astack.getTop();
 			astack.pop();
 			PUSHNEW(vmobject::binaryop(memory.get(k2), memory.get(k1), 6));
 			break;
-		case opcode::SHL:
+		case opcode::OP_SHL:
 			k1 = astack.getTop();
 			astack.pop();
 			k2 = astack.getTop();
 			astack.pop();
 			PUSHNEW(vmobject::binaryop(memory.get(k2), memory.get(k1), 7));
 			break;
-		case opcode::SHR:
+		case opcode::OP_SHR:
 			k1 = astack.getTop();
 			astack.pop();
 			k2 = astack.getTop();
 			astack.pop();
 			PUSHNEW(vmobject::binaryop(memory.get(k2), memory.get(k1), 8));
 			break;
-		case opcode::PWR:
+		case opcode::OP_PWR:
 			k1 = astack.getTop();
 			astack.pop();
 			k2 = astack.getTop();
 			astack.pop();
 			PUSHNEW(vmobject::binaryop(memory.get(k2), memory.get(k1), 9));
 			break;
-		case opcode::MOD:
+		case opcode::OP_MOD:
 			k1 = astack.getTop();
 			astack.pop();
 			k2 = astack.getTop();
 			astack.pop();
 			PUSHNEW(vmobject::binaryop(memory.get(k2), memory.get(k1), 10));
 			break;
-		case opcode::CMP:
-			cv1 = STACKTOP()->getValue();
+		case opcode::OP_CMP:
+			k1 = STACKTOP().getValue();
 			astack.pop();
-			cv2 = STACKTOP()->getValue();
+			k2 = STACKTOP().getValue();
 			astack.pop();
 			//                      less       greater    equal
 			//                  TOS-1 < TOS TOS-1 > TOS  TOS-1 == TOS
-			flagstack.getTop() = { cv1 > cv2, cv1 < cv2, cv1 == cv2 };
+			flagstack.getTop() = { k1 > k2,   k1 < k2,    k1 == k2 };
 			break;
-		case opcode::RET:
+		case opcode::OP_RET:
 			ret();
 			break;
-		case opcode::IRET:
+		case opcode::OP_IRET:
 			iret();
 			break;
-		case opcode::EMIT:
+		case opcode::OP_EMIT:
 			k = PARAMI(0);
 			v = globals->get(k);
-			emc = *disassembler::disassembleCode(v.holder, v.size);
-			addr = bytecode->size;
-			for (n = 0; n < emc.size; n++) bytecode->push(emc[n]);
-			branch(addr);
+			emc = disassembler::disassembleCode(v.holder, v.size);
+			k1 = bytecode.size;
+			for (n = 0; n < emc.size; n++) bytecode.push(emc[n]);
+			branch(k1);
 			break;
-		case opcode::DUP:
+		case opcode::OP_DUP:
 			astack.push(astack.getTop());
 			break;
-		case opcode::LEAP:
-			leap(STACKTOP()->getValue());
+		case opcode::OP_LEAP:
+			leap(STACKTOP().getValue());
 			astack.pop();
 			break;
-		case opcode::JMP:
+		case opcode::OP_JMP:
 			pc = PARAMI(0);
 			break;
-		case opcode::BR:
+		case opcode::OP_BR:
 			branch(PARAMI(0));
 			break;
-		case opcode::BRE:
-			branch(STACKTOP()->getValue());
+		case opcode::OP_BRE:
+			branch(STACKTOP().getValue());
 			astack.pop();
 			break;
-		case opcode::IFEQ:
+		case opcode::OP_IFEQ:
 			if (!flagstack.getTop().equal) pc += 1;
 			break;
-		case opcode::IFNE:
+		case opcode::OP_IFNE:
 			if (flagstack.getTop().equal) pc += 1;
 			break;
-		case opcode::IFLE:
+		case opcode::OP_IFLE:
 			if (!flagstack.getTop().equal && flagstack.getTop().greater) pc += 1;
 			break;
-		case opcode::IFGE:
+		case opcode::OP_IFGE:
 			if (!flagstack.getTop().equal && flagstack.getTop().less) pc += 1;
 			break;
-		case opcode::IFLT:
+		case opcode::OP_IFLT:
 			if (flagstack.getTop().greater || flagstack.getTop().equal) pc += 1;
 			break;
-		case opcode::IFGT:
+		case opcode::OP_IFGT:
 			if (flagstack.getTop().less || flagstack.getTop().equal) pc += 1;
 			break;
-		case opcode::BREAK:
+		case opcode::OP_BREAK:
 			// TODO: inform debugger?
 			klog("NVM", "Breakpoint");
 			break;
-		case opcode::GC:
+		case opcode::OP_GC:
 			//if(astack.top > -1) memory.get(astack.getTop())->refcount++;
 			trash();
 			break;
-		case opcode::INTR:
+		case opcode::OP_INTR:
 			inter = i.parameters[0];
-			v = Array<byte>(STACKTOP()->boundValue, STACKTOP()->bsize);
+			v = Array<byte>(STACKTOP().boundValue, STACKTOP().bsize);
 			astack.pop();
 			v.insert(0, inter);
 			bp = bitconverter::toarray_p(v);
-			vmmgr::enterCriticalSection();
+			//vmmgr::enterCriticalSection();
 			v = syscall::systemCall(bp, v.size, this);
-			vmmgr::leaveCriticalSection();
+			//vmmgr::leaveCriticalSection();
 			if (v.size != 0) astack.push(newobj(vmobject(v)));
 			delete[] bp;
 			break;
-		case opcode::LDGL:
+		case opcode::OP_LDGL:
 			astack.push(globals->get(PARAMI(0)));
 			break;
-		case opcode::STGL:
+		case opcode::OP_STGL:
 			k = astack.getTop();
 			astack.pop();
 			k1 = PARAMI(0);
-			memory.get(k)->refcount += 1;
+			memory.get(k).refcount += 1;
 			if(globals->find(k1)) DECREF(globals->get(k1));
 			globals->set(k1, k);
 			break;
-		case opcode::LDSTR:
+		case opcode::OP_LDSTR:
 			PUSHVAL(vmobject(Array<byte>(i.parameters, i.psize)));
 			// memory.get(astack.getTop())->type = DefaultType::String;
 			// not needed because it is String by default.
 			break;
-		case opcode::LDI:
+		case opcode::OP_LDI:
 			PUSHVAL(PARAMI(0));
-			memory.get(astack.getTop())->type = DefaultType::Int;
+			memory.get(astack.getTop()).type = DefaultType::Int;
 			break;
-		case opcode::LDB:
+		case opcode::OP_LDIB:
+			PUSHVAL((int)i.parameters[0]);
+			memory.get(astack.getTop()).type = DefaultType::Int;
+			break;
+		case opcode::OP_LDB:
 			PUSHVAL(Array<byte>(i.parameters, 1));
-			memory.get(astack.getTop())->type = DefaultType::Byte;
+			memory.get(astack.getTop()).type = DefaultType::Byte;
 			break;
-	    case opcode::TOP:
+	    case opcode::OP_TOP:
 	        astack.moveTop(PARAMI(0));
 			break;
-		case opcode::SPOP:
+		case opcode::OP_SPOP:
 			astack.pop();
 			break;
 		default:
@@ -481,7 +474,7 @@ void nvm::cycle()
 
 int nvm::newobj(vmobject o)
 {
-	ii = 0;
+	int ii = 0;
 	while (memory.find(ii))
 	{
 		ii++;
@@ -528,7 +521,7 @@ void nvm::iret()
 
 void nvm::ret()
 {
-	if (callstack.size == 0)
+	if (callstack.size == 1)
 	{
 		halt();
 	}
@@ -544,7 +537,7 @@ void nvm::ret()
 			{
 				curPage = p.first;
 				globals = &(globalPages.get(curPage));
-				locals = &(localScopes.get(curPage)[currentScopes.get(curPage).getTop()]);
+				locals = &(localScopes.get(curPage).get(currentScopes.get(curPage).getTop()));
 			}
 		}
 		if (pc == inhandler)
@@ -566,6 +559,17 @@ void nvm::leap(int addr)
 		{
 			curPage = p.first;
 			globals = &(globalPages.get(curPage));
+			int scp = -1;
+			if(addrScopes[curPage].find(addr) != addrScopes[curPage].end()) scp = addrScopes[curPage][addr];
+			else
+			{
+				scp = scopecounter;
+				addrScopes[curPage].emplace(addr, scp);
+				scopecounter++;
+			}
+			currentScopes[curPage].push(scp);
+			locals = &(localScopes.get(curPage).getSafe(currentScopes[curPage].getTop()));
+			locals->refcount = 1;
 			return;
 		}
 	}
@@ -597,10 +601,10 @@ void nvm::trash()
 	{
 		if(locals->keys[i] != -1)
 		{
-			rc = memory.get(locals->get(i))->refcount;
-			if(memory.get(locals->get(i))->refcount <= 1)
+			rc = memory.get(locals->get(i)).refcount;
+			if(memory.get(locals->get(i)).refcount <= 1)
 			{
-				if(locals->get(i) == ign) memory.get(ign)->refcount = 0;
+				if(locals->get(i) == ign) memory.get(ign).refcount = 0;
 				else memory.remove(locals->get(i));
 			}
 			locals->remove(i);

@@ -7,9 +7,13 @@ class instruction
 {
 public:
 	opcode opCode;
-	byte* parameters;
+	byte* parameters = NULL;
 	int psize;
 	instruction();
 	instruction(opcode op, byte* params, int size);
+	instruction(const instruction& other);
+	instruction(instruction&& other);
+	instruction& operator=(const instruction& other);
+	instruction& operator=(instruction&& other);
 	~instruction();
 };

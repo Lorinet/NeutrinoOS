@@ -21,12 +21,14 @@ static void NeutrinoStartup()
 	//{
 		//string init = lvmgr::formatPath(config::getValue("neutrino\\InitExecutable"));
 		string init = lvmgr::formatPath("0:\\Neutrino\\bin\\test.lex");
-		//string init1 = lvmgr::formatPath("0:\\Neutrino\\bin\\out.lex");
+		string init1 = lvmgr::formatPath("0:\\Neutrino\\bin\\quitter.lex");
 		if (file::fileExists(init))
 		{
 			vmmgr::start();
-			//for(int i = 0; i < 10; i++) vmmgr::createProcess(init1);
+			//for(int i = 0; i < 5; i++)
 			vmmgr::createProcess(init);
+			//vmmgr::createProcess(init1);
+			//vmmgr::createProcess(init);
 			//vmmgr::schedulers[0]->processes[0]->processPriority = PRIORITY_HIGH;
 			//vmmgr::kernelLoop();
 			klog("Init", "System startup finished.");

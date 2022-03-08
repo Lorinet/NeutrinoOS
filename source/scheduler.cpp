@@ -29,7 +29,7 @@ scheduler& scheduler::operator=(scheduler& other)
 
 scheduler::~scheduler()
 {
-	
+	delete eventSystem;
 }
 
 void scheduler::start()
@@ -51,6 +51,7 @@ void scheduler::runScheduler()
 	running = true;
 	while (running)
 	{
+		lock_guard<mutex> lock(schedulerMutex);
 		pi = 0;
 		while (pi < processes.size)
 		{
@@ -61,6 +62,7 @@ void scheduler::runScheduler()
 				if (!ehu->running)
 				{
 					removeProcessEx(pi);
+					vmmgr::shutdown();
 					pi--;
 					continue;
 				}
@@ -83,6 +85,7 @@ void scheduler::runScheduler()
 
 bool scheduler::checkAvailablePID(int pid)
 {
+	lock_guard<mutex> lock(schedulerMutex);
 	for (int i = 0; i < processes.size; i++)
 	{
 		if (processes[i]->processid == pid) return false;
@@ -92,6 +95,7 @@ bool scheduler::checkAvailablePID(int pid)
 
 void scheduler::addProcess(nvm* process)
 {
+	lock_guard<mutex> lock(schedulerMutex);
 	if (running)
 	{
 		suspend();
@@ -103,6 +107,7 @@ void scheduler::addProcess(nvm* process)
 
 nvm* scheduler::getProcess(int pid)
 {
+	lock_guard<mutex> lock(schedulerMutex);
 	for (int i = 0; i < processes.size; i++)
 	{
 		if (processes[i]->processid == pid) return processes[i];
@@ -112,6 +117,7 @@ nvm* scheduler::getProcess(int pid)
 
 void scheduler::removeProcess(int pid)
 {
+	lock_guard<mutex> lock(schedulerMutex);
 	for (int i = 0; i < processes.size; i++)
 	{
 		if (processes[i]->processid == pid)
@@ -124,6 +130,7 @@ void scheduler::removeProcess(int pid)
 
 void scheduler::sendMessage(int pid, Array<byte> msg)
 {
+	lock_guard<mutex> lock(schedulerMutex);
 	if (running)
 	{
 		suspend();
@@ -135,6 +142,7 @@ void scheduler::sendMessage(int pid, Array<byte> msg)
 
 void scheduler::sendTerminalInput(int pid, Array<byte> msg)
 {
+	lock_guard<mutex> lock(schedulerMutex);
 	if (running)
 	{
 		suspend();

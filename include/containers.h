@@ -1,52 +1,64 @@
 #pragma once
 #include "util.h"
-#include <iostream>
+#include <string.h>
 #include <map>
 template<class T>
 class Array
 {
 public:
-	T* holder;
+	T* holder = NULL;
 	int size;
-	bool alive = false;
 	Array()
 	{
 		size = 0;
-		holder = new T[0];
-		alive = true;
+		holder = NULL;
 	}
 	Array(const Array<T>& c)
 	{
+		operator=(c);
+	}
+	Array(Array<T>&& c)
+	{
+		operator=(c);
+	}
+	Array<T>& operator=(const Array<T>& c)
+	{
 		size = c.size;
+		delete[] holder;
 		holder = new T[size];
 		for (int i = 0; i < size; i++) holder[i] = c.holder[i];
-		alive = true;
+		return *this;
+	}
+	Array<T>& operator=(Array<T>&& c)
+	{
+		size = c.size;
+		delete[] holder;
+		holder = new T[size];
+		for (int i = 0; i < size; i++) holder[i] = c.holder[i];
+		c.size = 0;
+		delete[] c.holder;
+		c.holder = NULL;
 	}
 	Array(const int s)
 	{
 		size = s;
 		holder = new T[size];
 		for (int i = 0; i < size; i++) holder[i] = T();
-		alive = true;
 	}
 	Array(T* tc, int s)
 	{
 		size = s;
 		holder = new T[size];
 		for (int i = 0; i < size; i++) holder[i] = tc[i];
-		alive = true;
 	}
 	Array(string dummy)
 	{
-		alive = true;
+		
 	}
 	~Array()
 	{
-		if (alive)
-		{
-			delete[] holder;
-			alive = false;
-		}
+		delete[] holder;
+		holder = NULL;
 	}
 	void removeAt(int index)
 	{
@@ -72,6 +84,7 @@ public:
 				for (int i = index + 1; i < size + 1; i++) behold[i - 1] = holder[i];
 				delete[] holder;
 				holder = behold;
+				return;
 			}
 		}
 	}
@@ -168,7 +181,7 @@ public:
 			holder = behold;
 		}
 	}
-	void insert(int index, T item)
+	void insert(int index, const T& item)
 	{
 		if (index >= 0 && index <= size)
 		{
@@ -181,6 +194,16 @@ public:
 			delete[] holder;
 			holder = behold;
 		}
+	}
+	void append(const Array<T>& other)
+	{
+		T* behold = new T[size + other.size];
+		for(int i = 0; i < size; i++) behold[i] = holder[i];
+		delete[] holder;
+		holder = behold;
+		int os = size;
+		size += other.size;
+		for(int i = os; i < size; i++) holder[i] = other.holder[i - os];
 	}
 	T& getTop()
 	{
@@ -200,8 +223,6 @@ public:
 		{
 			return holder[index];
 		}
-		//else throw;
-		return holder[0];
 	}
 	T& getSafe(int index)
 	{
@@ -219,27 +240,9 @@ public:
 			return holder[index];
 		}
 	}
-	void operator=(const Array<T>& other)
+	bool operator!=(const Array<T>& other)
 	{
-		if (!alive)
-		{
-			size = other.size;
-			holder = new T[size];
-			for (int i = 0; i < size; i++) holder[i] = other.holder[i];
-			alive = true;
-		}
-		else
-		{
-			size = other.size;
-			T* behold = new T[size];
-			for (int i = 0; i < size; i++) behold[i] = other.holder[i];
-			delete[] holder;
-			holder = behold;
-		}
-	}
-	bool operator!=(const Array<T> other)
-	{
-		return !(this == other);
+		return !(*this == other);
 	}
 	bool operator==(const Array<T>& other)
 	{
@@ -254,45 +257,11 @@ public:
 		}
 		return true;
 	}
-	void addRange(Array<T> other)
-	{
-		T* behold = new T[size + other.size];
-		for (int i = 0; i < size; i++)
-		{
-			behold[i] = holder[i];
-		}
-		delete[] holder;
-		int os = size;
-		size = size + other.size;
-		for (int i = os; i < size; i++)
-		{
-			behold[i] = other.holder[i - os];
-		}
-		holder = behold;
-	}
-	void addRange(Array<T>* other)
-	{
-		T* behold = new T[size + other->size];
-		for (int i = 0; i < size; i++)
-		{
-			behold[i] = holder[i];
-		}
-		delete[] holder;
-		size = size + other->size;
-		for (int i = size - other->size; i < size; i++)
-		{
-			behold[i] = other->holder[i];
-		}
-		holder = behold;
-	}
 	void clear()
 	{
-		if (alive)
-		{
-			delete[] holder;
-			holder = new T[0];
-			size = 0;
-		}
+		delete[] holder;
+		holder = NULL;
+		size = 0;
 	}
 };
 
@@ -300,14 +269,12 @@ template<class V>
 class IntMap
 {
 public:
-	int* keys;
-	V** holder;
+	int* keys = NULL;
+	V** holder = NULL;
 	int size;
 	int hsize;
 	IntMap()
 	{
-		keys = new int[0];
-		holder = new V*[0];
 		size = 0;
 		hsize = 0;
 	}
@@ -319,6 +286,8 @@ public:
 	{
 		size = other.size;
 		hsize = other.hsize;
+		delete[] holder;
+		delete[] keys;
 		holder = new V*[hsize];
 		keys = new int[size];
 		for (int i = 0; i < size; i++) keys[i] = other.keys[i];
@@ -327,7 +296,6 @@ public:
 	}
 	~IntMap()
 	{
-		//for (int i = 0; i < hsize; i++) delete holder[i];
 		delete[] holder;
 		delete[] keys;
 	}
@@ -367,7 +335,7 @@ public:
 	void remove(int key)
 	{
 		int i = keys[key];
-		delete[] holder[i];
+		delete holder[i];
 		holder[i] = NULL;
 		keys[key] = -1;
 	}

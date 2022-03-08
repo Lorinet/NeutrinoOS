@@ -4,58 +4,39 @@
 
 vmobject::vmobject()
 {
-	holder = new int[0];
-	keys = new int[0];
-	count = 0;
-	hsize = 0;
-	boundValue = NULL;
+	reset();
+	boundValue = new byte[0];
 	bsize = 0;
 	type = DefaultType::Null;
-	refcount = 0;
 }
 
 vmobject::vmobject(int val)
 {
-	holder = new int[0];
-	keys = new int[0];
-	count = 0;
-	hsize = 0;
+	reset();
 	boundValue = bitconverter::toarray_p(val);
 	bsize = 4;
 	type = DefaultType::Int;
-	refcount = 0;
 }
 
 vmobject::vmobject(int val, DefaultType ty)
 {
-	holder = new int[0];
-	keys = new int[0];
-	count = 0;
-	hsize = 0;
+	reset();
 	boundValue = bitconverter::toarray_p(val);
 	bsize = 4;
 	type = ty;
-	refcount = 0;
 }
 
 vmobject::vmobject(string val)
 {
-	holder = new int[0];
-	keys = new int[0];
-	count = 0;
-	hsize = 0;
+	reset();
 	boundValue = bitconverter::toarray_p(val);
 	bsize = val.size();
 	type = DefaultType::String;
-	refcount = 0;
 }
 
 vmobject::vmobject(Array<byte> val)
 {
-	holder = new int[0];
-	keys = new int[0];
-	count = 0;
-	hsize = 0;
+	reset();
 	bsize = val.size;
 	boundValue = new byte[bsize];
 	for (int i = 0; i < bsize; i++)
@@ -63,7 +44,6 @@ vmobject::vmobject(Array<byte> val)
 		boundValue[i] = val.holder[i];
 	}
 	type = DefaultType::String;
-	refcount = 0;
 }
 
 vmobject::vmobject(const vmobject& other)
@@ -75,6 +55,9 @@ vmobject& vmobject::operator=(const vmobject& other)
 {
 	hsize = other.hsize;
 	count = other.count;
+	delete[] holder;
+	delete[] keys;
+	delete[] boundValue;
 	holder = new int[hsize];
 	keys = new int[count];
 	for (int i = 0; i < hsize; i++) holder[i] = other.holder[i];
@@ -84,6 +67,7 @@ vmobject& vmobject::operator=(const vmobject& other)
 	for(int i = 0; i < bsize; i++) boundValue[i] = other.boundValue[i];
 	type = other.type;
 	refcount = 0;
+	valid = true;
 	return *this;
 }
 
@@ -92,6 +76,29 @@ vmobject::~vmobject()
 	delete[] holder;
 	delete[] keys;
 	delete[] boundValue;
+	holder = NULL;
+	keys = NULL;
+	boundValue = NULL;
+}
+
+void vmobject::reset()
+{
+	delete[] holder;
+	delete[] keys;
+	delete[] boundValue;
+	boundValue = NULL;
+	holder = new int[0];
+	keys = new int[0];
+	count = 0;
+	hsize = 0;
+	refcount = 0;
+	valid = true;
+}
+
+void vmobject::eviscerate()
+{
+	reset();
+	valid = false;
 }
 
 void vmobject::add(int key, int value)
@@ -200,55 +207,62 @@ int vmobject::getValue()
 	return (type == DefaultType::Int ? bitconverter::toint32(boundValue, 0) : (int)boundValue[0]);
 }
 
-vmobject vmobject::binaryop(vmobject* a, vmobject* b, byte op)
+vmobject vmobject::binaryop(vmobject& a, vmobject& b, byte op)
 {
-	if (a->type == DefaultType::Int || a->type == DefaultType::Byte)
+	if (a.type == DefaultType::Int || a.type == DefaultType::Byte)
 	{
 		switch(op)
 		{
 		case 0: // add
-			return vmobject(a->getValue() + b->getValue());
+			return vmobject(a.getValue() + b.getValue());
 		case 1: // sub
-			return vmobject(a->getValue() - b->getValue());
+			return vmobject(a.getValue() - b.getValue());
 		case 2: // mul
-			return vmobject(a->getValue() * b->getValue());
+			return vmobject(a.getValue() * b.getValue());
 		case 3: // div
-			return vmobject(a->getValue() / b->getValue());
+			return vmobject(a.getValue() / b.getValue());
 		case 4: // and
-			return vmobject(a->getValue() & b->getValue());
+			return vmobject(a.getValue() & b.getValue());
 		case 5: // or
-			return vmobject(a->getValue() | b->getValue());
+			return vmobject(a.getValue() | b.getValue());
 		case 6: // xor
-			return vmobject(a->getValue() ^ b->getValue());
+			return vmobject(a.getValue() ^ b.getValue());
 		case 7: // shl
-			return vmobject(a->getValue() << b->getValue());
+			return vmobject(a.getValue() << b.getValue());
 		case 8: // shr
-			return vmobject(a->getValue() >> b->getValue());
+			return vmobject(a.getValue() >> b.getValue());
 		case 9: // pow
-			return vmobject(pow(a->getValue(), b->getValue()));
+			return vmobject(pow(a.getValue(), b.getValue()));
 		case 10: // mod
-			return vmobject(a->getValue() % b->getValue());
+			return vmobject(a.getValue() % b.getValue());
 		}
 	}
-	else if (a->type == DefaultType::String)
+	else if (a.type == DefaultType::String)
 	{
-		return vmobject(bitconverter::tostring(a->boundValue, a->bsize) + bitconverter::tostring(b->boundValue, b->bsize));
+		vmobject vv = vmobject(bitconverter::tostring(a.boundValue, a.bsize) + bitconverter::tostring(b.boundValue, b.bsize));
+		return vv;
 	}
 	return NULL;
 }
 
 ObjectMap::ObjectMap()
 {
-    keys = new int[1];
-    holder = new vmobject*[1];
+    keys = NULL;
+    holder = NULL;
     size = 0;
     hsize = 0;
 }
 
 ObjectMap::~ObjectMap()
 {
-	delete[] holder;
 	delete[] keys;
+	for(int i = 0; i < hsize; i++)
+	{
+		if(holder[i] != NULL) delete holder[i];
+	}
+	delete[] holder;
+	keys = NULL;
+	holder = NULL;
 }
 
 void ObjectMap::add(int key, vmobject value)
@@ -266,16 +280,15 @@ void ObjectMap::add(int key, vmobject value)
 	}
 	if (keys[key] != -1)
 	{
-		i = keys[key];
-		delete holder[i];
-		holder[i] = NULL;
+		delete holder[keys[key]];
+		holder[keys[key]] = NULL;
 	}
 	i = 0;
 	while (i < hsize && holder[i] != NULL)
 		i++;
 	if (i == hsize)
 	{
-		vmobject** nh = new vmobject * [hsize + 1];
+		vmobject** nh = new vmobject*[hsize + 1];
 		for (int j = 0; j < hsize; j++) nh[j] = holder[j];
 		delete[] holder;
 		holder = nh;
@@ -287,26 +300,29 @@ void ObjectMap::add(int key, vmobject value)
 
 void ObjectMap::remove(int key)
 {
-	int i = keys[key];
-	delete holder[i];
-	holder[i] = NULL;
+	delete holder[keys[key]];
+	holder[keys[key]] = NULL;
 	keys[key] = -1;
 }
 
-vmobject* ObjectMap::get(int key)
+vmobject& ObjectMap::get(int key)
 {
-	return holder[keys[key]];
+	return *holder[keys[key]];
 }
 
-vmobject* ObjectMap::operator[](int key)
+vmobject& ObjectMap::operator[](int key)
 {
-	return holder[keys[key]];
+	return *holder[keys[key]];
 }
 
 void ObjectMap::set(int key, vmobject value)
 {
 	if (keys[key] == -1) add(key, value);
-	else holder[keys[key]] = new vmobject(value);
+	else 
+	{
+		if(holder[keys[key]] != NULL) delete holder[keys[key]];
+		holder[keys[key]] = new vmobject(value);
+	}
 }
 
 int ObjectMap::find(int key)
@@ -320,7 +336,6 @@ BufferedStack::BufferedStack()
 	size = 10;
 	top = -1;
 	holder = new int[size];
-	alive = true;
 }
 
 BufferedStack::BufferedStack(int initialSize)
@@ -328,7 +343,6 @@ BufferedStack::BufferedStack(int initialSize)
 	size = initialSize;
 	top = -1;
 	holder = new int[size];
-	alive = true;
 }
 
 BufferedStack::BufferedStack(const BufferedStack& c)
@@ -341,11 +355,8 @@ BufferedStack::BufferedStack(const BufferedStack& c)
 
 BufferedStack::~BufferedStack()
 {
-	if (alive)
-	{
-		delete[] holder;
-		alive = false;
-	}
+	delete[] holder;
+	holder = NULL;
 }
 
 void BufferedStack::operator=(const BufferedStack& c)

@@ -401,24 +401,24 @@ void WindowManager::RenderWindow(Window& w, int wid, bool active)
 				else if (type == "Button")
 				{
 					if (Graphics::fonts.find(e.GetProperty("Font")) == Graphics::fonts.end()) continue;
-					int wid, hei;
-					TTF_SizeText(Graphics::fonts[e.GetProperty("Font")].font, e.GetProperty("Text").c_str(), &wid, &hei);
+					int widt, heig;
+					TTF_SizeText(Graphics::fonts[e.GetProperty("Font")].font, e.GetProperty("Text").c_str(), &widt, &heig);
 					Element* ew = &(windows[wid].elements[windows[wid].GetElementIndexByID(e.IGetProperty("ID"))]);
-					ew->properties["Width"] = to_string(wid + 10);
-					ew->properties["Height"] = to_string(hei + 10);
+					ew->properties["Width"] = to_string(widt + 10);
+					ew->properties["Height"] = to_string(heig + 10);
 					if (e.GetProperty("Hovering") == "1")
-						Graphics::DrawFilledRectangle(e.IGetProperty("Position X") + wi.X, e.IGetProperty("Position Y") + wi.Y + wi.DrawableBase, wid + 10, hei + 10, Theming::TransparenceColor);
-					Graphics::DrawRectangle(e.IGetProperty("Position X") + wi.X, e.IGetProperty("Position Y") + wi.Y + wi.DrawableBase, wid + 10, hei + 10);
+						Graphics::DrawFilledRectangle(e.IGetProperty("Position X") + wi.X, e.IGetProperty("Position Y") + wi.Y + wi.DrawableBase, widt + 10, heig + 10, Theming::TransparenceColor);
+					Graphics::DrawRectangle(e.IGetProperty("Position X") + wi.X, e.IGetProperty("Position Y") + wi.Y + wi.DrawableBase, widt + 10, heig + 10);
 					Graphics::DrawString(e.IGetProperty("Position X") + wi.X + 5, e.IGetProperty("Position Y") + wi.Y + wi.DrawableBase + 5, e.GetProperty("Text"), e.GetProperty("Font"));
 				}
 				else if (type == "CheckBox")
 				{
 					if (Graphics::fonts.find(e.GetProperty("Font")) == Graphics::fonts.end()) continue;
-					int wid, hei;
-					TTF_SizeText(Graphics::fonts[e.GetProperty("Font")].font, e.GetProperty("Text").c_str(), &wid, &hei);
+					int widt, heig;
+					TTF_SizeText(Graphics::fonts[e.GetProperty("Font")].font, e.GetProperty("Text").c_str(), &widt, &heig);
 					Element* ew = &(windows[wid].elements[windows[wid].GetElementIndexByID(e.IGetProperty("ID"))]);
-					ew->properties["Width"] = to_string(wid + 10);
-					ew->properties["Height"] = to_string(hei + 10);
+					ew->properties["Width"] = to_string(widt + 10);
+					ew->properties["Height"] = to_string(heig + 10);
 					if (e.GetProperty("Hovering") == "1")
 						Graphics::DrawFilledRectangle(e.IGetProperty("Position X") + wi.X, e.IGetProperty("Position Y") + wi.Y + wi.DrawableBase, 12, 12, Theming::TransparenceColor);
 					if(e.IGetProperty("Checked") == 1) Graphics::DrawFilledRectangle(e.IGetProperty("Position X") + wi.X + 3, e.IGetProperty("Position Y") + wi.Y + wi.DrawableBase + 3, 6, 6, Theming::TextColorLight);
@@ -427,20 +427,20 @@ void WindowManager::RenderWindow(Window& w, int wid, bool active)
 				}
 				else if (type == "TextField")
 				{
-					int wid = e.IGetProperty("Width");
-					int hei = e.IGetProperty("Height");
-					if (wid == 0)
+					int widt = e.IGetProperty("Width");
+					int heig = e.IGetProperty("Height");
+					if (widt == 0)
 					{
-						wid = Graphics::resX;
+						widt = Graphics::resX;
 					}
-					if (hei == 0)
+					if (heig == 0)
 					{
-						hei = Graphics::resX;
+						heig = Graphics::resX;
 					}
 					//Graphics::DrawStringWordWrap(e.IGetProperty("Position X"), e.IGetProperty("Position Y"), wid, hei, e.GetProperty("Text"), e.GetProperty("Font"));
 					if (e.IGetProperty("Border") == 1)
 					{
-						Graphics::DrawRectangle(e.IGetProperty("Position X"), e.IGetProperty("Position Y"), wid, hei);
+						Graphics::DrawRectangle(e.IGetProperty("Position X"), e.IGetProperty("Position Y"), widt, heig);
 					}
 				}
 				else if (type == "TextBuffer")
@@ -890,11 +890,11 @@ void WindowManager::FireEvent(EffigyEvent evt, int x, int y)
 				{
 					if (secWi.WakeOnInteraction)
 					{
-						//vmmgr::processes[secWi.parentProcess]->suspended = false;
+						vmmgr::processes[w.parentProcess]->suspended = false;
 					}
 					if (ew->eventHandler != -1)
 					{
-						//vmmgr::processes[secWi.parentProcess]->branch(ew->eventHandler);
+						vmmgr::processes[w.parentProcess]->leap(ew->eventHandler);
 					}
 				}
 			}

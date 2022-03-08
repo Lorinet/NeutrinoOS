@@ -477,8 +477,8 @@ void ViewManager::FireEvent(TiwazEvent e)
 								ck += el[i];
 							}
 						}
-						vmmgr::processes[views[activeView]->parentProcess]->astack.push(bitconverter::toArray(util::replaceAll(keys[v->elements.get(i).GetPropertyInt("SelectedIndex")], "\\\\", "\\")));
-						vmmgr::processes[views[activeView]->parentProcess]->branch(v->elements.get(i).eventHandler);
+						//vmmgr::processes[views[activeView]->parentProcess]->astack.push(bitconverter::toArray(util::replaceAll(keys[v->elements.get(i).GetPropertyInt("SelectedIndex")], "\\\\", "\\")));
+						//vmmgr::processes[views[activeView]->parentProcess]->branch(v->elements.get(i).eventHandler);
 					}
 				}
 			}

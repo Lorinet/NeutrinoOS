@@ -12,7 +12,7 @@
 
 /// Device Class
 //#define __HOLO
-//define __SANDBOX
+//#define __SANDBOX
 //#define __DESKTOP
 #define __THIN
 

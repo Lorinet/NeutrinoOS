@@ -24,6 +24,8 @@
 #include "EffigyWM/serialization.h"
 #include "EffigyWM/window.h"
 #include "EffigyWM/winmgr.h"
+#elif defined(COMPONENT_IOMANAGER)
+#include "IOManager/iomgr.h"
 #endif
 
 class components

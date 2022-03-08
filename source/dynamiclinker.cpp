@@ -12,15 +12,20 @@ void dynamiclinker::dynamicLink(nvm* v)
 {
 	map<string, int> offsets;
 	replaceModulesByName(v->bytecode);
-	v->pages.insert({ 0, pair<int, int>(0, v->bytecode->size - 1) });
+	v->pages.insert({ 0, pair<int, int>(0, v->bytecode.size - 1) });
 	int ndx = 1;
-	if (!link(v->bytecode, &offsets, &v->pages, &ndx, v->processid)) return;
+	if (!link(v->bytecode, offsets, v->pages, ndx, v->processid))
+	{
+		v->running = false;
+		return;
+	}
 	for (int i = 0; i < v->pages.size(); i++)
 	{
 		v->globalPages.add(vmobject());
 		v->globalPages.get(v->globalPages.size - 1).refcount = 1;
 		v->localScopes.add(Array<vmobject>());
 		v->currentScopes.add(Array<int>());
+		v->addrScopes.add(map<int, int>());
 	}
 	map<string, map<int, int>> sections;
 	int s;
@@ -29,24 +34,25 @@ void dynamiclinker::dynamicLink(nvm* v)
 	{
 		modcod = file::readAllBytes(lvmgr::formatPath("0:\\Neutrino\\sys\\" + p.first), &s);
 		sections.emplace(p.first, disassembler::extractExternalMethods(modcod, s));
+		delete[] modcod;
 	}
 	int sec;
 	string key;
 	int var;
 	byte* ab;
-	for (int i = 0; i < v->bytecode->size; i++)
+	for (int i = 0; i < v->bytecode.size; i++)
 	{
-		if ((*v->bytecode)[i].opCode == opcode::PUSHLX)
+		if (v->bytecode[i].opCode == opcode::OP_PUSHLX)
 		{
-			sec = bitconverter::toint32((*v->bytecode)[i].parameters, 0);
-			key = bitconverter::tostring((*v->bytecode)[i].parameters, 4, (*v->bytecode)[i].psize);
-			(*v->bytecode)[i].opCode = opcode::LDI;
-			(*v->bytecode)[i].psize = 4;
-			(*v->bytecode)[i].parameters = new byte[4];
+			sec = bitconverter::toint32(v->bytecode[i].parameters, 0);
+			key = bitconverter::tostring(v->bytecode[i].parameters, 4, v->bytecode[i].psize);
+			v->bytecode[i].opCode = opcode::OP_LDI;
+			v->bytecode[i].psize = 4;
+			v->bytecode[i].parameters = new byte[4];
 			ab = bitconverter::toarray_p(offsets[key] + sections[key][sec]);
 			for(int j = 0; j < 4; j++)
 			{
-				(*v->bytecode)[i].parameters[j] = ab[j];
+				v->bytecode[i].parameters[j] = ab[j];
 			}
 			delete[] ab;
 		}
@@ -54,23 +60,23 @@ void dynamiclinker::dynamicLink(nvm* v)
 	return;
 }
 
-bool dynamiclinker::link(Array<instruction>* v, map<string, int>* off, map<int, pair<int, int>>* pages, int* ndx, int pid)
+bool dynamiclinker::link(Array<instruction>& v, map<string, int>& off, map<int, pair<int, int>>& pages, int& ndx, int pid)
 {
 	byte* bin;
 	byte* parm;
 	int size;
-	Array<instruction>* dasm;
+	Array<instruction> dasm;
 	string file;
 	string path;
-	for (int i = 0; i < v->size; i++)
+	for (int i = 0; i < v.size; i++)
 	{
-		if ((*v)[i].opCode == opcode::LINK)
+		if (v[i].opCode == opcode::OP_LINK)
 		{
-			(*v)[i].opCode = opcode::NOP;
-			file = bitconverter::tostring((*v)[i].parameters, (*v)[i].psize);
-			if (off->find(file) == off->end())
+			v[i].opCode = opcode::OP_NOP;
+			file = bitconverter::tostring(v[i].parameters, v[i].psize);
+			if (off.find(file) == off.end())
 			{
-				off->insert({ file, v->size });
+				off.insert({ file, v.size });
 				path = lvmgr::formatPath("0:\\Neutrino\\sys\\" + file);
 				if (!file::fileExists(path))
 				{
@@ -81,25 +87,24 @@ bool dynamiclinker::link(Array<instruction>* v, map<string, int>* off, map<int, 
 				dasm = disassembler::disassembleExecutable(bin, size);
 				delete[] bin;
 				replaceModulesByName(dasm);
-				for (int j = 0; j < dasm->size; j++)
+				for (int j = 0; j < dasm.size; j++)
 				{
-					if ((*dasm)[j].opCode == opcode::PUSHL || (*dasm)[j].opCode == opcode::BR || (*dasm)[j].opCode == opcode::JMP)
+					if (dasm[j].opCode == opcode::OP_PUSHL || dasm[j].opCode == opcode::OP_BR || dasm[j].opCode == opcode::OP_JMP)
 					{
-						int a = bitconverter::toint32((*dasm)[j].parameters, 0);
-						a += v->size;
+						int a = bitconverter::toint32(dasm[j].parameters, 0);
+						a += v.size;
 						parm = bitconverter::toarray_p(a);
-						(*dasm)[j].parameters[0] = parm[0];
-						(*dasm)[j].parameters[1] = parm[1];
-						(*dasm)[j].parameters[2] = parm[2];
-						(*dasm)[j].parameters[3] = parm[3];
+						dasm[j].parameters[0] = parm[0];
+						dasm[j].parameters[1] = parm[1];
+						dasm[j].parameters[2] = parm[2];
+						dasm[j].parameters[3] = parm[3];
 						delete[] parm;
 					}
 				}
-				pages->insert({ *ndx, pair<int, int>(v->size, v->size + dasm->size - 1) });
-				(*ndx) += 1;
-				v->insert(dasm, v->size, 0, dasm->size);
-				dasm->clear();
-				delete dasm;
+				pages.insert({ ndx, pair<int, int>(v.size, v.size + dasm.size - 1) });
+				ndx += 1;
+				//v.insert(dasm, v.size, 0, dasm.size);
+				v.append(dasm);
 				if (!link(v, off, pages, ndx, pid)) return false;
 				break;
 			}
@@ -108,16 +113,16 @@ bool dynamiclinker::link(Array<instruction>* v, map<string, int>* off, map<int, 
 	return true;
 }
 
-void dynamiclinker::replaceModulesByName(Array<instruction>* dasm)
+void dynamiclinker::replaceModulesByName(Array<instruction>& dasm)
 {
 	map<int, string> imods;
 	int ili = 0;
 	string linkf;
-	for (int j = 0; j < dasm->size; j++)
+	for (int j = 0; j < dasm.size; j++)
 	{
-		if ((*dasm)[j].opCode == opcode::LINK)
+		if (dasm[j].opCode == opcode::OP_LINK)
 		{
-			linkf = bitconverter::tostring((*dasm)[j].parameters, (*dasm)[j].psize);
+			linkf = bitconverter::tostring(dasm[j].parameters, dasm[j].psize);
 			imods.insert({ ili, linkf });
 			ili += 1;
 		}
@@ -126,17 +131,18 @@ void dynamiclinker::replaceModulesByName(Array<instruction>* dasm)
 	byte* sec = NULL;
 	byte* var = NULL;
 	int modind = 0;
-	for (int j = 0; j < dasm->size; j++)
+	for (int j = 0; j < dasm.size; j++)
 	{
-		if ((*dasm)[j].opCode == opcode::PUSHLX)
+		if (dasm[j].opCode == opcode::OP_PUSHLX)
 		{
-			modind = bitconverter::toint32((*dasm)[j].parameters, 0);
+			modind = bitconverter::toint32(dasm[j].parameters, 0);
 			modnm = bitconverter::toarray_p(imods[modind] + '\0');
-			sec = bitconverter::toarray_p(bitconverter::toint32((*dasm)[j].parameters, 4));
-			(*dasm)[j].psize = imods[bitconverter::toint32((*dasm)[j].parameters, 0)].size() + 4;
-			(*dasm)[j].parameters = bitconverter::append(sec, 4, modnm, imods[modind].size());
+			sec = bitconverter::toarray_p(bitconverter::toint32(dasm[j].parameters, 4));
+			dasm[j].psize = imods[bitconverter::toint32(dasm[j].parameters, 0)].size() + 4;
+			delete[] dasm[j].parameters;
+			dasm[j].parameters = bitconverter::append(sec, 4, modnm, imods[modind].size());
 		}
 	}
-	if(modnm != NULL) delete modnm;
-	if(sec != NULL) delete sec;
+	if(modnm != NULL) delete[] modnm;
+	if(sec != NULL) delete[] sec;
 }

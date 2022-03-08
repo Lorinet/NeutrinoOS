@@ -23,6 +23,7 @@ IntMap<iapi*> syscall::interfaces;
 Array<byte> syscall::data;
 Array<byte> syscall::systemCall(byte* indata, int datasize, nvm* v)
 {
+	lock_guard<mutex> lock(vmmgr::kernelMutex);
 	syscll = (interrupts)indata[0];
 	data.clear();
 	eventid eid;
@@ -186,7 +187,7 @@ Array<byte> syscall::systemCall(byte* indata, int datasize, nvm* v)
 				WindowManager::Stop();
 #endif
 #if defined(__UNIX)
-				system("shutdown now");
+				vmmgr::shutdown();
 #endif
 				exit(0);
 				break;
@@ -347,7 +348,7 @@ Array<byte> syscall::systemCall(byte* indata, int datasize, nvm* v)
 		case 0x02:
 			return bitconverter::toArray(neutrinoDeviceType);
 		case 0x03:
-			return bitconverter::toArray(neutrinoRuntimeVersion);
+			return bitconverter::toArray(neutrinoOSVersion);
 		case 0x04:
 			return bitconverter::toArray(neutrinoBuildDate);
 		case 0x05:

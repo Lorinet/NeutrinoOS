@@ -15,14 +15,14 @@ bool vmmgr::dozing = false;
 int vmmgr::maxCpuFreq = 0;
 int vmmgr::minCpuFreq = 0;
 
-Array<scheduler*> vmmgr::schedulers;
+scheduler vmmgr::schedulers[MAX_THREADS_ALLOWED];
 IntMap<nvm*> vmmgr::processes;
 mutex vmmgr::kernelMutex;
 thread vmmgr::kernelLoopThread;
-unique_lock<mutex> vmmgr::kernelLock;
 
 void vmmgr::start()
 {
+	lock_guard<mutex> lock(kernelMutex);
 	klog("VirtualMachineManager", "Starting...");
 	running = true;
 	dozing = false;
@@ -40,30 +40,37 @@ void vmmgr::start()
 	//SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
 #endif
 	klog("VirtualMachineManager", "Starting schedulers...");
-	kernelLock = unique_lock<mutex>(kernelMutex, defer_lock);
-	schedulers = Array<scheduler*>();
-	for (int thr = 0; thr < MAX_THREADS_ALLOWED; thr++)
+	//kernelLock = unique_lock<mutex>(kernelMutex, defer_lock);
+	for (int i = 0; i < MAX_THREADS_ALLOWED; i++)
 	{
-		schedulers.add(new scheduler());
+		schedulers[i].start();
 	}
-	for (int i = 0; i < schedulers.size; i++)
+	klog("VirtualMachineManager", to_string(MAX_THREADS_ALLOWED) + " schedulers available.");
+}
+
+void vmmgr::shutdown()
+{
+	lock_guard<mutex> lock(kernelMutex);
+	for (int i = 0; i < MAX_THREADS_ALLOWED; i++)
 	{
-		schedulers[i]->start();
+		schedulers[i].suspend();
+		if(schedulers[i].run.joinable()) schedulers[i].run.detach();
 	}
-	klog("VirtualMachineManager", to_string(schedulers.size) + " schedulers available.");
+	running = false;
 }
 
 int vmmgr::createProcess(string file, bool start)
 {
+	lock_guard<mutex> lock(kernelMutex);
 	int procid = 0;
 	#ifndef __ESP32
 	try
 	{
 	#endif
-		scheduler* sch = schedulers[0];
-		for (int i = 0; i < schedulers.size; i++)
+		scheduler& sch = schedulers[0];
+		for (int i = 0; i < MAX_THREADS_ALLOWED; i++)
 		{
-			if (schedulers[i]->processes.size < sch->processes.size) sch = schedulers[i];
+			if (schedulers[i].processes.size < sch.processes.size) sch = schedulers[i];
 		}
 		int progsize;
 		byte* pcode = file::readAllBytes(file, &progsize);
@@ -88,7 +95,7 @@ int vmmgr::createProcess(string file, bool start)
 		}
 		n->processPriority = PRIORITY_LOW;
 		processes.add(pid, n);
-		sch->addProcess(n);
+		sch.addProcess(n);
 		return pid;
 	#ifndef __ESP32
 	}
@@ -104,6 +111,7 @@ int vmmgr::createProcessEx(string file, vt in, vt out)
 {
 	int pid = createProcess(file);
 	nvm* cp = getProcess(pid);
+	lock_guard<mutex> lock(kernelMutex);
 	cp->setTerminals(in, out);
 	cp->start();
 	return -1;
@@ -111,6 +119,7 @@ int vmmgr::createProcessEx(string file, vt in, vt out)
 
 void vmmgr::terminateProcess(int pid)
 {
+	lock_guard<mutex> lock(kernelMutex);
 	if (getProcess(pid) != NULL)
 	{
 		getProcess(pid)->running = false;
@@ -133,53 +142,56 @@ void vmmgr::terminateProcess(int pid)
 
 nvm* vmmgr::getProcess(int pid)
 {
+	lock_guard<mutex> lock(kernelMutex);
 	if (processes.find(pid)) return processes[pid];
 	return NULL;
 }
 
 void vmmgr::sendMessage(int pid, Array<byte> msg)
 {
+	lock_guard<mutex> lock(kernelMutex);
 	int psi = -1;
-	for (int i = 0; i < schedulers.size; i++)
+	for (int i = 0; i < MAX_THREADS_ALLOWED; i++)
 	{
-		for (int j = 0; j < schedulers[i]->processes.size; j++)
+		for (int j = 0; j < schedulers[i].processes.size; j++)
 		{
-			if (schedulers[i]->processes[j]->processid == pid)
+			if (schedulers[i].processes[j]->processid == pid)
 			{
 				psi = i;
 				break;
 			}
 		}
 	}
-	if (psi != -1) schedulers[psi]->sendMessage(pid, msg);
+	if (psi != -1) schedulers[psi].sendMessage(pid, msg);
 }
 
 void vmmgr::sendInput(int pid, Array<byte> msg)
 {
+	lock_guard<mutex> lock(kernelMutex);
 	int psi = -1;
-	for (int i = 0; i < schedulers.size; i++)
+	for (int i = 0; i < MAX_THREADS_ALLOWED; i++)
 	{
-		for (int j = 0; j < schedulers[i]->processes.size; j++)
+		for (int j = 0; j < schedulers[i].processes.size; j++)
 		{
-			if (schedulers[i]->processes[j]->processid == pid)
+			if (schedulers[i].processes[j]->processid == pid)
 			{
 				psi = i;
 				break;
 			}
 		}
 	}
-	if (psi != -1) schedulers[psi]->sendTerminalInput(pid, msg);
+	if (psi != -1) schedulers[psi].sendTerminalInput(pid, msg);
 }
 
 void vmmgr::enterCriticalSection()
 {
-	kernelLock.lock();
+	//kernelLock.lock();
 	//klog("VirtualMachineManager", "Enter Critical Section");
 }
 
 void vmmgr::leaveCriticalSection()
 {
-	kernelLock.unlock();
+	//kernelLock.unlock();
 	//klog("VirtualMachineManager", "Leave Critical Section");
 }
 
@@ -190,8 +202,8 @@ void vmmgr::doze(bool d)
 	if (minCpuFreq == 0 || maxCpuFreq == 0) return;
 	//if(d) system("cgset -r cpu.cfs_quota_us=100000 cpulimit");
 	//else system("cgset -r cpu.cfs_quota_us=1000000 cpulimit");
-	if (d) system(("cpufreq-set -r --max " + to_string(minCpuFreq) + "MHz").c_str());
-	else system(("cpufreq-set -r --max " + to_string(maxCpuFreq) + "MHz").c_str());
+	//if (d) system(("cpufreq-set -r --max " + to_string(minCpuFreq) + "MHz").c_str());
+	//else system(("cpufreq-set -r --max " + to_string(maxCpuFreq) + "MHz").c_str());
 #endif
 }
 
