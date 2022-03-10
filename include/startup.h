@@ -24,13 +24,12 @@ static void NeutrinoStartup()
 		string init1 = lvmgr::formatPath("0:\\Neutrino\\bin\\quitter.lex");
 		if (file::fileExists(init))
 		{
+			vmmgr::numThreads = 1;
 			vmmgr::start();
-			//for(int i = 0; i < 5; i++)
-			vmmgr::createProcess(init);
-			//vmmgr::createProcess(init1);
-			//vmmgr::createProcess(init);
-			//vmmgr::schedulers[0]->processes[0]->processPriority = PRIORITY_HIGH;
-			//vmmgr::kernelLoop();
+			for(int i = 0; i < 10; i++)
+			{
+				vmmgr::createProcess(init);
+			}
 			klog("Init", "System startup finished.");
 			vmmgr::kernelLoopThread = thread(vmmgr::kernelLoop);
 			vmmgr::kernelLoopThread.join();

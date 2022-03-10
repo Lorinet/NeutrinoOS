@@ -1,4 +1,6 @@
 #include "ntime.h"
+
+mutex ntime::timeMutex;
 int ntime::timeZone = 0;
 chrono::time_point<chrono::steady_clock> ntime::starttmr = chrono::steady_clock::now();
 void ntime::loadNetworkTime()
@@ -7,12 +9,14 @@ void ntime::loadNetworkTime()
 
 time_t ntime::getTime()
 {
+	lock_guard<mutex> safeLock(timeMutex);
 	time_t now;
 	return time(&now);
 }
 
 string ntime::getDateTime()
 {
+	lock_guard<mutex> safeLock(timeMutex);
 	time_t now;
 	struct tm timeinfo;
 	time(&now);
@@ -24,6 +28,7 @@ string ntime::getDateTime()
 
 string ntime::getTimeS()
 {
+	lock_guard<mutex> safeLock(timeMutex);
 	time_t now;
 	struct tm timeinfo;
 	time(&now);
@@ -37,6 +42,7 @@ string ntime::getTimeS()
 
 string ntime::getTimeWithSeconds()
 {
+	lock_guard<mutex> safeLock(timeMutex);
 	time_t now;
 	struct tm timeinfo;
 	time(&now);
@@ -52,6 +58,7 @@ string ntime::getTimeWithSeconds()
 
 int ntime::getHour()
 {
+	lock_guard<mutex> safeLock(timeMutex);
 	time_t now;
 	struct tm timeinfo;
 	time(&now);
@@ -61,6 +68,7 @@ int ntime::getHour()
 
 int ntime::getMinute()
 {
+	lock_guard<mutex> safeLock(timeMutex);
 	time_t now;
 	struct tm timeinfo;
 	time(&now);
@@ -70,6 +78,7 @@ int ntime::getMinute()
 
 int ntime::getSecond()
 {
+	lock_guard<mutex> safeLock(timeMutex);
 	time_t now;
 	struct tm timeinfo;
 	time(&now);
@@ -79,6 +88,7 @@ int ntime::getSecond()
 
 int ntime::getYear()
 {
+	lock_guard<mutex> safeLock(timeMutex);
 	time_t now;
 	struct tm timeinfo;
 	time(&now);
@@ -88,6 +98,7 @@ int ntime::getYear()
 
 int ntime::getMonth()
 {
+	lock_guard<mutex> safeLock(timeMutex);
 	time_t now;
 	struct tm timeinfo;
 	time(&now);
@@ -97,6 +108,7 @@ int ntime::getMonth()
 
 int ntime::getDay()
 {
+	lock_guard<mutex> safeLock(timeMutex);
 	time_t now;
 	struct tm timeinfo;
 	time(&now);
@@ -106,6 +118,7 @@ int ntime::getDay()
 
 long long ntime::getMillis()
 {
+	lock_guard<mutex> safeLock(timeMutex);
 #if defined (__ESP32)
 	long long millis = esp_timer_get_time() / 1000;
 #else
@@ -116,6 +129,7 @@ long long ntime::getMillis()
 
 bool ntime::getDST()
 {
+	lock_guard<mutex> safeLock(timeMutex);
 	time_t now;
 	struct tm timeinfo;
 	time(&now);

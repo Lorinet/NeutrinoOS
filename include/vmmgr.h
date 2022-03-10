@@ -1,5 +1,6 @@
 #pragma once
 #include <thread>
+#include <atomic>
 #include <algorithm>
 #include <vector>
 #include <map>
@@ -13,23 +14,24 @@
 #elif defined(__WIN32)
 #include <Windows.h>
 #endif
-
-#define MAX_THREADS_ALLOWED	1
 using namespace std;
 class nvm;
 class vt;
+
 class vmmgr
 {
+private:
+	static mutex kernelMutex;
+	static mutex processIdsMutex;
+	static IntMap<int> processIds;
 public:
-	static bool running;
+	static int numThreads;
+	static atomic<bool> running;
 	static bool dozing;
 	static int minCpuFreq;
 	static int maxCpuFreq;
-	static scheduler schedulers[MAX_THREADS_ALLOWED];
-	static IntMap<nvm*> processes;
-	static mutex kernelMutex;
+	static scheduler* schedulers;
 	static thread kernelLoopThread;
-	static unique_lock<mutex> kernelLock;
 	static void start();
 	static void shutdown();
 	static int createProcess(string file, bool start = true);
@@ -45,4 +47,5 @@ public:
 	static void vmmerror(string error, int procid);
 	static bool inputRequested(int pid);
 	static void kernelLoop();
+	static void releaseProcessID(int pid);
 };

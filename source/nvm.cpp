@@ -18,6 +18,7 @@
 #define PUSHVAL(v) astack.push(newobj(vmobject(v)))
 #define STACKTOP() memory.get(astack.getTop())
 #define DECREF(o) { memory.get(o).refcount -= 1; if(memory.get(o).refcount <= 0) memory.remove(o); }
+#define TRASHREF(o) { if(memory.get(o).refcount <= 0) memory.remove(o); }
 
 nvm::nvm()
 {
@@ -102,7 +103,7 @@ void nvm::start()
 void nvm::start(int procid, string file)
 {
 	fileName = file;
-	processid = procid;
+	setpid(procid);
 	start();
 }
 void nvm::cycle()
@@ -150,12 +151,13 @@ void nvm::cycle()
 			k = astack.getTop();
 			astack.pop();
 			PUSHVAL(to_string(memory.get(k).getValue()));
+			TRASHREF(k);
 			break;
 		case opcode::OP_PARSEINT:
 			k = astack.getTop();
 			astack.pop();
 			PUSHVAL(stoi(STRING(memory.get(k).getValue())));
-			astack.pop();
+			TRASHREF(k);
 			break;
 		case opcode::OP_CLR:
 			if (memory.find(astack.getTop()))
@@ -263,6 +265,8 @@ void nvm::cycle()
 			k2 = astack.getTop();
 			astack.pop();
 			PUSHNEW(vmobject::binaryop(memory.get(k2), memory.get(k1), 0));
+			TRASHREF(k1);
+			TRASHREF(k2);
 			break;
 		case opcode::OP_SUB:
 			k1 = astack.getTop();
@@ -270,6 +274,8 @@ void nvm::cycle()
 			k2 = astack.getTop();
 			astack.pop();
 			PUSHNEW(vmobject::binaryop(memory.get(k2), memory.get(k1), 1));
+			TRASHREF(k1);
+			TRASHREF(k2);
 			break;
 		case opcode::OP_MUL:
 			k1 = astack.getTop();
@@ -277,6 +283,8 @@ void nvm::cycle()
 			k2 = astack.getTop();
 			astack.pop();
 			PUSHNEW(vmobject::binaryop(memory.get(k2), memory.get(k1), 2));
+			TRASHREF(k1);
+			TRASHREF(k2);
 			break;
 		case opcode::OP_DIV:
 			k1 = astack.getTop();
@@ -284,6 +292,8 @@ void nvm::cycle()
 			k2 = astack.getTop();
 			astack.pop();
 			PUSHNEW(vmobject::binaryop(memory.get(k2), memory.get(k1), 3));
+			TRASHREF(k1);
+			TRASHREF(k2);
 			break;
 		case opcode::OP_AND:
 			k1 = astack.getTop();
@@ -291,6 +301,8 @@ void nvm::cycle()
 			k2 = astack.getTop();
 			astack.pop();
 			PUSHNEW(vmobject::binaryop(memory.get(k2), memory.get(k1), 4));
+			TRASHREF(k1);
+			TRASHREF(k2);
 			break;
 		case opcode::OP_OR:
 			k1 = astack.getTop();
@@ -298,6 +310,8 @@ void nvm::cycle()
 			k2 = astack.getTop();
 			astack.pop();
 			PUSHNEW(vmobject::binaryop(memory.get(k2), memory.get(k1), 5));
+			TRASHREF(k1);
+			TRASHREF(k2);
 			break;
 		case opcode::OP_XOR:
 			k1 = astack.getTop();
@@ -305,6 +319,8 @@ void nvm::cycle()
 			k2 = astack.getTop();
 			astack.pop();
 			PUSHNEW(vmobject::binaryop(memory.get(k2), memory.get(k1), 6));
+			TRASHREF(k1);
+			TRASHREF(k2);
 			break;
 		case opcode::OP_SHL:
 			k1 = astack.getTop();
@@ -312,6 +328,8 @@ void nvm::cycle()
 			k2 = astack.getTop();
 			astack.pop();
 			PUSHNEW(vmobject::binaryop(memory.get(k2), memory.get(k1), 7));
+			TRASHREF(k1);
+			TRASHREF(k2);
 			break;
 		case opcode::OP_SHR:
 			k1 = astack.getTop();
@@ -319,6 +337,8 @@ void nvm::cycle()
 			k2 = astack.getTop();
 			astack.pop();
 			PUSHNEW(vmobject::binaryop(memory.get(k2), memory.get(k1), 8));
+			TRASHREF(k1);
+			TRASHREF(k2);
 			break;
 		case opcode::OP_PWR:
 			k1 = astack.getTop();
@@ -326,6 +346,8 @@ void nvm::cycle()
 			k2 = astack.getTop();
 			astack.pop();
 			PUSHNEW(vmobject::binaryop(memory.get(k2), memory.get(k1), 9));
+			TRASHREF(k1);
+			TRASHREF(k2);
 			break;
 		case opcode::OP_MOD:
 			k1 = astack.getTop();
@@ -333,11 +355,15 @@ void nvm::cycle()
 			k2 = astack.getTop();
 			astack.pop();
 			PUSHNEW(vmobject::binaryop(memory.get(k2), memory.get(k1), 10));
+			TRASHREF(k1);
+			TRASHREF(k2);
 			break;
 		case opcode::OP_CMP:
 			k1 = STACKTOP().getValue();
+			TRASHREF(astack.getTop());
 			astack.pop();
 			k2 = STACKTOP().getValue();
+			TRASHREF(astack.getTop());
 			astack.pop();
 			//                      less       greater    equal
 			//                  TOS-1 < TOS TOS-1 > TOS  TOS-1 == TOS
@@ -362,6 +388,7 @@ void nvm::cycle()
 			break;
 		case opcode::OP_LEAP:
 			leap(STACKTOP().getValue());
+			TRASHREF(astack.getTop());
 			astack.pop();
 			break;
 		case opcode::OP_JMP:
@@ -372,6 +399,7 @@ void nvm::cycle()
 			break;
 		case opcode::OP_BRE:
 			branch(STACKTOP().getValue());
+			TRASHREF(astack.getTop());
 			astack.pop();
 			break;
 		case opcode::OP_IFEQ:
@@ -403,6 +431,7 @@ void nvm::cycle()
 		case opcode::OP_INTR:
 			inter = i.parameters[0];
 			v = Array<byte>(STACKTOP().boundValue, STACKTOP().bsize);
+			TRASHREF(astack.getTop());
 			astack.pop();
 			v.insert(0, inter);
 			bp = bitconverter::toarray_p(v);
@@ -420,7 +449,8 @@ void nvm::cycle()
 			astack.pop();
 			k1 = PARAMI(0);
 			memory.get(k).refcount += 1;
-			if(globals->find(k1)) DECREF(globals->get(k1));
+			if(globals->find(k1))
+				DECREF(globals->get(k1));
 			globals->set(k1, k);
 			break;
 		case opcode::OP_LDSTR:
@@ -610,4 +640,11 @@ void nvm::trash()
 			locals->remove(i);
 		}
 	}
+}
+
+void nvm::setpid(int pid)
+{
+	processid = pid;
+	interm->process = pid;
+	outterm->process = pid;
 }

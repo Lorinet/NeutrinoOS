@@ -1,5 +1,6 @@
 #pragma once
 #include <iostream>
+#include <mutex>
 #include "containers.h"
 #include "util.h"
 #include "interrupts.h"
@@ -9,6 +10,8 @@ class nvm;
 class vt;
 class syscall
 {
+private:
+	static mutex syscallMutex;
 public:
 	static string filename, files, folders, txt, txt1, txt2;
 	static Array<byte> contents, msg;

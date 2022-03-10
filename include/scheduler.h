@@ -3,33 +3,34 @@
 #include <mutex>
 #include "containers.h"
 #define PRIORITY_MIN 1
-#define PRIORITY_LOW 8
-#define PRIORITY_MEDIUM 16
-#define PRIORITY_HIGH 32
+#define PRIORITY_LOW 4
+#define PRIORITY_MEDIUM 8
+#define PRIORITY_HIGH 16
 #define PRIORITY_MAX 64
 using namespace std;
 class nvm;
 class events;
 class scheduler
 {
-public:
-	Array<nvm*> processes;
-	events* eventSystem;
+private:
 	bool running;
+	Array<nvm*> processes;
+	mutex processesMutex;
+	mutex runningMutex;
+	mutex eventsMutex;
+public:
+	events* eventSystem;
 	thread run;
-	mutex schedulerMutex;
 	scheduler();
-	scheduler(scheduler& other);
-	~scheduler();
-	scheduler& operator=(scheduler& other);
 	void start();
 	void suspend();
 	void runScheduler();
 	void addProcess(nvm* process);
 	nvm* getProcess(int pid);
 	void removeProcess(int pid);
-	void removeProcessEx(int index);
 	void sendMessage(int pid, Array<byte> msg);
 	void sendTerminalInput(int pid, Array<byte> msg);
-	bool checkAvailablePID(int pid);
+	bool getRunning();
+	void setRunning(bool r);
+	int processCount();
 };

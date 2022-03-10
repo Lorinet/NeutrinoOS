@@ -9,5 +9,6 @@ public:
 	virtual Array<byte> message(Array<byte> indata, nvm* v)
 	{
 		// implement for every component interface
+		return Array<byte>();
 	}
 };

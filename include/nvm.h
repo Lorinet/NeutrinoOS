@@ -82,5 +82,6 @@ public:
 	void setTerminals(vt in, vt out);
 	void processEvents();
 	void trash();
+	void setpid(int pid);
 };
 

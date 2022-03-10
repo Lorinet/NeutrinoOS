@@ -21,9 +21,10 @@ vt syscall::vi, syscall::vo;
 interrupts syscall::syscll;
 IntMap<iapi*> syscall::interfaces;
 Array<byte> syscall::data;
+mutex syscall::syscallMutex;
 Array<byte> syscall::systemCall(byte* indata, int datasize, nvm* v)
 {
-	lock_guard<mutex> lock(vmmgr::kernelMutex);
+	lock_guard<mutex> lock(syscallMutex);
 	syscll = (interrupts)indata[0];
 	data.clear();
 	eventid eid;

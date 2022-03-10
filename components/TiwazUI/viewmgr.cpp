@@ -364,7 +364,7 @@ void ViewManager::FireEvent(TiwazEvent e)
 		v = views[activeView];
 		if (v->properties.contains("WakeOnInteraction"))
 		{
-			vmmgr::processes[v->parentProcess]->suspended = false;
+			//vmmgr::processes[v->parentProcess]->suspended = false;
 		}
 		if (v->ContainsSelectables())
 		{
@@ -408,7 +408,7 @@ void ViewManager::FireEvent(TiwazEvent e)
 		{
 			if (views[activeView]->properties.contains("WakeOnInteraction"))
 			{
-				vmmgr::processes[views[activeView]->parentProcess]->suspended = false;
+				//vmmgr::processes[views[activeView]->parentProcess]->suspended = false;
 			}
 			elm = &views[activeView]->elements[views[activeView]->focusedElement];
 			if (elm->GetProperty("Type") == "CheckBox")
@@ -420,14 +420,14 @@ void ViewManager::FireEvent(TiwazEvent e)
 				RenderView(views[activeView]);
 				if (elm->eventHandler != -1)
 				{
-					vmmgr::processes[views[activeView]->parentProcess]->branch(elm->eventHandler);
+					//vmmgr::processes[views[activeView]->parentProcess]->branch(elm->eventHandler);
 				}
 			}
 			else if (elm->GetProperty("Type") == "Button")
 			{
 				if (elm->eventHandler != -1)
 				{
-					vmmgr::processes[views[activeView]->parentProcess]->branch(elm->eventHandler);
+					//vmmgr::processes[views[activeView]->parentProcess]->branch(elm->eventHandler);
 				}
 			}
 		}
@@ -435,7 +435,7 @@ void ViewManager::FireEvent(TiwazEvent e)
 		{
 			if (views[activeView]->properties.contains("WakeOnInteraction"))
 			{
-				vmmgr::processes[views[activeView]->parentProcess]->suspended = false;
+				//vmmgr::processes[views[activeView]->parentProcess]->suspended = false;
 			}
 			for(int i = 0; i < v->elements.size; i++)
 			{

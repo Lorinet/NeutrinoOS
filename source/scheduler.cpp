@@ -7,107 +7,72 @@
 
 scheduler::scheduler()
 {
-	running = false;
-	processes = Array<nvm*>();
+	setRunning(false);
+	lock_guard<mutex> safeLock(eventsMutex);
 	eventSystem = new events(this);
-}
-
-scheduler::scheduler(scheduler& other)
-{
-	running = other.running;
-	processes = other.processes;
-	eventSystem = new events(this);
-}
-
-scheduler& scheduler::operator=(scheduler& other)
-{
-	running = other.running;
-	processes = other.processes;
-	eventSystem = new events(this);
-	return *this;
-}
-
-scheduler::~scheduler()
-{
-	delete eventSystem;
 }
 
 void scheduler::start()
 {
-	if (run.joinable()) run.detach();
-	run = thread([this]() { runScheduler(); });
+	if (run.joinable()) run.join();
+	run = thread(&scheduler::runScheduler, this);
 }
 
 void scheduler::suspend()
 {
-	running = false;
+	setRunning(false);
 }
 
 void scheduler::runScheduler()
 {
 	int pi = 0;
 	int ii = 0;
+	int numproc = processCount();
 	nvm* ehu = NULL;
-	running = true;
-	while (running)
+	setRunning(true);
+	while (getRunning())
 	{
-		lock_guard<mutex> lock(schedulerMutex);
 		pi = 0;
-		while (pi < processes.size)
+		while (pi < numproc)
 		{
-			if (pi == -1) break;
-			if (processes[pi] != NULL && !processes[pi]->suspended)
+			lock_guard<mutex> lock(processesMutex);
+			ehu = processes[pi];
+			if (!ehu->running)
 			{
-				ehu = processes[pi];
-				if (!ehu->running)
-				{
-					removeProcessEx(pi);
-					vmmgr::shutdown();
-					pi--;
-					continue;
-				}
-				ii = 0;
-				input::inputLoop(ehu);
-				if (ehu->messages.size > 0) ehu->awaitmsg = false;
-				ehu->cycle();
+				vmmgr::releaseProcessID(ehu->processid);
+				delete processes[pi];
+				processes.removeAt(pi);
+				numproc = processes.size;
+				continue;
 			}
+			ii = 0;
+			input::inputLoop(ehu);
+			if (ehu->messages.size > 0) ehu->awaitmsg = false;
+			ehu->cycle();
 			if (processes[pi]->eventsenabled) processes[pi]->processEvents();
 			pi++;
 		}
 		eventSystem->eventLoop();
-		if (pi == 0)
+		if (pi <= 0)
 		{
-			running = false;
+			setRunning(false);
 			return;
 		}
 	}
 }
 
-bool scheduler::checkAvailablePID(int pid)
-{
-	lock_guard<mutex> lock(schedulerMutex);
-	for (int i = 0; i < processes.size; i++)
-	{
-		if (processes[i]->processid == pid) return false;
-	}
-	return true;
-}
-
 void scheduler::addProcess(nvm* process)
 {
-	lock_guard<mutex> lock(schedulerMutex);
-	if (running)
 	{
-		suspend();
-		run.join();
+		lock_guard<mutex> lock(processesMutex);
+		processes.add(process);
 	}
-	processes.add(process);
 	start();
 }
 
 nvm* scheduler::getProcess(int pid)
 {
-	lock_guard<mutex> lock(schedulerMutex);
+	lock_guard<mutex> lock(processesMutex);
 	for (int i = 0; i < processes.size; i++)
 	{
 		if (processes[i]->processid == pid) return processes[i];
@@ -117,12 +82,14 @@ nvm* scheduler::getProcess(int pid)
 
 void scheduler::removeProcess(int pid)
 {
-	lock_guard<mutex> lock(schedulerMutex);
+	lock_guard<mutex> lock(processesMutex);
 	for (int i = 0; i < processes.size; i++)
 	{
 		if (processes[i]->processid == pid)
 		{
-			removeProcessEx(i);
+			delete processes[i];
+			processes.removeAt(i);
+			vmmgr::releaseProcessID(pid);
 			return;
 		}
 	}
@@ -130,10 +97,10 @@ void scheduler::removeProcess(int pid)
 
 void scheduler::sendMessage(int pid, Array<byte> msg)
 {
-	lock_guard<mutex> lock(schedulerMutex);
-	if (running)
+	lock_guard<mutex> lock(processesMutex);
+	if (getRunning())
 	{
-		suspend();
+		setRunning(false);
 		run.join();
 	}
 	getProcess(pid)->messages.add(msg);
@@ -142,10 +109,10 @@ void scheduler::sendMessage(int pid, Array<byte> msg)
 
 void scheduler::sendTerminalInput(int pid, Array<byte> msg)
 {
-	lock_guard<mutex> lock(schedulerMutex);
-	if (running)
+	lock_guard<mutex> lock(processesMutex);
+	if (getRunning())
 	{
-		suspend();
+		setRunning(false);
 		run.join();
 	}
 	nvm* n = getProcess(pid);
@@ -156,9 +123,20 @@ void scheduler::sendTerminalInput(int pid, Array<byte> msg)
 	start();
 }
 
-void scheduler::removeProcessEx(int index)
+bool scheduler::getRunning()
 {
-	vmmgr::processes.remove(processes[index]->processid);
-	delete processes[index];
-	processes.removeAt(index);
+	lock_guard<mutex> lock(runningMutex);
+	return running;
+}
+
+void scheduler::setRunning(bool r)
+{
+	lock_guard<mutex> lock(runningMutex);
+	running = r;
+}
+
+int scheduler::processCount()
+{
+	lock_guard<mutex> safeLock(processesMutex);
+	return processes.size;
 }

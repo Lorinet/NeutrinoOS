@@ -52,7 +52,7 @@ void events::eventLoop()
 		timeSet = false;
 	}
 	byte eid = 0;
-	for (unsigned int i = 0; i < sched->processes.size; i++)
+	/*for (unsigned int i = 0; i < sched->processes.size; i++)
 	{
 		for (int j = 0; j < pending.size; j++)
 		{
@@ -75,5 +75,5 @@ void events::eventLoop()
 				}
 			}
 		}
-	}
+	}*/
 }

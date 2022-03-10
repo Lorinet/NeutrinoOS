@@ -3,6 +3,7 @@
 #include <iostream>
 #include <chrono>
 #include <time.h>
+#include <mutex>
 #include "util.h"
 #include "vmmgr.h"
 #include "event.h"
@@ -10,6 +11,7 @@ using namespace std;
 class ntime
 {
 public:
+	static mutex timeMutex;
 	static chrono::time_point<chrono::steady_clock> starttmr;
 	static int timeZone;
 	static void loadNetworkTime();

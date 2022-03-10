@@ -38,6 +38,7 @@ public:
 		c.size = 0;
 		delete[] c.holder;
 		c.holder = NULL;
+		return *this;
 	}
 	Array(const int s)
 	{
@@ -219,10 +220,7 @@ public:
 	}
 	T& get(int index)
 	{
-		if (index < size && index >= 0)
-		{
-			return holder[index];
-		}
+		return holder[index];
 	}
 	T& getSafe(int index)
 	{
@@ -278,11 +276,11 @@ public:
 		size = 0;
 		hsize = 0;
 	}
-	IntMap(IntMap<V>& other)
+	IntMap(const IntMap<V>& other)
 	{
 		operator=(other);
 	}
-	IntMap& operator=(IntMap<V>& other)
+	IntMap& operator=(const IntMap<V>& other)
 	{
 		size = other.size;
 		hsize = other.hsize;
@@ -347,9 +345,9 @@ public:
 	{
 		return *holder[keys[key]];
 	}
-	void set(int key, V& value)
+	void set(int key, V value)
 	{
-		if (keys[key] == -1) add(key, value);
+		if (keys == NULL || key >= size || keys[key] == -1) add(key, value);
 		else *holder[keys[key]] = value;
 	}
 	int find(int key)

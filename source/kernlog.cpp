@@ -1,5 +1,6 @@
 #include "kernlog.h"
 #include "ntime.h"
+#include "memorystats.h"
 #include <iostream>
 using namespace std;
 
