@@ -9,3 +9,7 @@ CMakeCache.txt
 Makefile
 NeutrinoOS/Makefile
 build
+linux/buildroot-*
+linux/wpa_supplicant
+linux/.vscode
+linux/linfinity.linux.img

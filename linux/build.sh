@@ -39,7 +39,7 @@ function rebuild {
 }
 
 function run {
-    qemu-system-$ARCH -curses -hda linfinity.linux.img -netdev user,id=mynet0 -device e1000,netdev=mynet0
+    qemu-system-$ARCH -enable-kvm -hda linfinity.linux.img -vga qxl -netdev user,id=mynet0 -device e1000,netdev=mynet0
 }
 
 $1

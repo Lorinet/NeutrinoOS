@@ -1,0 +1,5 @@
+config BR2_PACKAGE_BOOTSPLASH
+	bool "bootsplash"
+	depends on BR2_PACKAGE_LIBPNG
+	help
+	  This package enables the boot logo on NeutrinoOS.

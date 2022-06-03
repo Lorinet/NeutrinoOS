@@ -29,9 +29,8 @@ mkdir $BUILDDIR/imgdir
 echo "Mounting image..."
 sudo mount ${lodev}p1 $BUILDDIR/imgdir
 echo "Copying files..."
-echo $BUILDDIR
-pwd
 sudo tar -xf $BINARIES_DIR/rootfs.tar -C $BUILDDIR/imgdir
+sudo rm -rf $BUILDDIR/imgdir/{media,mnt,opt,root}
 echo "Installing kernel..."
 sudo cp $BINARIES_DIR/bzImage $BUILDDIR/imgdir/boot/
 echo "Installing Grub2 bootloader..."
@@ -43,7 +42,6 @@ case $ARCH in
 esac
 pushd $BUILD_DIR
 btd=$(find . -maxdepth 1 -type d -name '*grub2-*' -print -quit)
-echo $btd
 sudo $BASE_DIR/host/sbin/grub-bios-setup -b output/build/$btd/build-i386-pc/grub-core/boot.img -c output/images/grub.img -d $CONFIG_DIR $lodev
 popd
 echo "Unmounting..."

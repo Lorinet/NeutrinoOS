@@ -1,0 +1,1 @@
+source "$BR2_EXTERNAL_LinfinityLinux_PATH/package/bootsplash/Config.in"
