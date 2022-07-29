@@ -30,7 +30,7 @@ int main()
         png_read_png(png_ptr, info_ptr, PNG_TRANSFORM_IDENTITY, NULL);
         int width, height, bit_depth, color_type, interlace_type, compression_type, filter_method;
         png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type, &interlace_type, &compression_type, &filter_method);
-        png_bytepp row_pointers = malloc(height * sizeof(png_bytep));
+        unsigned char** row_pointers = malloc(height * sizeof(png_bytep));
         for(int i = 0; i < height; i++)
         {
             row_pointers[i] = malloc(width);
@@ -43,12 +43,16 @@ int main()
         {
             for(int j = 0; j < 1024; j += 4)
             {
-                png_byte pp = row_pointers[i / 4][j / 4];
-                printf("%d", pp);
-                fbdata[(i + voff) * fb_width + (j + hoff)] = pp;
+                unsigned char pp = row_pointers[i / 4][j / 4];
+                //printf("%d", pp);
+                /*fbdata[(i + voff) * fb_width + (j + hoff)] = pp;
                 fbdata[(i + voff) * fb_width + (j + hoff) + 1] = pp;
                 fbdata[(i + voff) * fb_width + (j + hoff) + 2] = pp;
-                fbdata[(i + voff) * fb_width + (j + hoff) + 3] = pp;
+                fbdata[(i + voff) * fb_width + (j + hoff) + 3] = pp;*/
+                fbdata[(i + voff) * fb_width + (j + hoff)] = pp;
+                fbdata[(i + voff) * fb_width + (j + hoff) + 1] = pp;
+                fbdata[(i + voff) * fb_width + (j + hoff) + 2] = 255;
+                fbdata[(i + voff) * fb_width + (j + hoff) + 3] = 255;
             }
         }
         for(int i = 0; i < height; i++)

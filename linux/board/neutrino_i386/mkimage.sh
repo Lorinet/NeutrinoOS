@@ -48,6 +48,6 @@ echo "Unmounting..."
 sudo umount -l $BUILDDIR/imgdir
 sudo losetup -d $lodev
 echo "Cleaning up..."
-rm -rf $BUILDDIR/imgdir
+sudo rm -rf $BUILDDIR/imgdir
 echo "Linfinity Linux bootable image linfinity.linux.img created successfully! Have a nice day :)"
 
